@@ -146,6 +146,40 @@ export function DashboardPage() {
     { name: 'Carbs', value: dailyCalorieData.reduce((s, d) => s + d.carbs, 0) / 7, fill: 'oklch(0.75 0.12 60)' },
     { name: 'Fat', value: dailyCalorieData.reduce((s, d) => s + d.fat, 0) / 7, fill: 'oklch(0.60 0.15 250)' },
   ];
+  const personalRecords = Array.from(
+    store.workoutLogs
+      .flatMap((log) =>
+        log.exercises.map((entry) => ({
+          ...entry,
+          date: log.date,
+          completed: log.completed,
+          volume: entry.sets.reduce((sum, set) => sum + set.weight * set.reps, 0),
+          bestSet: entry.sets.reduce(
+            (best, set) => (set.weight > best.weight ? set : best),
+            { reps: 0, weight: 0 }
+          ),
+        }))
+      )
+      .reduce((records, entry) => {
+        const current = records.get(entry.exerciseId);
+        if (!current || entry.bestSet.weight > current.bestSet.weight || entry.volume > current.volume) {
+          records.set(entry.exerciseId, entry);
+        }
+        return records;
+      }, new Map<string, {
+        exerciseId: string;
+        exerciseName: string;
+        sets: WorkoutExercise['sets'];
+        date: string;
+        completed?: boolean;
+        volume: number;
+        bestSet: { reps: number; weight: number };
+      }>())
+      .values()
+  )
+    .filter((record) => record.bestSet.weight > 0 || record.volume > 0)
+    .sort((a, b) => b.bestSet.weight - a.bestSet.weight || b.volume - a.volume)
+    .slice(0, 4);
 
   const displayName = store.userName || 'Set Your Name';
   const avatar = getAvatarOption(store.userAvatar || 'emerald');
@@ -325,6 +359,60 @@ export function DashboardPage() {
             </motion.div>
           ))}
         </div>
+
+        {/* Personal Records */}
+        <motion.div
+          className="mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.12 }}
+        >
+          <Card className="border-border/50">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Trophy className="h-4 w-4 text-primary" />
+                Personal Records
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {personalRecords.length === 0 ? (
+                <div className="text-center py-8">
+                  <Trophy className="h-10 w-10 mx-auto mb-3 text-muted-foreground/30" />
+                  <p className="text-sm font-medium text-muted-foreground">No records yet</p>
+                  <p className="text-xs text-muted-foreground/70 mt-1">Log sets with weight to unlock your strongest lifts.</p>
+                </div>
+              ) : (
+                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                  {personalRecords.map((record) => (
+                    <div key={record.exerciseId} className="rounded-xl border border-border/50 bg-muted/20 p-4">
+                      <div className="flex items-start justify-between gap-2 mb-3">
+                        <div className="min-w-0">
+                          <p className="font-semibold text-sm truncate">{record.exerciseName}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(`${record.date}T00:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                          </p>
+                        </div>
+                        {record.completed && (
+                          <Badge className="h-5 border-primary/20 bg-primary/10 text-primary text-[10px]">Complete</Badge>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div className="rounded-lg bg-background/50 p-2">
+                          <p className="text-muted-foreground">Best Set</p>
+                          <p className="font-semibold">{record.bestSet.weight}kg x {record.bestSet.reps}</p>
+                        </div>
+                        <div className="rounded-lg bg-background/50 p-2">
+                          <p className="text-muted-foreground">Volume</p>
+                          <p className="font-semibold">{record.volume}kg</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
 
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Left Column - Charts */}

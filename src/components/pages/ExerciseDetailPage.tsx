@@ -8,7 +8,8 @@ import { useAppStore } from '@/lib/store';
 import { exercises } from '@/lib/data';
 import {
   ArrowLeft, Clock, Flame, Heart, ChevronRight,
-  Dumbbell, Target, Lightbulb, Play,
+  Dumbbell, Target, Lightbulb, Play, Trophy,
+  BarChart3, Calendar, ListChecks,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
@@ -20,8 +21,8 @@ const difficultyColor: Record<string, string> = {
 };
 
 export function ExerciseDetailPage() {
-  const { selectedExerciseId, navigate, favorites, toggleFavorite } = useAppStore();
-  const [activeTab, setActiveTab] = useState<'instructions' | 'tips'>('instructions');
+  const { selectedExerciseId, navigate, favorites, toggleFavorite, workoutLogs } = useAppStore();
+  const [activeTab, setActiveTab] = useState<'instructions' | 'tips' | 'history'>('instructions');
 
   const exercise = exercises.find((e) => e.id === selectedExerciseId);
 
@@ -41,6 +42,25 @@ export function ExerciseDetailPage() {
   }
 
   const isFavorite = favorites.includes(exercise.id);
+  const exerciseHistory = workoutLogs
+    .flatMap((log) =>
+      log.exercises
+        .filter((entry) => entry.exerciseId === exercise.id)
+        .map((entry) => ({
+          logId: log.id,
+          date: log.date,
+          workoutName: log.name,
+          completed: log.completed,
+          sets: entry.sets,
+          volume: entry.sets.reduce((sum, set) => sum + set.weight * set.reps, 0),
+          bestWeight: Math.max(0, ...entry.sets.map((set) => set.weight)),
+          bestReps: Math.max(0, ...entry.sets.map((set) => set.reps)),
+        }))
+    )
+    .sort((a, b) => b.date.localeCompare(a.date));
+  const bestWeight = Math.max(0, ...exerciseHistory.map((entry) => entry.bestWeight));
+  const bestVolume = Math.max(0, ...exerciseHistory.map((entry) => entry.volume));
+  const totalTrackedSets = exerciseHistory.reduce((sum, entry) => sum + entry.sets.length, 0);
 
   return (
     <div className="min-h-screen pt-24 pb-16">
@@ -143,6 +163,31 @@ export function ExerciseDetailPage() {
           ))}
         </motion.div>
 
+        {/* Tracking History Summary */}
+        <motion.div
+          className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.15 }}
+        >
+          {[
+            { icon: <Calendar className="h-5 w-5 text-primary" />, label: 'Logged', value: `${exerciseHistory.length}x` },
+            { icon: <ListChecks className="h-5 w-5 text-primary" />, label: 'Tracked Sets', value: `${totalTrackedSets}` },
+            { icon: <Trophy className="h-5 w-5 text-primary" />, label: 'Best Weight', value: bestWeight > 0 ? `${bestWeight}kg` : '-' },
+            { icon: <BarChart3 className="h-5 w-5 text-primary" />, label: 'Best Volume', value: bestVolume > 0 ? `${bestVolume}kg` : '-' },
+          ].map((stat) => (
+            <Card key={stat.label} className="border-border/50">
+              <CardContent className="p-4 flex items-center gap-3">
+                {stat.icon}
+                <div>
+                  <p className="text-xs text-muted-foreground">{stat.label}</p>
+                  <p className="text-sm font-semibold">{stat.value}</p>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </motion.div>
+
         {/* Description */}
         <motion.div
           className="mb-8"
@@ -161,7 +206,7 @@ export function ExerciseDetailPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.3 }}
         >
-          <div className="flex gap-2 mb-6">
+          <div className="flex flex-wrap gap-2 mb-6">
             <Button
               variant={activeTab === 'instructions' ? 'default' : 'outline'}
               onClick={() => setActiveTab('instructions')}
@@ -177,6 +222,14 @@ export function ExerciseDetailPage() {
             >
               <Lightbulb className="h-4 w-4" />
               Pro Tips
+            </Button>
+            <Button
+              variant={activeTab === 'history' ? 'default' : 'outline'}
+              onClick={() => setActiveTab('history')}
+              className="rounded-xl gap-2"
+            >
+              <Trophy className="h-4 w-4" />
+              History
             </Button>
           </div>
 
@@ -228,6 +281,53 @@ export function ExerciseDetailPage() {
                     </motion.div>
                   ))}
                 </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {activeTab === 'history' && (
+            <Card className="border-border/50">
+              <CardContent className="p-6">
+                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <Trophy className="h-5 w-5 text-primary" />
+                  Exercise History
+                </h3>
+                {exerciseHistory.length === 0 ? (
+                  <div className="text-center py-10">
+                    <Dumbbell className="h-10 w-10 mx-auto mb-3 text-muted-foreground/30" />
+                    <p className="text-sm font-medium text-muted-foreground">No history yet</p>
+                    <p className="text-xs text-muted-foreground/70 mt-1">Log this exercise from the Workouts page to track progress here.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {exerciseHistory.slice(0, 8).map((entry) => (
+                      <div key={`${entry.logId}-${entry.date}`} className="rounded-xl border border-border/50 bg-muted/20 p-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                          <div>
+                            <p className="font-semibold text-sm">{entry.workoutName}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {new Date(`${entry.date}T00:00:00`).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {entry.completed && (
+                              <Badge className="h-5 border-primary/20 bg-primary/10 text-primary text-[10px]">Complete</Badge>
+                            )}
+                            <Badge variant="outline" className="text-xs">{entry.volume}kg volume</Badge>
+                          </div>
+                        </div>
+                        <div className="grid gap-2 sm:grid-cols-2">
+                          {entry.sets.map((set, i) => (
+                            <div key={i} className="flex items-center justify-between rounded-lg bg-background/50 px-3 py-2 text-xs">
+                              <span className="font-medium text-muted-foreground">Set {i + 1}</span>
+                              <span>{set.weight}kg x {set.reps} reps</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}
