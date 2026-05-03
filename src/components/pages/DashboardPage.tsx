@@ -129,7 +129,14 @@ export function DashboardPage() {
   }, []);
 
   const totalCaloriesBurned = dailyCalorieData.reduce((sum, d) => sum + d.burned, 0);
-  const totalWorkouts = weeklySchedule.filter((d) => d.done).length;
+  const startOfWeek = new Date();
+  startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+  startOfWeek.setHours(0, 0, 0, 0);
+  const completedWorkoutsThisWeek = store.workoutLogs.filter(
+    (log) => log.completed && new Date(`${log.date}T00:00:00`) >= startOfWeek
+  ).length;
+  const scheduledWorkoutsDone = weeklySchedule.filter((d) => d.done).length;
+  const totalWorkouts = Math.max(completedWorkoutsThisWeek, scheduledWorkoutsDone);
   const bmi = store.userHeight > 0 ? (store.userWeight / (store.userHeight / 100) ** 2).toFixed(1) : '—';
   const currentStreak = 12;
   const weeklyProgress = store.weeklyGoal > 0 ? (totalWorkouts / store.weeklyGoal) * 100 : 0;
@@ -226,6 +233,7 @@ export function DashboardPage() {
       date: workoutForm.date,
       duration: workoutForm.duration,
       notes: workoutForm.notes.trim(),
+      completed: false,
       exercises: workoutForm.exercises,
     });
     setShowWorkoutDialog(false);
@@ -754,10 +762,23 @@ export function DashboardPage() {
               ) : (
                 <div className="space-y-3 max-h-[420px] overflow-y-auto pr-1">
                   {store.workoutLogs.map((log) => (
-                    <div key={log.id} className="p-4 rounded-xl border border-border/50 bg-muted/20 hover:bg-muted/30 transition-colors">
+                    <div
+                      key={log.id}
+                      className={cn(
+                        'p-4 rounded-xl border bg-muted/20 hover:bg-muted/30 transition-colors',
+                        log.completed ? 'border-primary/40' : 'border-border/50'
+                      )}
+                    >
                       <div className="flex items-start justify-between mb-2">
                         <div>
-                          <p className="font-semibold text-sm">{log.name}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="font-semibold text-sm">{log.name}</p>
+                            {log.completed && (
+                              <Badge className="h-5 border-primary/20 bg-primary/10 text-primary text-[10px]">
+                                Complete
+                              </Badge>
+                            )}
+                          </div>
                           <p className="text-xs text-muted-foreground">{new Date(log.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</p>
                         </div>
                         <div className="flex items-center gap-3">
@@ -765,6 +786,19 @@ export function DashboardPage() {
                             <span className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="h-3 w-3" />{log.duration}m</span>
                           )}
                           <span className="text-xs text-muted-foreground flex items-center gap-1"><ListChecks className="h-3 w-3" />{log.exercises.length} exercises</span>
+                          <button
+                            onClick={() => store.completeWorkoutLog(log.id, !log.completed)}
+                            className={cn(
+                              'h-6 px-2 rounded-md flex items-center gap-1 text-xs transition-colors',
+                              log.completed
+                                ? 'text-primary bg-primary/10 hover:bg-primary/15'
+                                : 'text-muted-foreground hover:text-primary hover:bg-primary/10'
+                            )}
+                            aria-label={log.completed ? 'Mark workout incomplete' : 'Complete workout'}
+                          >
+                            <Check className="h-3 w-3" />
+                            {log.completed ? 'Done' : 'Complete'}
+                          </button>
                           <button
                             onClick={() => store.deleteWorkoutLog(log.id)}
                             className="h-6 w-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-red-400 hover:bg-red-400/10 transition-colors"

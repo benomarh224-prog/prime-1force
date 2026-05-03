@@ -142,6 +142,7 @@ export function WorkoutsPage() {
       date: quickLog.date,
       duration: quickLog.duration,
       notes: quickLog.notes.trim(),
+      completed: true,
       exercises: [
         {
           exerciseId: selectedExercise.id,

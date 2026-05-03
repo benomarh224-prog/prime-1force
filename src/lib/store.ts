@@ -23,6 +23,7 @@ export interface WorkoutLog {
   exercises: WorkoutExercise[];
   duration: number; // minutes
   notes: string;
+  completed?: boolean;
 }
 
 // ─── App State ──────────────────────────────────────────────────
@@ -58,6 +59,7 @@ interface AppState {
     weeklyGoal?: number;
   }) => void;
   addWorkoutLog: (log: Omit<WorkoutLog, 'id'>) => void;
+  completeWorkoutLog: (id: string, completed?: boolean) => void;
   deleteWorkoutLog: (id: string) => void;
 }
 
@@ -99,6 +101,11 @@ export const useAppStore = create<AppState>()(
           { ...log, id: `wl-${Date.now()}` },
           ...s.workoutLogs,
         ],
+      })),
+      completeWorkoutLog: (id, completed = true) => set((s) => ({
+        workoutLogs: s.workoutLogs.map((log) =>
+          log.id === id ? { ...log, completed } : log
+        ),
       })),
       deleteWorkoutLog: (id) => set((s) => ({
         workoutLogs: s.workoutLogs.filter((l) => l.id !== id),

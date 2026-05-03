@@ -8,10 +8,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useAppStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
-import { testimonials, progressData } from '@/lib/data';
+import { progressData } from '@/lib/data';
 import {
   Bot, Dumbbell, BarChart3, Apple, ArrowRight, Zap, Target,
-  Check, Star, Flame, TrendingUp, Clock, Users, Shield, Sparkles,
+  Check, Star, Flame, TrendingUp, Clock, Shield, Sparkles,
   Activity, ChevronDown, Play, Award,
 } from 'lucide-react';
 
@@ -730,40 +730,6 @@ export function HomePage() {
             <Button size="lg" onClick={() => navigate('workouts')} className="gap-2 font-semibold">
               Start Your Transformation <ArrowRight className="h-4 w-4" />
             </Button>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ═══════════ TESTIMONIALS ═══════════ */}
-      <section className="py-20 sm:py-28 bg-muted/30">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <motion.div className="text-center mb-16" initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-80px' }} variants={fadeUp} custom={0}>
-            <Badge variant="secondary" className="mb-4"><Users className="h-3 w-3 mr-1" />Testimonials</Badge>
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">Loved by <span className="gradient-text">Thousands</span></h2>
-            <p className="text-muted-foreground max-w-xl mx-auto">Real stories from real athletes who transformed their fitness journey with Prime Forge.</p>
-          </motion.div>
-          <motion.div className="grid md:grid-cols-3 gap-6" initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-60px' }} variants={staggerContainer}>
-            {testimonials.slice(0, 3).map((t) => (
-              <motion.div key={t.id} variants={scaleUp}>
-                <Card className="h-full border-border/50 hover:border-border/80 transition-colors duration-300">
-                  <CardContent className="p-6 flex flex-col h-full">
-                    <div className="flex gap-0.5 mb-4">
-                      {[...Array(t.rating)].map((_, i) => <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" />)}
-                    </div>
-                    <p className="text-sm text-muted-foreground leading-relaxed flex-1 mb-6">&ldquo;{t.content}&rdquo;</p>
-                    <div className="flex items-center gap-3 pt-4 border-t border-border/30">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/40 to-primary/10 flex items-center justify-center text-xs font-bold text-primary">
-                        {t.name.split(' ').map(n => n[0]).join('')}
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold">{t.name}</p>
-                        <p className="text-xs text-muted-foreground">{t.role}</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
           </motion.div>
         </div>
       </section>
