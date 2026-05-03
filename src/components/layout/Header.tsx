@@ -65,7 +65,7 @@ export function Header() {
           </button>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-1">
+          <nav className="hidden lg:flex items-center gap-1">
             {navItems.map((item) => (
               <Button
                 key={item.page}
@@ -105,7 +105,7 @@ export function Header() {
             {/* Mobile Menu */}
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className={`md:hidden rounded-lg ${heroTop ? 'text-white hover:bg-white/10 hover:text-white' : ''}`}>
+                <Button variant="ghost" size="icon" className={`lg:hidden rounded-lg ${heroTop ? 'text-white hover:bg-white/10 hover:text-white' : ''}`}>
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
