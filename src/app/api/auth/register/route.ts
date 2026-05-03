@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { registerSchema } from '@/lib/validations';
-import { sanitizeInput } from '@/middleware';
+import { sanitizeInput } from '@/proxy';
 
 export async function POST(request: Request) {
   try {

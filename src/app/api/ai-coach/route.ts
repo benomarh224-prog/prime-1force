@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import ZAI from 'z-ai-web-dev-sdk';
 import { aiCoachRequestSchema } from '@/lib/validations';
-import { sanitizeInput } from '@/middleware';
+import { sanitizeInput } from '@/proxy';
 
 let zaiInstance: Awaited<ReturnType<typeof ZAI.create>> | null = null;
 

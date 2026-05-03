@@ -86,15 +86,15 @@ export function validateCSRFToken(request: NextRequest): boolean {
   const headerToken = request.headers.get('x-csrf-token');
 
   if (!cookieToken || !headerToken) return false;
-  // Timing-safe comparison via constant-time check
-  try {
-    return crypto.subtle.timingSafeEqual(
-      new TextEncoder().encode(cookieToken),
-      new TextEncoder().encode(headerToken)
-    );
-  } catch {
-    return false;
+
+  let diff = cookieToken.length ^ headerToken.length;
+  const length = Math.max(cookieToken.length, headerToken.length);
+
+  for (let i = 0; i < length; i++) {
+    diff |= (cookieToken.charCodeAt(i) || 0) ^ (headerToken.charCodeAt(i) || 0);
   }
+
+  return diff === 0;
 }
 
 // ─── XSS Sanitization ─────────────────────────────────────────────────
@@ -147,7 +147,7 @@ export function sanitizeInput(input: unknown): unknown {
 }
 
 // ─── Middleware ────────────────────────────────────────────────────────
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // ── Skip middleware for static files, _next, and favicon ──
