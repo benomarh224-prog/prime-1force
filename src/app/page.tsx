@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useAppStore } from '@/lib/store';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
+import { MobileBottomNav } from '@/components/layout/MobileBottomNav';
 import { HomePage } from '@/components/pages/HomePage';
 import { WorkoutsPage } from '@/components/pages/WorkoutsPage';
 import { ExerciseDetailPage } from '@/components/pages/ExerciseDetailPage';
@@ -45,7 +46,7 @@ export default function MainApp() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="flex-1">
+      <main className="flex-1 pb-24 md:pb-0">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentPage}
@@ -60,6 +61,7 @@ export default function MainApp() {
         </AnimatePresence>
       </main>
       <Footer />
+      <MobileBottomNav />
     </div>
   );
 }

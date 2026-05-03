@@ -4,12 +4,23 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { useAppStore } from '@/lib/store';
 import { exercises } from '@/lib/data';
+import { useToast } from '@/hooks/use-toast';
 import {
   ArrowLeft, Clock, Flame, Heart, ChevronRight,
   Dumbbell, Target, Lightbulb, Play, Trophy,
-  BarChart3, Calendar, ListChecks,
+  BarChart3, Calendar, ListChecks, Plus, Save, Trash2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
@@ -20,9 +31,22 @@ const difficultyColor: Record<string, string> = {
   advanced: 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20',
 };
 
+type QuickSet = {
+  reps: number;
+  weight: number;
+};
+
 export function ExerciseDetailPage() {
-  const { selectedExerciseId, navigate, favorites, toggleFavorite, workoutLogs } = useAppStore();
+  const { selectedExerciseId, navigate, favorites, toggleFavorite, workoutLogs, addWorkoutLog } = useAppStore();
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<'instructions' | 'tips' | 'history'>('instructions');
+  const [logDialogOpen, setLogDialogOpen] = useState(false);
+  const [quickLog, setQuickLog] = useState({
+    date: new Date().toISOString().split('T')[0],
+    duration: 0,
+    notes: '',
+    sets: [{ reps: 10, weight: 0 }] as QuickSet[],
+  });
 
   const exercise = exercises.find((e) => e.id === selectedExerciseId);
 
@@ -61,6 +85,65 @@ export function ExerciseDetailPage() {
   const bestWeight = Math.max(0, ...exerciseHistory.map((entry) => entry.bestWeight));
   const bestVolume = Math.max(0, ...exerciseHistory.map((entry) => entry.volume));
   const totalTrackedSets = exerciseHistory.reduce((sum, entry) => sum + entry.sets.length, 0);
+
+  const openLogDialog = () => {
+    const defaultReps =
+      exercise.difficulty === 'advanced' ? 6 : exercise.difficulty === 'intermediate' ? 8 : 12;
+    setQuickLog({
+      date: new Date().toISOString().split('T')[0],
+      duration: exercise.duration,
+      notes: '',
+      sets: [{ reps: defaultReps, weight: exercise.category === 'no-equipment' ? 0 : 20 }],
+    });
+    setLogDialogOpen(true);
+  };
+
+  const updateSet = (index: number, field: keyof QuickSet, value: number) => {
+    setQuickLog((prev) => ({
+      ...prev,
+      sets: prev.sets.map((set, i) => (i === index ? { ...set, [field]: value } : set)),
+    }));
+  };
+
+  const addSet = () => {
+    setQuickLog((prev) => ({
+      ...prev,
+      sets: [...prev.sets, prev.sets[prev.sets.length - 1] ?? { reps: 10, weight: 0 }],
+    }));
+  };
+
+  const removeSet = (index: number) => {
+    setQuickLog((prev) => ({
+      ...prev,
+      sets: prev.sets.filter((_, i) => i !== index),
+    }));
+  };
+
+  const saveQuickLog = () => {
+    addWorkoutLog({
+      name: exercise.name,
+      date: quickLog.date,
+      duration: quickLog.duration,
+      notes: quickLog.notes.trim(),
+      completed: true,
+      exercises: [
+        {
+          exerciseId: exercise.id,
+          exerciseName: exercise.name,
+          sets: quickLog.sets.map((set) => ({
+            reps: Math.max(0, set.reps),
+            weight: Math.max(0, set.weight),
+          })),
+        },
+      ],
+    });
+    setLogDialogOpen(false);
+    setActiveTab('history');
+    toast({
+      title: 'Exercise logged',
+      description: `${exercise.name} was added to your workout history.`,
+    });
+  };
 
   return (
     <div className="min-h-screen pt-24 pb-16">
@@ -161,6 +244,18 @@ export function ExerciseDetailPage() {
               </CardContent>
             </Card>
           ))}
+        </motion.div>
+
+        <motion.div
+          className="mb-8"
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.18 }}
+        >
+          <Button onClick={openLogDialog} className="h-12 w-full rounded-xl gap-2 font-semibold neon-glow">
+            <Plus className="h-4 w-4" />
+            Log This Exercise
+          </Button>
         </motion.div>
 
         {/* Tracking History Summary */}
@@ -342,6 +437,13 @@ export function ExerciseDetailPage() {
             Ask AI Coach About This Exercise
           </Button>
           <Button
+            onClick={openLogDialog}
+            className="flex-1 h-12 rounded-xl gap-2 font-semibold"
+          >
+            <Plus className="h-4 w-4" />
+            Log This Exercise
+          </Button>
+          <Button
             variant="outline"
             onClick={() => navigate('workouts')}
             className="flex-1 h-12 rounded-xl gap-2 font-semibold"
@@ -350,6 +452,116 @@ export function ExerciseDetailPage() {
           </Button>
         </div>
       </div>
+
+      <Dialog open={logDialogOpen} onOpenChange={setLogDialogOpen}>
+        <DialogContent className="max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Dumbbell className="h-5 w-5 text-primary" />
+              Log Exercise
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-5">
+            <div className="rounded-lg border border-primary/10 bg-muted/30 p-3">
+              <p className="font-semibold">{exercise.name}</p>
+              <p className="text-sm text-muted-foreground">
+                {exercise.muscleGroup} - {exercise.equipment}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Date</Label>
+                <Input
+                  type="date"
+                  value={quickLog.date}
+                  onChange={(e) => setQuickLog({ ...quickLog, date: e.target.value })}
+                  className="h-10 rounded-lg"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Duration</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  max={300}
+                  value={quickLog.duration || ''}
+                  onChange={(e) => setQuickLog({ ...quickLog, duration: Number(e.target.value) })}
+                  className="h-10 rounded-lg"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-semibold">Sets</Label>
+                <Button variant="ghost" size="sm" onClick={addSet} className="h-8 rounded-lg gap-1.5">
+                  <Plus className="h-3.5 w-3.5" />
+                  Add Set
+                </Button>
+              </div>
+              <div className="space-y-2">
+                {quickLog.sets.map((set, index) => (
+                  <div key={index} className="grid grid-cols-[2rem_1fr_1fr_2rem] items-center gap-2">
+                    <span className="text-xs font-medium text-muted-foreground text-center">S{index + 1}</span>
+                    <div className="relative">
+                      <Input
+                        type="number"
+                        min={0}
+                        value={set.weight || ''}
+                        onChange={(e) => updateSet(index, 'weight', Number(e.target.value))}
+                        className="h-10 rounded-lg pr-8"
+                        placeholder="0"
+                      />
+                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground pointer-events-none">kg</span>
+                    </div>
+                    <div className="relative">
+                      <Input
+                        type="number"
+                        min={0}
+                        value={set.reps || ''}
+                        onChange={(e) => updateSet(index, 'reps', Number(e.target.value))}
+                        className="h-10 rounded-lg pr-10"
+                        placeholder="0"
+                      />
+                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground pointer-events-none">reps</span>
+                    </div>
+                    <button
+                      onClick={() => removeSet(index)}
+                      disabled={quickLog.sets.length === 1}
+                      className="h-9 w-9 rounded-md flex items-center justify-center text-muted-foreground hover:text-red-400 hover:bg-red-400/10 disabled:opacity-40 disabled:pointer-events-none"
+                      aria-label="Remove set"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs">Notes</Label>
+              <Textarea
+                value={quickLog.notes}
+                onChange={(e) => setQuickLog({ ...quickLog, notes: e.target.value })}
+                placeholder="How did this set feel?"
+                className="min-h-[70px] rounded-lg resize-none"
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setLogDialogOpen(false)} className="rounded-xl">
+              Cancel
+            </Button>
+            <Button onClick={saveQuickLog} className="rounded-xl gap-2">
+              <Save className="h-4 w-4" />
+              Save Workout
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
