@@ -1,0 +1,100 @@
+# ============================================================
+# Prime Forge - AI-Powered Fitness Platform
+# Caddy Reverse Proxy Configuration
+# Free Domain: primeforge.21-0-10-152.sslip.io
+# Custom Domain: fitforce.live (when DNS is configured)
+# ============================================================
+
+:81 {
+        # Enable compression for better performance
+        encode gzip zstd
+
+        # Port-based routing for microservices
+        @transform_port_query {
+                query XTransformPort=*
+        }
+
+        handle @transform_port_query {
+                reverse_proxy localhost:{query.XTransformPort}
+        }
+
+        # Main application -> Next.js dev server
+        handle {
+                reverse_proxy localhost:3000
+
+                # Security headers
+                header {
+                        X-Content-Type-Options "nosniff"
+                        X-Frame-Options "SAMEORIGIN"
+                        X-XSS-Protection "1; mode=block"
+                        Referrer-Policy "strict-origin-when-cross-origin"
+                        Permissions-Policy "camera=(), microphone=(), geolocation=()"
+                        Cross-Origin-Opener-Policy "same-origin"
+                        Cross-Origin-Resource-Policy "same-origin"
+                }
+        }
+}
+
+# ============================================================
+# Free Domain: primeforge.21-0-10-152.sslip.io
+# (Auto-resolves via sslip.io — no registration needed!)
+# ============================================================
+primeforge.21-0-10-152.sslip.io {
+        encode gzip zstd
+
+        @transform_port_query {
+                query XTransformPort=*
+        }
+
+        handle @transform_port_query {
+                reverse_proxy localhost:{query.XTransformPort}
+        }
+
+        handle {
+                reverse_proxy localhost:3000
+
+                header {
+                        X-Content-Type-Options "nosniff"
+                        X-Frame-Options "SAMEORIGIN"
+                        X-XSS-Protection "1; mode=block"
+                        Referrer-Policy "strict-origin-when-cross-origin"
+                        Permissions-Policy "camera=(), microphone=(), geolocation=()"
+                        Cross-Origin-Opener-Policy "same-origin"
+                        Cross-Origin-Resource-Policy "same-origin"
+                }
+        }
+}
+
+# ============================================================
+# Custom Domain: fitforce.live (active when DNS is configured)
+# ============================================================
+fitforce.live, www.fitforce.live {
+        encode gzip zstd
+
+        www.fitforce.live {
+                redir https://fitforce.live{uri} permanent
+        }
+
+        @transform_port_query {
+                query XTransformPort=*
+        }
+
+        handle @transform_port_query {
+                reverse_proxy localhost:{query.XTransformPort}
+        }
+
+        handle {
+                reverse_proxy localhost:3000
+
+                header {
+                        X-Content-Type-Options "nosniff"
+                        X-Frame-Options "SAMEORIGIN"
+                        X-XSS-Protection "1; mode=block"
+                        Referrer-Policy "strict-origin-when-cross-origin"
+                        Permissions-Policy "camera=(), microphone=(), geolocation=()"
+                        Cross-Origin-Opener-Policy "same-origin"
+                        Cross-Origin-Resource-Policy "same-origin"
+                        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+                }
+        }
+}
