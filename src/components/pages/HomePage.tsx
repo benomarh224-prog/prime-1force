@@ -456,6 +456,9 @@ export function HomePage() {
         </motion.div>
       </section>
 
+      {/* ═══════════ DAILY MOTIVATION ═══════════ */}
+      <QuoteSlider />
+
       {/* ═══════════ FEATURES SECTION ═══════════ */}
       <section className="py-20 sm:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -675,9 +678,6 @@ export function HomePage() {
           </motion.div>
         </div>
       </section>
-
-      {/* ═══════════ MOTIVATIONAL QUOTES ═══════════ */}
-      <QuoteSlider />
 
       {/* ═══════════ FAQ SECTION ═══════════ */}
       <section className="py-20 sm:py-28 bg-muted/30">
