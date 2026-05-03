@@ -402,24 +402,11 @@ export function DashboardPage() {
             </h1>
             <p className="text-muted-foreground mt-1">Track your fitness journey</p>
           </div>
-          <AnimatePresence mode="wait">
-            {!isEditing ? (
-              <motion.div key="edit-btn" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}>
-                <Button onClick={startEditing} className="rounded-xl gap-2">
-                  <Edit3 className="h-4 w-4" /> Edit Profile
-                </Button>
-              </motion.div>
-            ) : (
-              <motion.div key="save-btns" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="flex gap-2">
-                <Button variant="ghost" onClick={handleCancel} className="rounded-xl gap-2">
-                  <X className="h-4 w-4" /> Cancel
-                </Button>
-                <Button onClick={handleSave} className="rounded-xl gap-2">
-                  <Check className="h-4 w-4" /> Save
-                </Button>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
+            <Button onClick={startEditing} className="rounded-xl gap-2">
+              <Edit3 className="h-4 w-4" /> Edit Profile
+            </Button>
+          </motion.div>
         </motion.div>
 
         {/* Stats Cards Row */}
@@ -725,174 +712,15 @@ export function DashboardPage() {
                   <CardTitle className="text-base flex items-center gap-2">
                     <User className="h-4 w-4 text-primary" />
                     Profile
-                    {isEditing && (
-                      <Badge variant="outline" className="ml-auto text-xs text-primary border-primary/30">Editing</Badge>
-                    )}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <AnimatePresence mode="wait">
-                    {isEditing ? (
-                      <motion.div
-                        key="edit-mode"
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -8 }}
-                        transition={{ duration: 0.2 }}
-                        className="space-y-4"
-                      >
-                        {/* Avatar Picker */}
-                        <div className="space-y-2" ref={avatarPickerRef}>
-                          <Label className="text-xs">Profile Icon</Label>
-                          <div className="relative">
-                            <button
-                              onClick={() => setShowAvatarPicker(!showAvatarPicker)}
-                              className="group flex items-center gap-3 w-full p-2 rounded-xl border border-border/50 hover:border-primary/30 transition-colors"
-                            >
-                              <div className={cn(
-                                'h-12 w-12 rounded-full bg-gradient-to-br flex items-center justify-center text-lg ring-2 ring-offset-2 ring-offset-background transition-all',
-                                `bg-gradient-to-br ${getAvatarOption(editData.avatar).gradient}`,
-                                getAvatarOption(editData.avatar).ring,
-                              )}>
-                                {editData.name ? getInitials(editData.name) : getAvatarOption(editData.avatar).emoji}
-                              </div>
-                              <div className="flex-1 text-left">
-                                <p className="text-sm font-medium">
-                                  {editData.name || 'Your Name'}
-                                </p>
-                                <p className="text-xs text-muted-foreground">Click to change icon</p>
-                              </div>
-                              <Camera className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                            </button>
-
-                            {/* Picker Dropdown */}
-                            <AnimatePresence>
-                              {showAvatarPicker && (
-                                <motion.div
-                                  initial={{ opacity: 0, y: -4, scale: 0.95 }}
-                                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                                  exit={{ opacity: 0, y: -4, scale: 0.95 }}
-                                  transition={{ duration: 0.15 }}
-                                  className="absolute z-50 top-full mt-2 left-0 right-0 bg-popover border border-border rounded-xl shadow-xl p-3"
-                                >
-                                  <div className="grid grid-cols-4 gap-2">
-                                    {avatarOptions.map((opt) => (
-                                      <button
-                                        key={opt.id}
-                                        onClick={() => {
-                                          setEditData({ ...editData, avatar: opt.id });
-                                          setShowAvatarPicker(false);
-                                        }}
-                                        className={cn(
-                                          'h-12 w-12 rounded-full bg-gradient-to-br flex items-center justify-center text-lg transition-all mx-auto',
-                                          opt.gradient,
-                                          editData.avatar === opt.id
-                                            ? `ring-2 ring-offset-2 ring-offset-popover ${opt.ring} scale-110`
-                                            : 'opacity-70 hover:opacity-100 hover:scale-105'
-                                        )}
-                                      >
-                                        {opt.emoji}
-                                      </button>
-                                    ))}
-                                  </div>
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
-                          </div>
-                        </div>
-
-                        <Separator />
-
-                        {/* Name Input */}
-                        <div className="space-y-2">
-                          <Label className="text-xs">Display Name</Label>
-                          <Input
-                            value={editData.name}
-                            onChange={(e) => setEditData({ ...editData, name: e.target.value })}
-                            placeholder="Enter your name..."
-                            className="h-9 rounded-lg"
-                            maxLength={30}
-                          />
-                          {editData.name && (
-                            <p className="text-[10px] text-muted-foreground">
-                              Preview: {editData.name} ({getInitials(editData.name)})
-                            </p>
-                          )}
-                        </div>
-
-                        <Separator />
-
-                        {/* Body Stats */}
-                        <div className="space-y-2">
-                          <Label className="text-xs">Weight (kg)</Label>
-                          <Input
-                            type="number"
-                            value={editData.weight}
-                            onChange={(e) => setEditData({ ...editData, weight: Number(e.target.value) })}
-                            className="h-9 rounded-lg"
-                            min={30}
-                            max={300}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-xs">Height (cm)</Label>
-                          <Input
-                            type="number"
-                            value={editData.height}
-                            onChange={(e) => setEditData({ ...editData, height: Number(e.target.value) })}
-                            className="h-9 rounded-lg"
-                            min={100}
-                            max={250}
-                          />
-                        </div>
-
-                        <Separator />
-
-                        {/* Goal & Level */}
-                        <div className="space-y-2">
-                          <Label className="text-xs">Fitness Goal</Label>
-                          <Select value={editData.goal} onValueChange={(v) => setEditData({ ...editData, goal: v })}>
-                            <SelectTrigger className="h-9 rounded-lg"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="lose_weight">Lose Weight</SelectItem>
-                              <SelectItem value="gain_muscle">Build Muscle</SelectItem>
-                              <SelectItem value="stay_fit">Stay Fit</SelectItem>
-                              <SelectItem value="increase_endurance">Endurance</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-xs">Fitness Level</Label>
-                          <Select value={editData.level} onValueChange={(v) => setEditData({ ...editData, level: v })}>
-                            <SelectTrigger className="h-9 rounded-lg"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="beginner">Beginner</SelectItem>
-                              <SelectItem value="intermediate">Intermediate</SelectItem>
-                              <SelectItem value="advanced">Advanced</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-xs">Weekly Goal (workouts)</Label>
-                          <Input
-                            type="number"
-                            min={1}
-                            max={7}
-                            value={editData.weeklyGoal}
-                            onChange={(e) => setEditData({ ...editData, weeklyGoal: Number(e.target.value) })}
-                            className="h-9 rounded-lg"
-                          />
-                        </div>
-                      </motion.div>
-                    ) : (
-                      <motion.div
-                        key="view-mode"
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -8 }}
-                        transition={{ duration: 0.2 }}
-                        className="space-y-4"
-                      >
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="space-y-4"
+                  >
                         {/* Avatar + Name */}
                         <div className="flex items-center gap-4">
                           <div className={cn(
@@ -931,9 +759,7 @@ export function DashboardPage() {
                             <p className="text-xs text-muted-foreground">Target</p>
                           </div>
                         </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                  </motion.div>
                 </CardContent>
               </Card>
             </motion.div>
@@ -1133,7 +959,175 @@ export function DashboardPage() {
         </motion.div>
       </div>
 
-      {/* ═══════════ LOG WORKOUT DIALOG ═══════════ */}
+      {/* Edit Profile Dialog */}
+      <Dialog
+        open={isEditing}
+        onOpenChange={(open) => {
+          if (open) {
+            setIsEditing(true);
+          } else {
+            handleCancel();
+          }
+        }}
+      >
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Edit3 className="h-5 w-5 text-primary" />
+              Edit Profile
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-5 mt-2">
+            <div className="space-y-2" ref={avatarPickerRef}>
+              <Label className="text-xs">Profile Icon</Label>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setShowAvatarPicker(!showAvatarPicker)}
+                  className="group flex w-full items-center gap-3 rounded-xl border border-border/50 p-2 transition-colors hover:border-primary/30"
+                >
+                  <div
+                    className={cn(
+                      'h-12 w-12 rounded-full bg-gradient-to-br flex items-center justify-center text-lg ring-2 ring-offset-2 ring-offset-background transition-all shrink-0',
+                      `bg-gradient-to-br ${getAvatarOption(editData.avatar).gradient}`,
+                      getAvatarOption(editData.avatar).ring,
+                    )}
+                  >
+                    {editData.name ? getInitials(editData.name) : getAvatarOption(editData.avatar).emoji}
+                  </div>
+                  <div className="min-w-0 flex-1 text-left">
+                    <p className="truncate text-sm font-medium">{editData.name || 'Your Name'}</p>
+                    <p className="text-xs text-muted-foreground">Click to change icon</p>
+                  </div>
+                  <Camera className="h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover:text-primary" />
+                </button>
+
+                <AnimatePresence>
+                  {showAvatarPicker && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -6, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -6, scale: 0.98 }}
+                      className="absolute left-0 right-0 top-full z-50 mt-2 rounded-xl border border-border/50 bg-card p-3 shadow-xl"
+                    >
+                      <div className="grid grid-cols-4 gap-2">
+                        {avatarOptions.map((option) => (
+                          <button
+                            key={option.id}
+                            type="button"
+                            onClick={() => {
+                              setEditData({ ...editData, avatar: option.id });
+                              setShowAvatarPicker(false);
+                            }}
+                            className={cn(
+                              'h-12 rounded-xl bg-gradient-to-br flex items-center justify-center text-lg ring-2 ring-offset-2 ring-offset-card transition-all hover:scale-105',
+                              option.gradient,
+                              editData.avatar === option.id ? option.ring : 'ring-transparent',
+                            )}
+                            aria-label={`Choose ${option.id} profile icon`}
+                          >
+                            {option.emoji}
+                          </button>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs">Display Name</Label>
+              <Input
+                value={editData.name}
+                onChange={(e) => setEditData({ ...editData, name: e.target.value })}
+                placeholder="Your name"
+                className="h-10 rounded-lg"
+              />
+            </div>
+
+            <Separator />
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Weight (kg)</Label>
+                <Input
+                  type="number"
+                  min={30}
+                  max={250}
+                  value={editData.weight}
+                  onChange={(e) => setEditData({ ...editData, weight: Number(e.target.value) })}
+                  className="h-10 rounded-lg"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Height (cm)</Label>
+                <Input
+                  type="number"
+                  min={100}
+                  max={250}
+                  value={editData.height}
+                  onChange={(e) => setEditData({ ...editData, height: Number(e.target.value) })}
+                  className="h-10 rounded-lg"
+                />
+              </div>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Main Goal</Label>
+                <Select value={editData.goal} onValueChange={(value) => setEditData({ ...editData, goal: value })}>
+                  <SelectTrigger className="h-10 rounded-lg">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="lose_weight">Lose Weight</SelectItem>
+                    <SelectItem value="gain_muscle">Build Muscle</SelectItem>
+                    <SelectItem value="stay_fit">Stay Fit</SelectItem>
+                    <SelectItem value="increase_endurance">Endurance</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Fitness Level</Label>
+                <Select value={editData.level} onValueChange={(value) => setEditData({ ...editData, level: value })}>
+                  <SelectTrigger className="h-10 rounded-lg">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="beginner">Beginner</SelectItem>
+                    <SelectItem value="intermediate">Intermediate</SelectItem>
+                    <SelectItem value="advanced">Advanced</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs">Weekly Workout Goal</Label>
+              <Input
+                type="number"
+                min={1}
+                max={14}
+                value={editData.weeklyGoal}
+                onChange={(e) => setEditData({ ...editData, weeklyGoal: Number(e.target.value) })}
+                className="h-10 rounded-lg"
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="mt-4 gap-2 sm:gap-0">
+            <Button variant="outline" onClick={handleCancel} className="rounded-xl">
+              Cancel
+            </Button>
+            <Button onClick={handleSave} className="rounded-xl gap-2">
+              <Save className="h-4 w-4" /> Save Profile
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={showWorkoutDialog} onOpenChange={setShowWorkoutDialog}>
         <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader>
