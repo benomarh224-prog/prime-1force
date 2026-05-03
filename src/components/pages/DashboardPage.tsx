@@ -31,7 +31,7 @@ import {
   User, Target, Flame, TrendingDown, Calendar,
   Dumbbell, Trophy, Edit3, Save, X, Check,
   Weight, Ruler, Activity, Apple, Camera,
-  Plus, Trash2, Clock, ClipboardList, ListChecks,
+  Plus, Trash2, Clock, ClipboardList, ListChecks, Award, Shield, BarChart3,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -82,6 +82,14 @@ function getAvatarOption(id: string) {
   return avatarOptions.find((a) => a.id === id) || avatarOptions[0];
 }
 
+function toDateKey(date: Date) {
+  return date.toISOString().split('T')[0];
+}
+
+function getWorkoutDate(date: string) {
+  return new Date(`${date}T00:00:00`);
+}
+
 export function DashboardPage() {
   const store = useAppStore();
   const { toast } = useToast();
@@ -129,17 +137,49 @@ export function DashboardPage() {
   }, []);
 
   const totalCaloriesBurned = dailyCalorieData.reduce((sum, d) => sum + d.burned, 0);
+  const completedLogs = store.workoutLogs.filter((log) => log.completed);
+  const completedDateKeys = new Set(completedLogs.map((log) => log.date));
   const startOfWeek = new Date();
   startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
   startOfWeek.setHours(0, 0, 0, 0);
-  const completedWorkoutsThisWeek = store.workoutLogs.filter(
-    (log) => log.completed && new Date(`${log.date}T00:00:00`) >= startOfWeek
+  const completedWorkoutsThisWeek = completedLogs.filter(
+    (log) => getWorkoutDate(log.date) >= startOfWeek
   ).length;
   const scheduledWorkoutsDone = weeklySchedule.filter((d) => d.done).length;
   const totalWorkouts = Math.max(completedWorkoutsThisWeek, scheduledWorkoutsDone);
   const bmi = store.userHeight > 0 ? (store.userWeight / (store.userHeight / 100) ** 2).toFixed(1) : '—';
-  const currentStreak = 12;
+  let currentStreak = 0;
+  for (let i = 0; i < 60; i++) {
+    const date = new Date();
+    date.setDate(date.getDate() - i);
+    if (!completedDateKeys.has(toDateKey(date))) break;
+    currentStreak += 1;
+  }
   const weeklyProgress = store.weeklyGoal > 0 ? (totalWorkouts / store.weeklyGoal) * 100 : 0;
+  const totalLoggedSets = store.workoutLogs.reduce(
+    (sum, log) => sum + log.exercises.reduce((exerciseSum, ex) => exerciseSum + ex.sets.length, 0),
+    0
+  );
+  const totalVolume = store.workoutLogs.reduce(
+    (sum, log) =>
+      sum +
+      log.exercises.reduce(
+        (exerciseSum, ex) => exerciseSum + ex.sets.reduce((setSum, set) => setSum + set.weight * set.reps, 0),
+        0
+      ),
+    0
+  );
+  const today = new Date();
+  const calendarMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+  const monthStartOffset = calendarMonth.getDay();
+  const calendarDays = [
+    ...Array.from({ length: monthStartOffset }, (_, i) => ({ key: `blank-${i}`, day: 0, dateKey: '' })),
+    ...Array.from({ length: daysInMonth }, (_, i) => {
+      const date = new Date(today.getFullYear(), today.getMonth(), i + 1);
+      return { key: toDateKey(date), day: i + 1, dateKey: toDateKey(date) };
+    }),
+  ];
 
   const macroData = [
     { name: 'Protein', value: dailyCalorieData.reduce((s, d) => s + d.protein, 0) / 7, fill: 'oklch(0.72 0.19 155)' },
@@ -180,6 +220,56 @@ export function DashboardPage() {
     .filter((record) => record.bestSet.weight > 0 || record.volume > 0)
     .sort((a, b) => b.bestSet.weight - a.bestSet.weight || b.volume - a.volume)
     .slice(0, 4);
+  const achievements = [
+    {
+      title: 'First Session',
+      description: 'Complete your first workout',
+      icon: <Check className="h-4 w-4" />,
+      unlocked: completedLogs.length >= 1,
+      progress: Math.min(completedLogs.length, 1),
+      target: 1,
+    },
+    {
+      title: 'Weekly Warrior',
+      description: 'Complete 5 workouts this week',
+      icon: <Calendar className="h-4 w-4" />,
+      unlocked: completedWorkoutsThisWeek >= 5,
+      progress: Math.min(completedWorkoutsThisWeek, 5),
+      target: 5,
+    },
+    {
+      title: 'Set Collector',
+      description: 'Log 100 total sets',
+      icon: <ListChecks className="h-4 w-4" />,
+      unlocked: totalLoggedSets >= 100,
+      progress: Math.min(totalLoggedSets, 100),
+      target: 100,
+    },
+    {
+      title: 'Gold Streak',
+      description: 'Build a 7-day streak',
+      icon: <Flame className="h-4 w-4" />,
+      unlocked: currentStreak >= 7,
+      progress: Math.min(currentStreak, 7),
+      target: 7,
+    },
+    {
+      title: 'PR Hunter',
+      description: 'Unlock 3 personal records',
+      icon: <Trophy className="h-4 w-4" />,
+      unlocked: personalRecords.length >= 3,
+      progress: Math.min(personalRecords.length, 3),
+      target: 3,
+    },
+    {
+      title: 'Volume Club',
+      description: 'Move 10,000kg total volume',
+      icon: <BarChart3 className="h-4 w-4" />,
+      unlocked: totalVolume >= 10000,
+      progress: Math.min(Math.round(totalVolume), 10000),
+      target: 10000,
+    },
+  ];
 
   const displayName = store.userName || 'Set Your Name';
   const avatar = getAvatarOption(store.userAvatar || 'emerald');
@@ -358,6 +448,131 @@ export function DashboardPage() {
               </Card>
             </motion.div>
           ))}
+        </div>
+
+        {/* Calendar + Achievements */}
+        <div className="grid lg:grid-cols-3 gap-6 mb-8">
+          <motion.div
+            className="lg:col-span-2"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+          >
+            <Card className="border-border/50">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between gap-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-primary" />
+                    Workout Calendar
+                  </CardTitle>
+                  <Badge variant="outline" className="text-xs">
+                    {calendarMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-7 gap-2 mb-2">
+                  {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+                    <div key={day} className="text-center text-[11px] font-medium text-muted-foreground">
+                      {day}
+                    </div>
+                  ))}
+                </div>
+                <div className="grid grid-cols-7 gap-2">
+                  {calendarDays.map((day) => {
+                    const completed = day.dateKey ? completedDateKeys.has(day.dateKey) : false;
+                    const logsForDay = day.dateKey
+                      ? store.workoutLogs.filter((log) => log.date === day.dateKey).length
+                      : 0;
+                    const isToday = day.dateKey === toDateKey(new Date());
+
+                    return (
+                      <div
+                        key={day.key}
+                        className={cn(
+                          'aspect-square rounded-lg border text-xs flex flex-col items-center justify-center gap-1 transition-colors',
+                          day.day === 0 && 'border-transparent',
+                          day.day > 0 && 'border-border/50 bg-muted/20',
+                          completed && 'border-primary/40 bg-primary/15 text-primary',
+                          isToday && 'ring-1 ring-primary/50'
+                        )}
+                      >
+                        {day.day > 0 && (
+                          <>
+                            <span className="font-semibold">{day.day}</span>
+                            {logsForDay > 0 && (
+                              <span className={cn('h-1.5 w-1.5 rounded-full', completed ? 'bg-primary' : 'bg-muted-foreground/50')} />
+                            )}
+                          </>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-primary" /> Completed</span>
+                  <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-muted-foreground/50" /> Logged</span>
+                  <span>{completedLogs.length} completed workout{completedLogs.length === 1 ? '' : 's'} total</span>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.15 }}
+          >
+            <Card className="border-border/50 h-full">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Award className="h-4 w-4 text-primary" />
+                  Achievements
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {achievements.map((achievement) => (
+                    <div
+                      key={achievement.title}
+                      className={cn(
+                        'rounded-xl border p-3 transition-colors',
+                        achievement.unlocked
+                          ? 'border-primary/35 bg-primary/10'
+                          : 'border-border/50 bg-muted/20'
+                      )}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div
+                          className={cn(
+                            'h-9 w-9 shrink-0 rounded-lg flex items-center justify-center',
+                            achievement.unlocked ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                          )}
+                        >
+                          {achievement.icon}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="text-sm font-semibold truncate">{achievement.title}</p>
+                            {achievement.unlocked && (
+                              <Badge className="h-5 border-primary/20 bg-primary/10 text-primary text-[10px]">Unlocked</Badge>
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-0.5">{achievement.description}</p>
+                          <div className="mt-2">
+                            <Progress value={(achievement.progress / achievement.target) * 100} className="h-1.5" />
+                            <p className="mt-1 text-[10px] text-muted-foreground">
+                              {achievement.progress.toLocaleString()} / {achievement.target.toLocaleString()}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
         </div>
 
         {/* Personal Records */}
