@@ -170,7 +170,7 @@ export const exercises: Exercise[] = [
     equipment: 'Barbell, Bench',
     duration: 10,
     calories: 85,
-    image: '/images/workout-strength.png',
+    image: '/images/workout-strength-luxe.jpg',
     steps: [
       'Lie flat on a bench with your feet firmly on the ground',
       'Grip the barbell slightly wider than shoulder-width apart',
@@ -197,7 +197,7 @@ export const exercises: Exercise[] = [
     equipment: 'Dumbbells',
     duration: 8,
     calories: 45,
-    image: '/images/exercise-bicep.png',
+    image: '/images/workout-gym-luxe.jpg',
     steps: [
       'Stand with feet shoulder-width apart holding dumbbells at your sides',
       'Keep your elbows close to your torso and palms facing forward',
@@ -223,7 +223,7 @@ export const exercises: Exercise[] = [
     equipment: 'Barbell, Squat Rack',
     duration: 12,
     calories: 120,
-    image: '/images/exercise-squat.png',
+    image: '/images/workout-squat-luxe.jpg',
     steps: [
       'Position the bar on your upper traps, gripping it just outside your shoulders',
       'Unrack the bar and step back with feet shoulder-width apart',
@@ -250,7 +250,7 @@ export const exercises: Exercise[] = [
     equipment: 'None',
     duration: 5,
     calories: 35,
-    image: '/images/workout-no-equip.png',
+    image: '/images/workout-pushup-luxe.jpg',
     steps: [
       'Start in a high plank position with hands shoulder-width apart',
       'Keep your body in a straight line from head to heels',
@@ -276,7 +276,7 @@ export const exercises: Exercise[] = [
     equipment: 'Yoga Mat',
     duration: 20,
     calories: 95,
-    image: '/images/workout-home.png',
+    image: '/images/workout-yoga-luxe.jpg',
     steps: [
       'Start in Mountain Pose (Tadasana) - stand tall with feet together',
       'Inhale and sweep arms overhead into Upward Salute',
@@ -304,7 +304,7 @@ export const exercises: Exercise[] = [
     equipment: 'Barbell',
     duration: 10,
     calories: 110,
-    image: '/images/workout-strength.png',
+    image: '/images/workout-strength-luxe.jpg',
     steps: [
       'Stand with feet hip-width apart, barbell over mid-foot',
       'Hinge at hips and grip the bar just outside your knees',
@@ -331,7 +331,7 @@ export const exercises: Exercise[] = [
     equipment: 'None',
     duration: 3,
     calories: 20,
-    image: '/images/workout-no-equip.png',
+    image: '/images/workout-pushup-luxe.jpg',
     steps: [
       'Start in a forearm plank position with elbows under shoulders',
       'Extend legs behind you, balancing on toes',
@@ -357,7 +357,7 @@ export const exercises: Exercise[] = [
     equipment: 'None',
     duration: 5,
     calories: 65,
-    image: '/images/workout-no-equip.png',
+    image: '/images/workout-hiit-luxe.jpg',
     steps: [
       'Stand with feet shoulder-width apart',
       'Drop into a squat position with hands on the ground',
@@ -384,7 +384,7 @@ export const exercises: Exercise[] = [
     equipment: 'None',
     duration: 8,
     calories: 50,
-    image: '/images/workout-home.png',
+    image: '/images/workout-yoga-luxe.jpg',
     steps: [
       'Stand with feet shoulder-width apart or slightly wider',
       'Point toes slightly outward (15-30 degrees)',
@@ -411,7 +411,7 @@ export const exercises: Exercise[] = [
     equipment: 'Pull-Up Bar',
     duration: 8,
     calories: 75,
-    image: '/images/workout-strength.png',
+    image: '/images/workout-strength-luxe.jpg',
     steps: [
       'Grip the pull-up bar slightly wider than shoulder-width',
       'Hang with arms fully extended (dead hang position)',
@@ -437,7 +437,7 @@ export const exercises: Exercise[] = [
     equipment: 'None',
     duration: 15,
     calories: 150,
-    image: '/images/workout-home.png',
+    image: '/images/workout-hiit-luxe.jpg',
     steps: [
       'Warm up with 2 minutes of light jogging in place',
       'Round 1: 30 seconds high knees + 15 seconds rest',
@@ -464,7 +464,7 @@ export const exercises: Exercise[] = [
     equipment: 'Dumbbells',
     duration: 8,
     calories: 55,
-    image: '/images/workout-strength.png',
+    image: '/images/workout-gym-luxe.jpg',
     steps: [
       'Sit on a bench with back support (or stand)',
       'Hold dumbbells at shoulder height with palms facing forward',
@@ -756,7 +756,7 @@ export const machineGuides: MachineGuide[] = [
     category: 'Strength',
     muscleGroup: 'Quads, Glutes, Hamstrings',
     difficulty: 'beginner',
-    image: '/images/exercise-squat.png',
+    image: '/images/workout-squat-luxe.jpg',
     setup: 'Sit in the seat with your back flat against the pad. Place feet shoulder-width apart on the platform, positioned at the middle of the foot plate.',
     steps: [
       'Unlock the safety latches by pressing the handles to the side',
@@ -780,7 +780,7 @@ export const machineGuides: MachineGuide[] = [
     category: 'Strength',
     muscleGroup: 'Chest, Shoulders, Arms',
     difficulty: 'intermediate',
-    image: '/images/workout-strength.png',
+    image: '/images/workout-strength-luxe.jpg',
     setup: 'Set both pulleys to the highest position. Attach single-grip D-handles. Select your weight on both weight stacks.',
     steps: [
       'Stand in a staggered stance between the two pulleys, one foot forward',
@@ -804,7 +804,7 @@ export const machineGuides: MachineGuide[] = [
     category: 'Strength',
     muscleGroup: 'Lats, Biceps, Upper Back',
     difficulty: 'beginner',
-    image: '/images/workout-strength.png',
+    image: '/images/workout-gym-luxe.jpg',
     setup: 'Adjust the thigh pad so it locks your legs in place. Stand up and grab the wide bar, then sit back down. Your arms should be fully extended overhead.',
     steps: [
       'Grip the bar wider than shoulder-width, palms facing away',
@@ -828,7 +828,7 @@ export const machineGuides: MachineGuide[] = [
     category: 'Strength',
     muscleGroup: 'Chest, Shoulders, Triceps',
     difficulty: 'beginner',
-    image: '/images/workout-strength.png',
+    image: '/images/workout-strength-luxe.jpg',
     setup: 'Adjust the seat height so the handles are at mid-chest level. Sit with your back flat, feet firmly on the floor. Select your weight.',
     steps: [
       'Grip the handles with palms facing forward or slightly inward',
@@ -881,7 +881,7 @@ export const workoutPrograms: WorkoutProgram[] = [
     duration: '8 weeks',
     daysPerWeek: 3,
     goal: 'Build Strength & Learn Proper Form',
-    image: '/images/prog-fullbody.png',
+    image: '/images/workout-gym-luxe.jpg',
     highlights: ['3 days per week', '45 min sessions', 'Full body each session', 'Progressive overload', 'Rest day between workouts'],
     schedule: [
       { day: 'Monday', focus: 'Full Body A', exercises: ['Goblet Squat 3×10', 'Push-Ups 3×8-12', 'Dumbbell Row 3×10', 'Plank 3×30s', 'Lat Pulldown 3×10'] },
@@ -897,7 +897,7 @@ export const workoutPrograms: WorkoutProgram[] = [
     duration: '12 weeks',
     daysPerWeek: 6,
     goal: 'Build Muscle & Size',
-    image: '/images/prog-ppl.png',
+    image: '/images/workout-strength-luxe.jpg',
     highlights: ['6 days per week', '60 min sessions', 'Push/Pull/Legs split', 'Optimal recovery', 'Progressive overload'],
     schedule: [
       { day: 'Monday', focus: 'Push', exercises: ['Bench Press 4×8', 'OHP 3×10', 'Incline DB Press 3×12', 'Lateral Raises 3×15', 'Tricep Pushdown 3×12'] },
@@ -916,7 +916,7 @@ export const workoutPrograms: WorkoutProgram[] = [
     duration: '6 weeks',
     daysPerWeek: 4,
     goal: 'Burn Fat & Improve Conditioning',
-    image: '/images/prog-hiit.png',
+    image: '/images/workout-hiit-luxe.jpg',
     highlights: ['4 days per week', '30 min sessions', 'HIIT intervals', 'No equipment needed', 'Max calorie burn'],
     schedule: [
       { day: 'Monday', focus: 'HIIT Cardio', exercises: ['Warm-Up 3 min', 'Burpees 30s/Rest 15s ×4', 'Mountain Climbers 30s/Rest 15s ×4', 'Jump Squats 30s/Rest 15s ×4', 'Cool-Down 3 min'] },
@@ -933,7 +933,7 @@ export const workoutPrograms: WorkoutProgram[] = [
     duration: '16 weeks',
     daysPerWeek: 4,
     goal: 'Increase Raw Strength',
-    image: '/images/prog-strength.png',
+    image: '/images/workout-squat-luxe.jpg',
     highlights: ['4 days per week', '75 min sessions', 'Heavy compound lifts', '1RM progression', 'Deload every 4th week'],
     schedule: [
       { day: 'Monday', focus: 'Upper Strength', exercises: ['Bench Press 5×5', 'Barbell Row 5×5', 'OHP 3×8', 'Weighted Pull-Ups 3×8', 'Barbell Curl 3×10'] },
@@ -950,7 +950,7 @@ export const workoutPrograms: WorkoutProgram[] = [
     duration: '10 weeks',
     daysPerWeek: 4,
     goal: 'Balanced Muscle & Strength',
-    image: '/images/prog-upperlower.png',
+    image: '/images/workout-pushup-luxe.jpg',
     highlights: ['4 days per week', '55 min sessions', 'Upper/Lower split', '2 rest days', 'Balanced volume'],
     schedule: [
       { day: 'Monday', focus: 'Upper Body A', exercises: ['Bench Press 4×8', 'Barbell Row 4×8', 'OHP 3×10', 'Lat Pulldown 3×10', 'Face Pulls 3×15'] },
@@ -967,7 +967,7 @@ export const workoutPrograms: WorkoutProgram[] = [
     duration: '12 weeks',
     daysPerWeek: 5,
     goal: 'Maximum Muscle Growth',
-    image: '/images/prog-hypertrophy.png',
+    image: '/images/workout-gym-luxe.jpg',
     highlights: ['5 days per week', '70 min sessions', 'High volume', 'Short rest (60-90s)', 'Mind-muscle connection'],
     schedule: [
       { day: 'Monday', focus: 'Chest & Triceps', exercises: ['Bench Press 4×10', 'Incline DB Press 4×10', 'Cable Flyes 3×15', 'Dips 3×12', 'Overhead Extension 3×15'] },
