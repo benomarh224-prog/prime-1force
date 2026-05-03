@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -11,7 +12,7 @@ import { cn } from '@/lib/utils';
 import { progressData } from '@/lib/data';
 import {
   Bot, Dumbbell, BarChart3, Apple, ArrowRight, Zap, Target,
-  Check, Star, Flame, TrendingUp, Clock, Shield, Sparkles,
+  Flame, TrendingUp, Shield, Heart,
   Activity, ChevronDown, Play, Award,
 } from 'lucide-react';
 
@@ -72,15 +73,6 @@ const featureCards = [
     iconBg: 'bg-rose-500/10',
   },
 ];
-
-const mockStats = [
-  { label: 'Workouts', value: '156', change: '+12%', icon: <Dumbbell className="h-4 w-4" /> },
-  { label: 'Calories Burned', value: '84.2k', change: '+8%', icon: <Flame className="h-4 w-4" /> },
-  { label: 'Active Streak', value: '24 days', change: 'Best!', icon: <TrendingUp className="h-4 w-4" /> },
-  { label: 'Avg Duration', value: '48 min', change: '+5min', icon: <Clock className="h-4 w-4" /> },
-];
-
-const miniBarHeights = [40, 55, 45, 65, 50, 70, 60, 80, 55, 75, 90, 85];
 
 const faqItems = [
   {
@@ -362,145 +354,96 @@ export function HomePage() {
     <div className="overflow-hidden">
 
       {/* ═══════════ HERO SECTION ═══════════ */}
-      <section className="relative min-h-screen flex items-center overflow-hidden">
+      <section className="relative min-h-screen overflow-hidden bg-black text-white">
         {/* Background */}
         <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-primary/5" />
-          <div className="absolute top-0 right-0 w-[800px] h-[800px] rounded-full bg-primary/5 blur-[120px] -translate-y-1/2 translate-x-1/3" />
-          <div className="absolute bottom-0 left-0 w-[600px] h-[600px] rounded-full bg-emerald-500/5 blur-[100px] translate-y-1/2 -translate-x-1/3" />
-          {/* Grid pattern */}
-          <div className="absolute inset-0 opacity-[0.015]" style={{
-            backgroundImage: 'linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)',
-            backgroundSize: '60px 60px',
-          }} />
+          <Image
+            src="/images/gym-hero.png"
+            alt="Athlete training in a modern gym"
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover object-center"
+          />
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.92)_0%,rgba(0,0,0,0.76)_38%,rgba(0,0,0,0.18)_66%,rgba(0,0,0,0.70)_100%)]" />
+          <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black to-transparent" />
         </div>
 
-        {/* Floating particles */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {[...Array(8)].map((_, i) => (
+        <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[1400px] items-center px-4 pb-20 pt-24 sm:px-10 sm:pb-28 sm:pt-28 lg:px-16">
+          <div className="max-w-[760px]">
             <motion.div
-              key={i}
-              className="absolute w-1.5 h-1.5 rounded-full bg-primary/30"
-              style={{ left: `${10 + i * 12}%`, top: `${15 + (i % 4) * 20}%` }}
-              animate={{ y: [0, -20, 0], opacity: [0.15, 0.5, 0.15] }}
-              transition={{ duration: 3 + i * 0.4, repeat: Infinity, ease: 'easeInOut', delay: i * 0.3 }}
-            />
-          ))}
-        </div>
-
-        <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full">
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-            {/* Left — Text */}
-            <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }}>
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-                <Badge variant="secondary" className="mb-6 px-4 py-1.5 text-sm bg-primary/10 border-primary/20 text-primary">
-                  <Sparkles className="h-3 w-3 mr-1.5" />
-                  AI-Powered Fitness Platform
-                </Badge>
-              </motion.div>
-
-              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight leading-[1.08] mb-6">
-                Forge Your
-                <br />
-                Ultimate Body
-                <br />
-                with <span className="gradient-text">AI</span>
-              </h1>
-
-              <p className="text-lg sm:text-xl text-muted-foreground max-w-lg leading-relaxed mb-10">
-                Personalized workouts, smart tracking, and real results.
-                Your complete fitness companion — powered by intelligence.
-              </p>
-
-              <motion.div className="flex flex-col sm:flex-row items-start sm:items-center gap-4" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
-                <Button size="lg" onClick={() => navigate('workouts')} className="h-14 px-8 text-base rounded-xl neon-glow gap-2 font-semibold">
-                  Start Now
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-                <Button size="lg" variant="outline" onClick={() => navigate('ai-coach')} className="h-14 px-8 text-base rounded-xl gap-2 font-semibold glass border-white/20 text-foreground hover:bg-white/10">
-                  <Play className="h-4 w-4" />
-                  Get Your Plan
-                </Button>
-              </motion.div>
-
-              {/* Social proof */}
-              <motion.div className="flex items-center gap-4 mt-10 pt-8 border-t border-border/50" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }}>
-                <div className="flex -space-x-2">
-                  {['bg-gradient-to-br from-emerald-400 to-emerald-600', 'bg-gradient-to-br from-amber-400 to-amber-600', 'bg-gradient-to-br from-rose-400 to-rose-600', 'bg-gradient-to-br from-sky-400 to-sky-600'].map((bg, i) => (
-                    <div key={i} className={cn('w-9 h-9 rounded-full border-2 border-background flex items-center justify-center text-[10px] font-bold text-white', bg)}>
-                      {['SC', 'MJ', 'ER', 'DP'][i]}
-                    </div>
-                  ))}
-                </div>
-                <div>
-                  <div className="flex items-center gap-1 mb-0.5">
-                    {[...Array(5)].map((_, i) => <Star key={i} className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />)}
-                  </div>
-                  <p className="text-xs text-muted-foreground">Trusted by <span className="text-foreground font-medium">2,500+</span> athletes</p>
-                </div>
-              </motion.div>
+              className="mb-7 flex items-center gap-4 text-xs font-semibold uppercase tracking-wide text-primary sm:mb-9 sm:gap-7 sm:text-sm"
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.65 }}
+            >
+              <span>Stronger Everyday</span>
+              <span className="h-px w-16 bg-primary/70 sm:w-28" />
             </motion.div>
 
-            {/* Right — Dashboard Mockup */}
-            <motion.div className="relative hidden lg:block" initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8, delay: 0.3 }}>
-              <div className="absolute -inset-4 bg-gradient-to-r from-primary/20 via-emerald-500/10 to-primary/20 rounded-3xl blur-2xl" />
-              <Card className="relative border-border/50 glass overflow-hidden">
-                <div className="px-6 pt-6 pb-4 border-b border-border/30">
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <h3 className="font-semibold text-sm">Dashboard</h3>
-                      <p className="text-xs text-muted-foreground">Overview for this week</p>
-                    </div>
-                    <Badge variant="outline" className="text-[10px]"><Activity className="h-3 w-3 mr-1 text-emerald-400" />Live</Badge>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    {mockStats.map((stat) => (
-                      <div key={stat.label} className="bg-muted/40 rounded-lg p-3">
-                        <div className="flex items-center gap-1.5 mb-1">
-                          <span className="text-muted-foreground">{stat.icon}</span>
-                          <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{stat.label}</span>
-                        </div>
-                        <div className="flex items-baseline gap-2">
-                          <span className="text-lg font-bold">{stat.value}</span>
-                          <span className="text-[10px] text-emerald-400 font-medium">{stat.change}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div className="px-6 py-4 border-b border-border/30">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs font-medium">Weekly Activity</span>
-                    <span className="text-[10px] text-muted-foreground">Last 12 weeks</span>
-                  </div>
-                  <div className="flex items-end gap-1.5 h-20">
-                    {miniBarHeights.map((h, i) => (
-                      <motion.div key={i} className="flex-1 rounded-sm bg-gradient-to-t from-primary/80 to-primary/40" initial={{ height: 0 }} animate={{ height: `${h}%` }} transition={{ duration: 0.5, delay: 0.8 + i * 0.05 }} />
-                    ))}
-                  </div>
-                </div>
-                <div className="px-6 py-4">
-                  <span className="text-xs font-medium block mb-3">Recent Workouts</span>
-                  <div className="space-y-2.5">
-                    {[
-                      { name: 'Push Day', duration: '55 min', calories: '420 kcal', done: true },
-                      { name: 'Pull Day', duration: '50 min', calories: '380 kcal', done: true },
-                      { name: 'Leg Day', duration: '60 min', calories: '500 kcal', done: false },
-                    ].map((w) => (
-                      <div key={w.name} className="flex items-center gap-3 p-2 rounded-lg bg-muted/20 hover:bg-muted/30 transition-colors">
-                        <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center', w.done ? 'bg-emerald-500/10' : 'bg-muted/50')}>
-                          {w.done ? <Check className="h-4 w-4 text-emerald-400" /> : <Dumbbell className="h-4 w-4 text-muted-foreground" />}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-medium">{w.name}</p>
-                          <p className="text-[10px] text-muted-foreground">{w.duration}</p>
-                        </div>
-                        <span className={cn('text-[10px] font-medium', w.done ? 'text-emerald-400' : 'text-muted-foreground')}>{w.calories}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </Card>
+            <motion.h1
+              className="max-w-4xl text-5xl font-black uppercase leading-[0.92] tracking-tight sm:text-7xl md:text-8xl lg:text-[8.5rem]"
+              initial={{ opacity: 0, y: 26 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.75, delay: 0.1 }}
+            >
+              Build Your Best Self
+            </motion.h1>
+
+            <motion.p
+              className="mt-6 max-w-xl text-base leading-relaxed text-white/78 sm:mt-8 sm:text-xl"
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.65, delay: 0.22 }}
+            >
+              Personalized workouts, nutrition, and AI coaching in one place.
+            </motion.p>
+
+            <motion.div
+              className="mt-9 flex w-full flex-col items-stretch gap-4 sm:mt-11 sm:w-auto sm:flex-row sm:items-center"
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.65, delay: 0.34 }}
+            >
+              <Button size="lg" onClick={() => navigate('workouts')} className="h-14 min-w-52 rounded-lg px-10 text-sm font-black uppercase">
+                Start Now
+              </Button>
+              <button
+                type="button"
+                onClick={() => navigate('ai-coach')}
+                className="group flex h-14 items-center justify-center gap-4 rounded-lg border border-primary/15 bg-card/35 px-5 text-sm font-black uppercase text-white transition-colors hover:bg-primary/10 sm:justify-start sm:border-0 sm:bg-transparent sm:px-0"
+              >
+                <span className="flex h-10 w-10 items-center justify-center rounded-full border border-primary/50 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground sm:h-11 sm:w-11">
+                  <Play className="h-4 w-4 fill-current" />
+                </span>
+                See Demo
+              </button>
+            </motion.div>
+
+            <motion.div
+              className="mt-10 grid max-w-3xl grid-cols-1 overflow-hidden rounded-lg border border-primary/10 bg-card/55 backdrop-blur-md sm:mt-14 sm:grid-cols-3"
+              initial="hidden"
+              animate="visible"
+              variants={staggerContainer}
+            >
+              {[
+                { icon: <Dumbbell className="h-7 w-7" />, title: 'Strength', text: 'Build power and confidence' },
+                { icon: <Zap className="h-7 w-7 fill-current" />, title: 'Energy', text: 'Boost your daily performance' },
+                { icon: <Heart className="h-7 w-7" />, title: 'Focus', text: 'Sharpen your mind and body' },
+              ].map((item, i) => (
+                <motion.div
+                  key={item.title}
+                  variants={fadeUp}
+                  custom={i}
+                  className="flex min-h-28 items-center gap-5 border-white/10 px-6 py-5 text-white sm:border-r sm:last:border-r-0"
+                >
+                  <span className="shrink-0 text-white">{item.icon}</span>
+                  <span>
+                    <span className="block text-sm font-black uppercase">{item.title}</span>
+                    <span className="mt-1 block text-sm leading-relaxed text-white/62">{item.text}</span>
+                  </span>
+                </motion.div>
+              ))}
             </motion.div>
           </div>
         </div>
@@ -576,7 +519,6 @@ export function HomePage() {
 
             {/* Right — Dashboard Mock */}
             <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, margin: '-80px' }} transition={{ duration: 0.7, delay: 0.2 }} className="relative">
-              <div className="absolute -inset-4 bg-gradient-to-br from-primary/10 to-emerald-500/10 rounded-3xl blur-2xl" />
               <Card className="relative border-border/50 overflow-hidden">
                 <div className="p-5 sm:p-6 border-b border-border/30">
                   <div className="grid grid-cols-3 gap-4">

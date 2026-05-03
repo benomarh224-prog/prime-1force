@@ -3,7 +3,6 @@
 import { useAppStore, type PageName } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
-import { useTheme } from 'next-themes';
 import { motion } from 'framer-motion';
 import {
   Dumbbell,
@@ -12,12 +11,10 @@ import {
   Utensils,
   Mail,
   Menu,
-  Moon,
-  Sun,
   Bot,
   ArrowRight,
 } from 'lucide-react';
-import { useEffect, useState, useSyncExternalStore } from 'react';
+import { useEffect, useState } from 'react';
 
 const navItems: { label: string; page: PageName; icon: React.ReactNode }[] = [
   { label: 'Home', page: 'home', icon: <Home className="h-4 w-4" /> },
@@ -28,13 +25,10 @@ const navItems: { label: string; page: PageName; icon: React.ReactNode }[] = [
   { label: 'Contact', page: 'contact', icon: <Mail className="h-4 w-4" /> },
 ];
 
-const emptySubscribe = () => () => {};
-
 export function Header() {
   const { currentPage, navigate } = useAppStore();
-  const { theme, setTheme } = useTheme();
   const [scrolled, setScrolled] = useState(false);
-  const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
+  const heroTop = currentPage === 'home' && !scrolled;
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -58,13 +52,15 @@ export function Header() {
           {/* Logo */}
           <button
             onClick={() => navigate('home')}
-            className="flex items-center gap-2 group"
+            className={`flex min-w-0 items-center gap-3 group ${heroTop ? 'text-white' : ''}`}
           >
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-lg group-hover:scale-110 transition-transform">
+            <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg font-bold text-lg transition-transform group-hover:scale-105 ${
+              heroTop ? 'border border-primary/70 bg-black/20 text-primary shadow-sm' : 'bg-primary text-primary-foreground'
+            }`}>
               P
             </div>
-            <span className="text-xl font-bold tracking-tight">
-              Prime<span className="text-primary"> Forge</span>
+            <span className={`truncate text-lg sm:text-xl font-black uppercase tracking-tight ${heroTop ? 'text-white' : ''}`}>
+              Prime<span className={heroTop ? 'text-white' : 'text-primary'}> Forge</span>
             </span>
           </button>
 
@@ -77,50 +73,47 @@ export function Header() {
                 size="sm"
                 onClick={() => navigate(item.page)}
                 className={`gap-2 rounded-lg transition-all ${
-                  currentPage === item.page
-                    ? 'bg-primary/10 text-primary font-medium'
-                    : 'hover:bg-accent'
+                  heroTop
+                    ? 'bg-transparent text-white hover:bg-white/10 hover:text-white uppercase font-bold'
+                    : currentPage === item.page
+                    ? 'bg-primary/10 text-primary font-medium shadow-sm'
+                    : 'text-muted-foreground hover:bg-accent hover:text-foreground'
                 }`}
               >
-                {item.icon}
-                {item.label}
+                <span className={heroTop ? 'hidden' : ''}>{item.icon}</span>
+                {item.page === 'workouts' && heroTop ? 'Programs' : item.label}
               </Button>
             ))}
           </nav>
 
           {/* Right side */}
           <div className="flex items-center gap-2">
-            {mounted && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                className="rounded-lg"
-              >
-                {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-              </Button>
-            )}
             <Button
               onClick={() => navigate('workouts')}
-              className="hidden sm:flex gap-2 rounded-lg neon-glow font-semibold"
+              variant={heroTop ? 'outline' : 'default'}
+              className={`hidden sm:flex gap-2 font-semibold ${
+                heroTop
+                  ? 'h-11 rounded-lg border-primary/70 bg-black/20 px-6 uppercase text-white shadow-none hover:bg-primary hover:text-primary-foreground'
+                  : 'rounded-lg neon-glow'
+              }`}
               size="sm"
             >
-              Start Now
-              <ArrowRight className="h-4 w-4" />
+              {heroTop ? 'Join Now' : 'Start Now'}
+              <ArrowRight className={`h-4 w-4 ${heroTop ? 'hidden' : ''}`} />
             </Button>
 
             {/* Mobile Menu */}
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="md:hidden rounded-lg">
+                <Button variant="ghost" size="icon" className={`md:hidden rounded-lg ${heroTop ? 'text-white hover:bg-white/10 hover:text-white' : ''}`}>
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-72 p-0">
+              <SheetContent side="right" className="w-[min(88vw,20rem)] p-0 luxury-surface">
                 <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
                 <div className="flex flex-col h-full">
                   <div className="flex items-center justify-between p-4 border-b">
-                    <span className="text-lg font-bold">
+                    <span className="text-lg font-black uppercase tracking-tight">
                       Prime<span className="text-primary"> Forge</span>
                     </span>
                   </div>
@@ -132,7 +125,7 @@ export function Header() {
                         className={`justify-start gap-3 rounded-lg h-12 ${
                           currentPage === item.page
                             ? 'bg-primary/10 text-primary font-medium'
-                            : ''
+                            : 'text-muted-foreground'
                         }`}
                         onClick={() => navigate(item.page)}
                       >
@@ -152,7 +145,7 @@ export function Header() {
                     <Button
                       variant="outline"
                       onClick={() => navigate('ai-coach')}
-                      className="w-full gap-2 rounded-lg"
+                      className="w-full gap-2 rounded-lg border-primary/20"
                     >
                       <Bot className="h-4 w-4" />
                       Talk to AI Coach

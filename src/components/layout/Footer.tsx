@@ -8,16 +8,16 @@ export function Footer() {
   const { navigate } = useAppStore();
 
   return (
-    <footer className="border-t bg-card/50 backdrop-blur-sm mt-auto">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
+    <footer className="mt-auto border-t border-primary/10 bg-background/80 backdrop-blur-sm">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 sm:py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="md:col-span-1">
             <button onClick={() => navigate('home')} className="flex items-center gap-2 mb-4">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-lg">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-lg shadow-sm">
                 P
               </div>
-              <span className="text-xl font-bold tracking-tight">
+              <span className="text-xl font-black uppercase tracking-tight">
                 Prime<span className="text-primary"> Forge</span>
               </span>
             </button>
@@ -28,7 +28,7 @@ export function Footer() {
 
           {/* Quick Links */}
           <div>
-            <h3 className="font-semibold mb-4 text-sm uppercase tracking-wider">Platform</h3>
+            <h3 className="font-semibold mb-4 text-sm uppercase tracking-wider text-primary">Platform</h3>
             <ul className="space-y-2">
               {[
                 { label: 'Workouts', page: 'workouts' as const },
@@ -50,7 +50,7 @@ export function Footer() {
 
           {/* Company */}
           <div>
-            <h3 className="font-semibold mb-4 text-sm uppercase tracking-wider">Company</h3>
+            <h3 className="font-semibold mb-4 text-sm uppercase tracking-wider text-primary">Company</h3>
             <ul className="space-y-2">
               {['About Us', 'Careers', 'Blog', 'Privacy Policy', 'Terms of Service'].map((item) => (
                 <li key={item}>
@@ -67,7 +67,7 @@ export function Footer() {
 
           {/* Social */}
           <div>
-            <h3 className="font-semibold mb-4 text-sm uppercase tracking-wider">Connect</h3>
+            <h3 className="font-semibold mb-4 text-sm uppercase tracking-wider text-primary">Connect</h3>
             <div className="flex gap-3">
               {[
                 { Icon: Instagram, href: 'https://www.instagram.com/elliot_alderson112?igsh=MTdsc21jaG90dWl5OA%3D%3D&utm_source=qr', label: 'Instagram' },
@@ -80,7 +80,7 @@ export function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={label}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border hover:bg-accent hover:text-accent-foreground transition-colors"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-primary/15 bg-card/60 text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
                 >
                   <Icon className="h-4 w-4" />
                 </a>
