@@ -76,6 +76,23 @@ const dayAccent = [
   'from-lime-300 to-white',
 ];
 
+const fallbackProgram: Program = {
+  id: 'fallback-program',
+  name: 'Push / Pull / Legs',
+  description: 'A balanced six-day split with one recovery day.',
+  isActive: true,
+};
+
+const fallbackDays: ScheduleDay[] = [
+  { id: 'fallback-0', dayOfWeek: 0, dayName: 'Sunday', splitTitle: 'Rest Day', exercises: [], notes: null, isRestDay: true },
+  { id: 'fallback-1', dayOfWeek: 1, dayName: 'Monday', splitTitle: 'Push', exercises: ['Chest', 'Shoulders', 'Triceps'], notes: null, isRestDay: false },
+  { id: 'fallback-2', dayOfWeek: 2, dayName: 'Tuesday', splitTitle: 'Pull', exercises: ['Back', 'Biceps', 'Rear Delts'], notes: null, isRestDay: false },
+  { id: 'fallback-3', dayOfWeek: 3, dayName: 'Wednesday', splitTitle: 'Legs', exercises: ['Quads', 'Hamstrings', 'Glutes', 'Calves'], notes: null, isRestDay: false },
+  { id: 'fallback-4', dayOfWeek: 4, dayName: 'Thursday', splitTitle: 'Push', exercises: ['Chest', 'Shoulders', 'Triceps'], notes: null, isRestDay: false },
+  { id: 'fallback-5', dayOfWeek: 5, dayName: 'Friday', splitTitle: 'Pull', exercises: ['Back', 'Biceps', 'Core'], notes: null, isRestDay: false },
+  { id: 'fallback-6', dayOfWeek: 6, dayName: 'Saturday', splitTitle: 'Legs + Conditioning', exercises: ['Legs', 'Abs', 'Cardio'], notes: null, isRestDay: false },
+];
+
 function formatDate(value: string) {
   return new Date(value).toLocaleDateString('en-US', {
     weekday: 'short',
@@ -94,6 +111,7 @@ export function SchedulePage() {
   const [today, setToday] = useState<ScheduleResponse['today']>(null);
   const [history, setHistory] = useState<Completion[]>([]);
   const [newProgramName, setNewProgramName] = useState('');
+  const isFallbackProgram = activeProgram?.id === fallbackProgram.id;
 
   const completedThisWeek = useMemo(() => {
     const now = new Date();
@@ -119,10 +137,19 @@ export function SchedulePage() {
       setToday(data.today);
       setHistory(data.history);
     } catch (error) {
+      const now = new Date();
+      const dateOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+      const fallbackToday = fallbackDays.find((day) => day.dayOfWeek === now.getDay()) ?? fallbackDays[0];
+
+      setPrograms([fallbackProgram]);
+      setActiveProgram(fallbackProgram);
+      setDays(fallbackDays);
+      setToday({ ...fallbackToday, completed: false, completionId: null, date: dateOnly });
+      setHistory([]);
+
       toast({
-        title: 'Schedule failed to load',
-        description: error instanceof Error ? error.message : 'Please try again.',
-        variant: 'destructive',
+        title: 'Using default schedule',
+        description: error instanceof Error ? error.message : 'The saved schedule could not be reached.',
       });
     } finally {
       setLoading(false);
@@ -141,6 +168,15 @@ export function SchedulePage() {
 
   const saveSchedule = async () => {
     if (!activeProgram) return;
+
+    if (isFallbackProgram) {
+      toast({
+        title: 'Reconnect to save',
+        description: 'The default schedule is loaded locally. Refresh once the server is reachable.',
+      });
+      return;
+    }
+
     setSaving(true);
     try {
       const response = await fetch('/api/schedule', {
@@ -175,6 +211,16 @@ export function SchedulePage() {
 
   const toggleCompletion = async (day: ScheduleDay) => {
     if (!activeProgram) return;
+
+    if (isFallbackProgram) {
+      setToday((current) => (current ? { ...current, completed: !current.completed } : current));
+      toast({
+        title: today?.completed ? 'Workout reopened' : 'Workout completed',
+        description: 'Saved locally until the server schedule is reachable.',
+      });
+      return;
+    }
+
     try {
       const response = await fetch('/api/schedule/completions', {
         method: 'POST',
@@ -239,6 +285,15 @@ export function SchedulePage() {
 
   const deleteProgram = async () => {
     if (!activeProgram) return;
+
+    if (isFallbackProgram) {
+      toast({
+        title: 'Reconnect to delete',
+        description: 'The default schedule cannot be deleted while offline.',
+      });
+      return;
+    }
+
     try {
       const response = await fetch(`/api/schedule?programId=${activeProgram.id}`, { method: 'DELETE' });
       const data = await response.json();
