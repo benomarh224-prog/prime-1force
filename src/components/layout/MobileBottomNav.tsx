@@ -1,13 +1,13 @@
 'use client';
 
-import { Bot, Dumbbell, Home, LayoutDashboard } from 'lucide-react';
+import { CalendarDays, Dumbbell, Home, LayoutDashboard } from 'lucide-react';
 import { useAppStore, type PageName } from '@/lib/store';
 import { cn } from '@/lib/utils';
 
 const navItems: { label: string; page: PageName; icon: React.ReactNode }[] = [
   { label: 'Home', page: 'home', icon: <Home className="h-5 w-5" /> },
   { label: 'Workouts', page: 'workouts', icon: <Dumbbell className="h-5 w-5" /> },
-  { label: 'Coach', page: 'ai-coach', icon: <Bot className="h-5 w-5" /> },
+  { label: 'Schedule', page: 'schedule', icon: <CalendarDays className="h-5 w-5" /> },
   { label: 'Dashboard', page: 'dashboard', icon: <LayoutDashboard className="h-5 w-5" /> },
 ];
 

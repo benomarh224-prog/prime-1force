@@ -8,6 +8,7 @@ import { MobileBottomNav } from '@/components/layout/MobileBottomNav';
 import { HomePage } from '@/components/pages/HomePage';
 import { WorkoutsPage } from '@/components/pages/WorkoutsPage';
 import { ExerciseDetailPage } from '@/components/pages/ExerciseDetailPage';
+import { SchedulePage } from '@/components/pages/SchedulePage';
 import { AICoachPage } from '@/components/pages/AICoachPage';
 import { DashboardPage } from '@/components/pages/DashboardPage';
 import { NutritionPage } from '@/components/pages/NutritionPage';
@@ -30,6 +31,8 @@ export default function MainApp() {
         return <WorkoutsPage />;
       case 'exercise-detail':
         return <ExerciseDetailPage />;
+      case 'schedule':
+        return <SchedulePage />;
       case 'ai-coach':
         return <AICoachPage />;
       case 'dashboard':

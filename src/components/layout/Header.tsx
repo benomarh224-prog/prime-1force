@@ -13,12 +13,14 @@ import {
   Menu,
   Bot,
   ArrowRight,
+  CalendarDays,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 const navItems: { label: string; page: PageName; icon: React.ReactNode }[] = [
   { label: 'Home', page: 'home', icon: <Home className="h-4 w-4" /> },
   { label: 'Workouts', page: 'workouts', icon: <Dumbbell className="h-4 w-4" /> },
+  { label: 'Schedule', page: 'schedule', icon: <CalendarDays className="h-4 w-4" /> },
   { label: 'AI Coach', page: 'ai-coach', icon: <Bot className="h-4 w-4" /> },
   { label: 'Dashboard', page: 'dashboard', icon: <LayoutDashboard className="h-4 w-4" /> },
   { label: 'Nutrition', page: 'nutrition', icon: <Utensils className="h-4 w-4" /> },
