@@ -265,32 +265,32 @@ export function SchedulePage() {
   }
 
   return (
-    <div className="min-h-screen bg-black pt-24 text-white">
-      <div className="absolute inset-x-0 top-0 h-[520px] bg-[radial-gradient(circle_at_18%_5%,rgba(255,255,255,0.18),transparent_28%),linear-gradient(180deg,#141414_0%,#000_100%)]" />
+    <div className="min-h-screen bg-black pt-20 text-white sm:pt-24">
+      <div className="absolute inset-x-0 top-0 h-[460px] bg-[radial-gradient(circle_at_18%_5%,rgba(255,255,255,0.18),transparent_28%),linear-gradient(180deg,#141414_0%,#000_100%)] sm:h-[520px]" />
       <div className="relative mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
         <motion.div
-          className="mb-8 flex flex-col justify-between gap-6 lg:flex-row lg:items-end"
+          className="mb-8 flex flex-col justify-between gap-5 sm:gap-6 lg:flex-row lg:items-end"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <div>
-            <Badge className="mb-5 rounded-sm border-white/20 bg-white/10 px-3 py-1 text-white">
+          <div className="max-w-3xl">
+            <Badge className="mb-4 max-w-full rounded-sm border-white/20 bg-white/10 px-3 py-1 text-[11px] uppercase tracking-wide text-white sm:mb-5 sm:text-xs">
               Weekly Training System
             </Badge>
-            <h1 className="max-w-3xl text-5xl font-black uppercase leading-none tracking-tight sm:text-6xl">
+            <h1 className="text-[2.65rem] font-black uppercase leading-[0.94] tracking-tight min-[390px]:text-5xl sm:text-6xl lg:text-7xl">
               Workout Schedule
             </h1>
-            <p className="mt-4 max-w-2xl text-white/65">
+            <p className="mt-4 max-w-2xl text-base leading-7 text-white/65 sm:text-lg sm:leading-8">
               Assign splits to each day, see today&apos;s workout, mark sessions complete, and keep a permanent training history.
             </p>
           </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <Button onClick={() => fetchSchedule(activeProgram?.id)} variant="outline" className="rounded-sm border-white/20 bg-white/5 text-white hover:bg-white hover:text-black">
+          <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:w-auto lg:min-w-80">
+            <Button onClick={() => fetchSchedule(activeProgram?.id)} variant="outline" className="h-12 rounded-sm border-white/20 bg-white/5 text-white hover:bg-white hover:text-black">
               <RefreshCcw className="h-4 w-4" />
               Refresh
             </Button>
-            <Button onClick={saveSchedule} disabled={saving} className="rounded-sm bg-white text-black hover:bg-white/90">
+            <Button onClick={saveSchedule} disabled={saving} className="h-12 rounded-sm bg-white text-black hover:bg-white/90">
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
               Save Schedule
             </Button>

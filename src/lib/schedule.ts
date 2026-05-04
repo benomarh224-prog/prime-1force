@@ -37,8 +37,19 @@ export function toDateOnly(date: Date) {
 }
 
 export async function getScheduleUserId() {
-  const session = await getServerSession(authOptions);
-  const sessionUserId = (session?.user as { id?: string } | undefined)?.id;
+  let sessionUserId: string | undefined;
+
+  if (authOptions.secret) {
+    try {
+      const session = await getServerSession(authOptions);
+      sessionUserId = (session?.user as { id?: string } | undefined)?.id;
+    } catch (error) {
+      console.warn(
+        '[Schedule] Falling back to demo user because auth session lookup failed:',
+        error instanceof Error ? error.message : 'Unknown error'
+      );
+    }
+  }
 
   if (sessionUserId) return sessionUserId;
 
