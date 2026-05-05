@@ -4,6 +4,10 @@ import { ensureDefaultProgram, getScheduleUserId, toDateOnly, weekDays } from '@
 
 export async function GET(request: Request) {
   try {
+    if (!process.env.DATABASE_URL) {
+      return NextResponse.json({ success: true, persistence: 'disabled', history: [] });
+    }
+
     const userId = await getScheduleUserId();
     const url = new URL(request.url);
     const programId = url.searchParams.get('programId') || await ensureDefaultProgram(userId);
@@ -31,6 +35,15 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    if (!process.env.DATABASE_URL) {
+      return NextResponse.json({
+        success: true,
+        persistence: 'disabled',
+        completed: true,
+        completion: null,
+      });
+    }
+
     const userId = await getScheduleUserId();
     const body = await request.json();
     const programId = typeof body.programId === 'string' ? body.programId : await ensureDefaultProgram(userId);
@@ -90,6 +103,10 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
+    if (!process.env.DATABASE_URL) {
+      return NextResponse.json({ success: true, persistence: 'disabled' });
+    }
+
     const userId = await getScheduleUserId();
     const url = new URL(request.url);
     const completionId = url.searchParams.get('id');

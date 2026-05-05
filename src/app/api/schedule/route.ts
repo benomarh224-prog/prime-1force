@@ -34,8 +34,56 @@ function serializeDay(day: {
   };
 }
 
+function getFallbackScheduleResponse() {
+  const today = new Date();
+  const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const days = defaultSchedule.map((day) => ({
+    id: `fallback-${day.dayOfWeek}`,
+    dayOfWeek: day.dayOfWeek,
+    splitTitle: day.splitTitle,
+    exercises: day.exercises,
+    notes: null,
+    isRestDay: day.isRestDay,
+    dayName: weekDays[day.dayOfWeek],
+    updatedAt: today.toISOString(),
+  }));
+  const todayDay = days.find((day) => day.dayOfWeek === today.getDay()) ?? days[0];
+
+  return {
+    success: true,
+    persistence: 'disabled',
+    programs: [
+      {
+        id: 'fallback-program',
+        name: 'Push / Pull / Legs',
+        description: 'A balanced six-day split with one recovery day.',
+        isActive: true,
+        createdAt: today.toISOString(),
+      },
+    ],
+    activeProgram: {
+      id: 'fallback-program',
+      name: 'Push / Pull / Legs',
+      description: 'A balanced six-day split with one recovery day.',
+      isActive: true,
+    },
+    days,
+    today: {
+      ...todayDay,
+      date: todayDate.toISOString(),
+      completed: false,
+      completionId: null,
+    },
+    history: [],
+  };
+}
+
 export async function GET(request: Request) {
   try {
+    if (!process.env.DATABASE_URL) {
+      return NextResponse.json(getFallbackScheduleResponse());
+    }
+
     const userId = await getScheduleUserId();
     const url = new URL(request.url);
     const requestedProgramId = url.searchParams.get('programId');
