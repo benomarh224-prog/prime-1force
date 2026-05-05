@@ -197,76 +197,62 @@ function QuoteSlider() {
   const q = quotes[current];
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Animated background orbs */}
+    <section className="relative overflow-hidden border-y border-primary/10 bg-card/35 py-16 sm:py-20">
       <AnimatePresence mode="wait">
         <motion.div
-          key={`orbs-${current}`}
+          key={`motivation-bg-${current}`}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 1 }}
+          transition={{ duration: 0.8 }}
           className="absolute inset-0 pointer-events-none"
         >
-          <div className={cn('absolute top-1/4 left-1/4 w-[500px] h-[500px] rounded-full bg-gradient-to-br blur-[140px] opacity-[0.07]', q.orb1)} />
-          <div className={cn('absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full bg-gradient-to-br blur-[120px] opacity-[0.06]', q.orb2)} />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/40 to-background pointer-events-none" />
+          <Image
+            src="/images/gym-machines.png"
+            alt=""
+            fill
+            sizes="100vw"
+            className="object-cover opacity-10"
+          />
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,oklch(0.09_0.01_95)_0%,oklch(0.11_0.012_95_/_0.88)_48%,oklch(0.09_0.012_95)_100%)]" />
+          <div className={cn('absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-current to-transparent opacity-50', q.accent)} />
         </motion.div>
       </AnimatePresence>
 
-      {/* Grid overlay */}
       <div className="absolute inset-0 opacity-[0.02] pointer-events-none" style={{
         backgroundImage: 'linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)',
         backgroundSize: '80px 80px',
       }} />
 
-      {/* Floating particles */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[...Array(6)].map((_, i) => (
-          <motion.div
-            key={i}
-            className={cn('absolute w-1 h-1 rounded-full opacity-20', q.accent)}
-            style={{ left: `${15 + i * 14}%`, top: `${20 + (i % 3) * 25}%` }}
-            animate={{ y: [0, -30, 0], opacity: [0.1, 0.4, 0.1] }}
-            transition={{ duration: 4 + i * 0.5, repeat: Infinity, ease: 'easeInOut', delay: i * 0.4 }}
-          />
-        ))}
-      </div>
-
       <div className="relative z-10 w-full mx-auto max-w-5xl px-4 sm:px-6 lg:px-8"
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
       >
-        {/* Label */}
-        <motion.div className="flex justify-center mb-8" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-          <Badge variant="secondary" className="px-4 py-1.5 bg-white/5 border-white/10 backdrop-blur-sm">
+        <motion.div className="flex justify-center mb-6" initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }}>
+          <Badge variant="secondary" className="px-4 py-1.5 bg-white/5 border-white/10 backdrop-blur-sm uppercase tracking-wide">
             <Flame className="h-3 w-3 mr-1.5" />
             Daily Motivation
           </Badge>
         </motion.div>
 
-        {/* Quote display */}
-        <div className="relative flex flex-col items-center text-center min-h-[280px] sm:min-h-[240px]">
+        <div className="relative flex flex-col items-center text-center min-h-[210px] sm:min-h-[230px]">
           <AnimatePresence mode="wait">
             <motion.div
               key={current}
-              initial={{ opacity: 0, y: 40, filter: 'blur(8px)' }}
+              initial={{ opacity: 0, y: 24, filter: 'blur(8px)' }}
               animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-              exit={{ opacity: 0, y: -40, filter: 'blur(8px)' }}
+              exit={{ opacity: 0, y: -24, filter: 'blur(8px)' }}
               transition={{ duration: 0.6, ease: 'easeInOut' }}
               className="w-full flex flex-col items-center"
             >
-              {/* Big quotation mark */}
-              <div className={cn('text-7xl sm:text-8xl md:text-9xl font-serif leading-none mb-2 opacity-10 select-none', q.accent)}>
+              <div className={cn('text-5xl sm:text-6xl font-serif leading-none mb-2 opacity-20 select-none', q.accent)}>
                 &ldquo;
               </div>
 
-              {/* Quote text */}
-              <p className="text-2xl sm:text-3xl md:text-5xl font-bold tracking-tight leading-snug max-w-4xl mb-8">
+              <p className="text-2xl sm:text-3xl md:text-5xl font-black tracking-tight leading-tight max-w-4xl mb-7 text-balance">
                 {q.quote}
               </p>
 
-              {/* Author */}
               <div className="flex items-center gap-3">
                 <div className="h-px w-8 bg-border" />
                 <p className="text-sm sm:text-base font-medium text-muted-foreground tracking-wide uppercase">
@@ -278,8 +264,7 @@ function QuoteSlider() {
           </AnimatePresence>
         </div>
 
-        {/* Controls row */}
-        <div className="flex items-center justify-center gap-6 mt-12">
+        <div className="flex items-center justify-center gap-5 mt-8">
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
@@ -292,7 +277,6 @@ function QuoteSlider() {
             </svg>
           </motion.button>
 
-          {/* Dots */}
           <div className="flex items-center gap-2">
             {quotes.map((_, i) => (
               <button
@@ -322,7 +306,6 @@ function QuoteSlider() {
           </motion.button>
         </div>
 
-        {/* Progress bar */}
         <div className="max-w-xs mx-auto mt-6">
           <div className="h-[2px] bg-white/10 rounded-full overflow-hidden">
             <motion.div
@@ -335,7 +318,6 @@ function QuoteSlider() {
           </div>
         </div>
 
-        {/* Counter */}
         <p className="text-center text-xs text-muted-foreground/50 mt-3 tabular-nums">
           {current + 1} / {quotes.length}
         </p>
@@ -354,7 +336,7 @@ export function HomePage() {
     <div className="overflow-hidden">
 
       {/* ═══════════ HERO SECTION ═══════════ */}
-      <section className="relative min-h-screen overflow-hidden bg-black text-white">
+      <section className="relative min-h-[92svh] overflow-hidden bg-black text-white">
         {/* Background */}
         <div className="absolute inset-0">
           <Image
@@ -365,11 +347,11 @@ export function HomePage() {
             sizes="100vw"
             className="object-cover object-center"
           />
-          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.92)_0%,rgba(0,0,0,0.76)_38%,rgba(0,0,0,0.18)_66%,rgba(0,0,0,0.70)_100%)]" />
-          <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black to-transparent" />
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.94)_0%,rgba(0,0,0,0.78)_40%,rgba(0,0,0,0.24)_68%,rgba(0,0,0,0.72)_100%)]" />
+          <div className="absolute inset-x-0 bottom-0 h-52 bg-gradient-to-t from-background via-background/50 to-transparent" />
         </div>
 
-        <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[1400px] items-center px-4 pb-20 pt-24 sm:px-10 sm:pb-28 sm:pt-28 lg:px-16">
+        <div className="relative z-10 mx-auto flex min-h-[92svh] w-full max-w-[1400px] items-center px-4 pb-24 pt-24 sm:px-10 sm:pb-28 sm:pt-28 lg:px-16">
           <div className="max-w-[760px]">
             <motion.div
               className="mb-7 flex items-center gap-4 text-xs font-semibold uppercase tracking-wide text-primary sm:mb-9 sm:gap-7 sm:text-sm"
@@ -382,7 +364,7 @@ export function HomePage() {
             </motion.div>
 
             <motion.h1
-              className="max-w-4xl text-5xl font-black uppercase leading-[0.92] tracking-tight sm:text-7xl md:text-8xl lg:text-[8.5rem]"
+              className="max-w-4xl text-5xl font-black uppercase leading-[0.92] tracking-tight text-balance sm:text-7xl md:text-8xl lg:text-[8rem]"
               initial={{ opacity: 0, y: 26 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.75, delay: 0.1 }}
@@ -391,7 +373,7 @@ export function HomePage() {
             </motion.h1>
 
             <motion.p
-              className="mt-6 max-w-xl text-base leading-relaxed text-white/78 sm:mt-8 sm:text-xl"
+              className="mt-6 max-w-xl text-base leading-relaxed text-white/80 sm:mt-8 sm:text-xl"
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.65, delay: 0.22 }}
@@ -421,7 +403,7 @@ export function HomePage() {
             </motion.div>
 
             <motion.div
-              className="mt-10 grid max-w-3xl grid-cols-1 overflow-hidden rounded-lg border border-primary/10 bg-card/55 backdrop-blur-md sm:mt-14 sm:grid-cols-3"
+              className="mt-10 grid max-w-3xl grid-cols-1 overflow-hidden rounded-lg border border-primary/15 bg-black/35 shadow-2xl shadow-black/30 backdrop-blur-md sm:mt-14 sm:grid-cols-3"
               initial="hidden"
               animate="visible"
               variants={staggerContainer}
@@ -437,10 +419,10 @@ export function HomePage() {
                   custom={i}
                   className="flex min-h-28 items-center gap-5 border-white/10 px-6 py-5 text-white sm:border-r sm:last:border-r-0"
                 >
-                  <span className="shrink-0 text-white">{item.icon}</span>
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">{item.icon}</span>
                   <span>
                     <span className="block text-sm font-black uppercase">{item.title}</span>
-                    <span className="mt-1 block text-sm leading-relaxed text-white/62">{item.text}</span>
+                    <span className="mt-1 block text-sm leading-relaxed text-white/60">{item.text}</span>
                   </span>
                 </motion.div>
               ))}
@@ -449,7 +431,7 @@ export function HomePage() {
         </div>
 
         {/* Scroll indicator */}
-        <motion.div className="absolute bottom-8 left-1/2 -translate-x-1/2" animate={{ y: [0, 8, 0] }} transition={{ duration: 2, repeat: Infinity }}>
+        <motion.div className="absolute bottom-7 left-1/2 -translate-x-1/2" animate={{ y: [0, 8, 0] }} transition={{ duration: 2, repeat: Infinity }}>
           <div className="w-6 h-10 rounded-full border-2 border-muted-foreground/30 flex justify-center pt-2">
             <div className="w-1.5 h-3 rounded-full bg-primary/60" />
           </div>
@@ -460,7 +442,7 @@ export function HomePage() {
       <QuoteSlider />
 
       {/* ═══════════ FEATURES SECTION ═══════════ */}
-      <section className="py-20 sm:py-28">
+      <section className="py-16 sm:py-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div className="text-center mb-16" initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-80px' }} variants={fadeUp} custom={0}>
             <Badge variant="secondary" className="mb-4"><Zap className="h-3 w-3 mr-1" />Features</Badge>
@@ -470,10 +452,10 @@ export function HomePage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {featureCards.map((feature, i) => (
               <motion.div key={feature.title} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-60px' }} variants={fadeUp} custom={i}>
-                <Card className="group hover:shadow-xl transition-all duration-500 hover:-translate-y-2 h-full border-border/50 relative overflow-hidden">
+                <Card className="group hover:shadow-xl transition-all duration-500 hover:-translate-y-1 h-full border-border/50 relative overflow-hidden">
                   <div className={cn('absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity duration-500', feature.gradient)} />
                   <CardContent className="relative p-6">
-                    <div className={cn('flex h-14 w-14 items-center justify-center rounded-2xl mb-5 transition-all duration-300 group-hover:scale-110', feature.iconBg, feature.iconColor)}>
+                    <div className={cn('flex h-14 w-14 items-center justify-center rounded-lg mb-5 transition-all duration-300 group-hover:scale-105', feature.iconBg, feature.iconColor)}>
                       {feature.icon}
                     </div>
                     <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
@@ -493,7 +475,7 @@ export function HomePage() {
       </section>
 
       {/* ═══════════ DASHBOARD PREVIEW ═══════════ */}
-      <section className="py-20 sm:py-28 bg-muted/30">
+      <section className="py-16 sm:py-24 bg-muted/25">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, margin: '-80px' }} transition={{ duration: 0.7 }}>
@@ -609,7 +591,7 @@ export function HomePage() {
       </section>
 
       {/* ═══════════ BEFORE / AFTER TRANSFORMATIONS ═══════════ */}
-      <section className="py-20 sm:py-28">
+      <section className="py-16 sm:py-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div className="text-center mb-16" initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-80px' }} variants={fadeUp} custom={0}>
             <Badge variant="secondary" className="mb-4"><Award className="h-3 w-3 mr-1" />Transformations</Badge>
@@ -680,7 +662,7 @@ export function HomePage() {
       </section>
 
       {/* ═══════════ FAQ SECTION ═══════════ */}
-      <section className="py-20 sm:py-28 bg-muted/30">
+      <section className="py-16 sm:py-24 bg-muted/25">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
           <motion.div className="text-center mb-16" initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-80px' }} variants={fadeUp} custom={0}>
             <Badge variant="secondary" className="mb-4">FAQ</Badge>
@@ -702,10 +684,16 @@ export function HomePage() {
       </section>
 
       {/* ═══════════ FINAL CTA ═══════════ */}
-      <section className="py-20 sm:py-28 relative overflow-hidden">
+      <section className="py-16 sm:py-24 relative overflow-hidden">
         <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-emerald-500/5" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-primary/5 blur-[100px]" />
+          <Image
+            src="/images/workout-strength-luxe.jpg"
+            alt=""
+            fill
+            sizes="100vw"
+            className="object-cover opacity-[0.12]"
+          />
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,oklch(0.09_0.01_95_/_0.94),oklch(0.105_0.009_95_/_0.9))]" />
         </div>
         <div className="relative z-10 mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-80px' }} variants={fadeUp} custom={0}>

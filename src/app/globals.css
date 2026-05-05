@@ -96,8 +96,10 @@
     min-width: 320px;
     overflow-x: hidden;
     background:
-      linear-gradient(180deg, oklch(0.145 0.018 95) 0%, oklch(0.105 0.009 95) 28%, oklch(0.075 0.012 95) 100%);
+      radial-gradient(1200px 520px at 50% -18%, oklch(0.24 0.028 92 / 46%), transparent 62%),
+      linear-gradient(180deg, oklch(0.13 0.014 95) 0%, oklch(0.105 0.009 95) 34%, oklch(0.075 0.012 95) 100%);
     text-rendering: optimizeLegibility;
+    font-feature-settings: "ss01" 1, "cv05" 1;
   }
 
   ::selection {
@@ -140,14 +142,14 @@
 
 /* Glass morphism */
 .glass {
-  background: linear-gradient(180deg, oklch(0.16 0.012 95 / 86%), oklch(0.11 0.01 95 / 78%));
+  background: linear-gradient(180deg, oklch(0.145 0.012 95 / 88%), oklch(0.105 0.01 95 / 82%));
   backdrop-filter: blur(18px) saturate(140%);
   -webkit-backdrop-filter: blur(18px) saturate(140%);
   border-bottom: 1px solid oklch(0.78 0.125 72 / 16%);
 }
 
 .dark .glass {
-  background: linear-gradient(180deg, oklch(0.16 0.012 95 / 86%), oklch(0.11 0.01 95 / 78%));
+  background: linear-gradient(180deg, oklch(0.145 0.012 95 / 88%), oklch(0.105 0.01 95 / 82%));
   border-bottom: 1px solid oklch(0.78 0.125 72 / 16%);
 }
 
@@ -180,9 +182,15 @@
 
 .luxury-surface {
   background:
-    linear-gradient(180deg, oklch(0.19 0.014 95 / 88%), oklch(0.13 0.012 95 / 92%));
-  border: 1px solid oklch(0.78 0.125 72 / 14%);
-  box-shadow: 0 18px 44px oklch(0 0 0 / 34%), inset 0 1px 0 oklch(1 0 0 / 7%);
+    linear-gradient(180deg, oklch(0.18 0.014 95 / 90%), oklch(0.12 0.012 95 / 94%));
+  border: 1px solid oklch(0.78 0.125 72 / 16%);
+  box-shadow: 0 18px 44px oklch(0 0 0 / 34%), inset 0 1px 0 oklch(1 0 0 / 8%);
+}
+
+@supports (text-wrap: balance) {
+  .text-balance {
+    text-wrap: balance;
+  }
 }
 
 @media (max-width: 640px) {

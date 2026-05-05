@@ -45,11 +45,11 @@ export function Header() {
       transition={{ duration: 0.5, ease: 'easeOut' }}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         scrolled
-          ? 'glass shadow-lg'
+          ? 'glass shadow-[0_16px_42px_oklch(0_0_0_/_0.24)]'
           : 'bg-transparent'
       }`}
     >
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-10">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <button
@@ -57,7 +57,7 @@ export function Header() {
             className={`flex min-w-0 items-center gap-3 group ${heroTop ? 'text-white' : ''}`}
           >
             <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg font-bold text-lg transition-transform group-hover:scale-105 ${
-              heroTop ? 'border border-primary/70 bg-black/20 text-primary shadow-sm' : 'bg-primary text-primary-foreground'
+              heroTop ? 'border border-primary/70 bg-black/25 text-primary shadow-sm backdrop-blur-sm' : 'bg-primary text-primary-foreground'
             }`}>
               P
             </div>
@@ -76,7 +76,7 @@ export function Header() {
                 onClick={() => navigate(item.page)}
                 className={`gap-2 rounded-lg transition-all ${
                   heroTop
-                    ? 'bg-transparent text-white hover:bg-white/10 hover:text-white uppercase font-bold'
+                    ? 'bg-transparent text-white/90 hover:bg-white/10 hover:text-white uppercase font-bold'
                     : currentPage === item.page
                     ? 'bg-primary/10 text-primary font-medium shadow-sm'
                     : 'text-muted-foreground hover:bg-accent hover:text-foreground'
