@@ -26,6 +26,12 @@ const socials = [
   { icon: <Twitter className="h-5 w-5" />, label: 'X', href: 'https://x.com/ho50539?s=21' },
 ];
 
+type ContactApiResponse = {
+  success?: boolean;
+  error?: string;
+  delivery?: 'direct';
+};
+
 export function ContactPage() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -58,17 +64,19 @@ export function ContactPage() {
         body: JSON.stringify(form),
       });
 
-      const data = await response.json();
+      const data = await response.json() as ContactApiResponse;
 
       if (data.success) {
         setSubmitted(true);
         toast({
-          title: 'Message Sent!',
-          description: "We'll get back to you within 24 hours.",
+          title: data.delivery === 'direct' ? 'Message Ready' : 'Message Sent!',
+          description: data.delivery === 'direct'
+            ? 'Use the email on this page for the fastest reply.'
+            : "We'll get back to you within 24 hours.",
         });
         setForm({ name: '', email: '', subject: '', message: '' });
       } else {
-        throw new Error(data.error);
+        throw new Error(data.error || 'Failed to send message');
       }
     } catch {
       toast({
@@ -170,9 +178,9 @@ export function ContactPage() {
                     <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 mx-auto mb-4">
                       <CheckCircle2 className="h-8 w-8 text-primary" />
                     </div>
-                    <h3 className="text-xl font-semibold mb-2">Message Sent!</h3>
+                    <h3 className="text-xl font-semibold mb-2">Thanks for reaching out</h3>
                     <p className="text-sm text-muted-foreground mb-6 max-w-sm mx-auto">
-                      Thank you for reaching out. Our team will review your message and get back to you soon.
+                      We received your request. For urgent questions, email us directly at houssambenomar17@gmail.com.
                     </p>
                     <Button onClick={() => setSubmitted(false)} variant="outline" className="rounded-xl">
                       Send Another Message

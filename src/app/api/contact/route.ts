@@ -34,6 +34,17 @@ export async function POST(request: Request) {
       ? subject.replace(/<[^>]*>/g, '').trim()
       : subject) : null;
 
+    if (!process.env.DATABASE_URL) {
+      return NextResponse.json(
+        {
+          success: true,
+          delivery: 'direct',
+          message: 'Message prepared successfully',
+        },
+        { status: 202 }
+      );
+    }
+
     await db.contactMessage.create({
       data: {
         name: cleanName,

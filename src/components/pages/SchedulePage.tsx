@@ -59,6 +59,7 @@ type Completion = {
 type ScheduleResponse = {
   success: boolean;
   error?: string;
+  persistence?: 'database' | 'disabled';
   programs: Program[];
   activeProgram: Program;
   days: ScheduleDay[];
@@ -93,12 +94,31 @@ const fallbackDays: ScheduleDay[] = [
   { id: 'fallback-6', dayOfWeek: 6, dayName: 'Saturday', splitTitle: 'Legs + Conditioning', exercises: ['Legs', 'Abs', 'Cardio'], notes: null, isRestDay: false },
 ];
 
+const localScheduleKey = 'prime-forge-schedule-days';
+
 function formatDate(value: string) {
   return new Date(value).toLocaleDateString('en-US', {
     weekday: 'short',
     month: 'short',
     day: 'numeric',
   });
+}
+
+function getLocalScheduleDays() {
+  if (typeof window === 'undefined') return fallbackDays;
+  try {
+    const saved = window.localStorage.getItem(localScheduleKey);
+    if (!saved) return fallbackDays;
+    const parsed = JSON.parse(saved);
+    return Array.isArray(parsed) && parsed.length === 7 ? parsed as ScheduleDay[] : fallbackDays;
+  } catch {
+    return fallbackDays;
+  }
+}
+
+function saveLocalScheduleDays(days: ScheduleDay[]) {
+  if (typeof window === 'undefined') return;
+  window.localStorage.setItem(localScheduleKey, JSON.stringify(days));
 }
 
 export function SchedulePage() {
@@ -133,8 +153,10 @@ export function SchedulePage() {
 
       setPrograms(data.programs);
       setActiveProgram(data.activeProgram);
-      setDays(data.days);
-      setToday(data.today);
+      const nextDays = data.persistence === 'disabled' ? getLocalScheduleDays() : data.days;
+      const todayDay = nextDays.find((day) => day.dayOfWeek === new Date().getDay()) ?? nextDays[0];
+      setDays(nextDays);
+      setToday(data.today && todayDay ? { ...todayDay, completed: data.today.completed, completionId: data.today.completionId, date: data.today.date } : data.today);
       setHistory(data.history);
     } catch (error) {
       const now = new Date();
@@ -143,13 +165,15 @@ export function SchedulePage() {
 
       setPrograms([fallbackProgram]);
       setActiveProgram(fallbackProgram);
-      setDays(fallbackDays);
-      setToday({ ...fallbackToday, completed: false, completionId: null, date: dateOnly });
+      const localDays = getLocalScheduleDays();
+      const localToday = localDays.find((day) => day.dayOfWeek === now.getDay()) ?? fallbackToday;
+      setDays(localDays);
+      setToday({ ...localToday, completed: false, completionId: null, date: dateOnly });
       setHistory([]);
 
       toast({
-        title: 'Using default schedule',
-        description: error instanceof Error ? error.message : 'The saved schedule could not be reached.',
+        title: 'Using saved local schedule',
+        description: 'Your schedule is available in this browser.',
       });
     } finally {
       setLoading(false);
@@ -170,9 +194,14 @@ export function SchedulePage() {
     if (!activeProgram) return;
 
     if (isFallbackProgram) {
+      saveLocalScheduleDays(days);
+      setToday((current) => {
+        const todayDay = days.find((day) => day.dayOfWeek === new Date().getDay());
+        return current && todayDay ? { ...todayDay, completed: current.completed, completionId: current.completionId, date: current.date } : current;
+      });
       toast({
-        title: 'Reconnect to save',
-        description: 'The default schedule is loaded locally. Refresh once the server is reachable.',
+        title: 'Schedule saved',
+        description: 'Your changes are saved in this browser.',
       });
       return;
     }
@@ -213,10 +242,11 @@ export function SchedulePage() {
     if (!activeProgram) return;
 
     if (isFallbackProgram) {
+      const nextCompleted = !today?.completed;
       setToday((current) => (current ? { ...current, completed: !current.completed } : current));
       toast({
-        title: today?.completed ? 'Workout reopened' : 'Workout completed',
-        description: 'Saved locally until the server schedule is reachable.',
+        title: nextCompleted ? 'Workout completed' : 'Workout reopened',
+        description: 'Today has been updated locally.',
       });
       return;
     }
@@ -288,8 +318,8 @@ export function SchedulePage() {
 
     if (isFallbackProgram) {
       toast({
-        title: 'Reconnect to delete',
-        description: 'The default schedule cannot be deleted while offline.',
+        title: 'Default program kept',
+        description: 'Create database storage to manage multiple programs online.',
       });
       return;
     }
