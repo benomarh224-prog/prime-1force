@@ -1,620 +1,443 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { useToast } from '@/hooks/use-toast';
-import { openAuthDialog } from '@/lib/auth-dialog';
-import { cn } from '@/lib/utils';
-import {
+  Activity,
   CalendarDays,
   CheckCircle2,
   Clock,
   Dumbbell,
-  History,
-  Loader2,
+  Flame,
+  ListChecks,
   Plus,
-  RefreshCcw,
   Save,
-  Shield,
   Trash2,
 } from 'lucide-react';
-import { useSession } from 'next-auth/react';
-
-type Program = {
-  id: string;
-  name: string;
-  description: string | null;
-  isActive: boolean;
-};
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Progress } from '@/components/ui/progress';
+import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
+import { useAppStore, type WorkoutExercise, type WorkoutLog } from '@/lib/store';
 
 type ScheduleDay = {
   id: string;
   dayOfWeek: number;
   dayName: string;
   splitTitle: string;
-  exercises: string[];
-  notes: string | null;
+  focus: string;
+  notes: string;
   isRestDay: boolean;
 };
 
-type Completion = {
-  id: string;
+type WorkoutForm = {
+  name: string;
   date: string;
-  dayName: string;
-  splitTitle: string;
-  completedAt: string;
+  duration: string;
+  exerciseName: string;
+  sets: string;
+  reps: string;
+  weight: string;
+  notes: string;
 };
 
-type ScheduleResponse = {
-  success: boolean;
-  error?: string;
-  persistence?: 'database' | 'disabled';
-  programs: Program[];
-  activeProgram: Program;
-  days: ScheduleDay[];
-  today: (ScheduleDay & { completed: boolean; completionId: string | null; date: string }) | null;
-  history: Completion[];
-};
+const scheduleKey = 'prime-forge-simple-schedule';
 
-const dayAccent = [
-  'from-zinc-400 to-white',
-  'from-emerald-300 to-white',
-  'from-sky-300 to-white',
-  'from-amber-300 to-white',
-  'from-rose-300 to-white',
-  'from-violet-300 to-white',
-  'from-lime-300 to-white',
+const defaultDays: ScheduleDay[] = [
+  { id: 'sun', dayOfWeek: 0, dayName: 'Sun', splitTitle: 'Recovery', focus: 'Mobility, walk, stretch', notes: 'Keep it light.', isRestDay: true },
+  { id: 'mon', dayOfWeek: 1, dayName: 'Mon', splitTitle: 'Push', focus: 'Chest, shoulders, triceps', notes: 'Start with your main press.', isRestDay: false },
+  { id: 'tue', dayOfWeek: 2, dayName: 'Tue', splitTitle: 'Pull', focus: 'Back, biceps, rear delts', notes: 'Control every rep.', isRestDay: false },
+  { id: 'wed', dayOfWeek: 3, dayName: 'Wed', splitTitle: 'Legs', focus: 'Quads, hamstrings, calves', notes: 'Warm up hips and knees.', isRestDay: false },
+  { id: 'thu', dayOfWeek: 4, dayName: 'Thu', splitTitle: 'Upper', focus: 'Strength accessories', notes: 'Add weight only if clean.', isRestDay: false },
+  { id: 'fri', dayOfWeek: 5, dayName: 'Fri', splitTitle: 'Conditioning', focus: 'Core, intervals, carries', notes: 'Finish strong, not sloppy.', isRestDay: false },
+  { id: 'sat', dayOfWeek: 6, dayName: 'Sat', splitTitle: 'Full Body', focus: 'Squat, hinge, push, pull', notes: 'Optional pump work.', isRestDay: false },
 ];
 
-const fallbackProgram: Program = {
-  id: 'fallback-program',
-  name: 'Push / Pull / Legs',
-  description: 'A balanced six-day split with one recovery day.',
-  isActive: true,
-};
+const emptyForm = (): WorkoutForm => ({
+  name: '',
+  date: new Date().toISOString().slice(0, 10),
+  duration: '45',
+  exerciseName: '',
+  sets: '3',
+  reps: '10',
+  weight: '',
+  notes: '',
+});
 
-const fallbackDays: ScheduleDay[] = [
-  { id: 'fallback-0', dayOfWeek: 0, dayName: 'Sunday', splitTitle: 'Rest Day', exercises: [], notes: null, isRestDay: true },
-  { id: 'fallback-1', dayOfWeek: 1, dayName: 'Monday', splitTitle: 'Push', exercises: ['Chest', 'Shoulders', 'Triceps'], notes: null, isRestDay: false },
-  { id: 'fallback-2', dayOfWeek: 2, dayName: 'Tuesday', splitTitle: 'Pull', exercises: ['Back', 'Biceps', 'Rear Delts'], notes: null, isRestDay: false },
-  { id: 'fallback-3', dayOfWeek: 3, dayName: 'Wednesday', splitTitle: 'Legs', exercises: ['Quads', 'Hamstrings', 'Glutes', 'Calves'], notes: null, isRestDay: false },
-  { id: 'fallback-4', dayOfWeek: 4, dayName: 'Thursday', splitTitle: 'Push', exercises: ['Chest', 'Shoulders', 'Triceps'], notes: null, isRestDay: false },
-  { id: 'fallback-5', dayOfWeek: 5, dayName: 'Friday', splitTitle: 'Pull', exercises: ['Back', 'Biceps', 'Core'], notes: null, isRestDay: false },
-  { id: 'fallback-6', dayOfWeek: 6, dayName: 'Saturday', splitTitle: 'Legs + Conditioning', exercises: ['Legs', 'Abs', 'Cardio'], notes: null, isRestDay: false },
-];
+function readSchedule() {
+  if (typeof window === 'undefined') return defaultDays;
 
-const localScheduleKey = 'prime-forge-schedule-days';
+  try {
+    const saved = window.localStorage.getItem(scheduleKey);
+    if (!saved) return defaultDays;
+    const parsed = JSON.parse(saved);
+    return Array.isArray(parsed) && parsed.length === 7 ? (parsed as ScheduleDay[]) : defaultDays;
+  } catch {
+    return defaultDays;
+  }
+}
 
-function formatDate(value: string) {
-  return new Date(value).toLocaleDateString('en-US', {
+function getDateKey(date = new Date()) {
+  return date.toISOString().slice(0, 10);
+}
+
+function formatDate(dateKey: string) {
+  return new Date(`${dateKey}T00:00:00`).toLocaleDateString('en-US', {
     weekday: 'short',
     month: 'short',
     day: 'numeric',
   });
 }
 
-function getLocalScheduleDays() {
-  if (typeof window === 'undefined') return fallbackDays;
-  try {
-    const saved = window.localStorage.getItem(localScheduleKey);
-    if (!saved) return fallbackDays;
-    const parsed = JSON.parse(saved);
-    return Array.isArray(parsed) && parsed.length === 7 ? parsed as ScheduleDay[] : fallbackDays;
-  } catch {
-    return fallbackDays;
-  }
-}
-
-function saveLocalScheduleDays(days: ScheduleDay[]) {
-  if (typeof window === 'undefined') return;
-  window.localStorage.setItem(localScheduleKey, JSON.stringify(days));
+function workoutVolume(log: WorkoutLog) {
+  return log.exercises.reduce(
+    (total, exercise) => total + exercise.sets.reduce((sum, set) => sum + set.weight * set.reps, 0),
+    0
+  );
 }
 
 export function SchedulePage() {
   const { toast } = useToast();
-  const { status } = useSession();
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [programs, setPrograms] = useState<Program[]>([]);
-  const [activeProgram, setActiveProgram] = useState<Program | null>(null);
-  const [days, setDays] = useState<ScheduleDay[]>([]);
-  const [today, setToday] = useState<ScheduleResponse['today']>(null);
-  const [history, setHistory] = useState<Completion[]>([]);
-  const [newProgramName, setNewProgramName] = useState('');
-  const isFallbackProgram = activeProgram?.id === fallbackProgram.id;
+  const store = useAppStore();
+  const [days, setDays] = useState<ScheduleDay[]>(() => readSchedule());
+  const [form, setForm] = useState<WorkoutForm>(() => emptyForm());
+  const todayIndex = new Date().getDay();
+  const today = days.find((day) => day.dayOfWeek === todayIndex) ?? days[0];
+  const todayLog = store.workoutLogs.find((log) => log.date === getDateKey());
 
-  const completedThisWeek = useMemo(() => {
+  const stats = useMemo(() => {
     const now = new Date();
     const start = new Date(now);
     start.setDate(now.getDate() - now.getDay());
     start.setHours(0, 0, 0, 0);
-    return history.filter((entry) => new Date(entry.date) >= start).length;
-  }, [history]);
 
-  const fetchSchedule = async (programId?: string) => {
-    setLoading(true);
-    try {
-      const response = await fetch(`/api/schedule${programId ? `?programId=${programId}` : ''}`);
-      const data = (await response.json()) as ScheduleResponse;
+    const thisWeek = store.workoutLogs.filter((log) => new Date(`${log.date}T00:00:00`) >= start);
+    const completedThisWeek = thisWeek.filter((log) => log.completed).length;
+    const totalVolume = store.workoutLogs.reduce((sum, log) => sum + workoutVolume(log), 0);
+    const totalMinutes = store.workoutLogs.reduce((sum, log) => sum + log.duration, 0);
+    const trainingDays = days.filter((day) => !day.isRestDay).length;
 
-      if (!response.ok || !data.success) {
-        throw new Error(data.error || 'Could not load schedule');
-      }
-
-      setPrograms(data.programs);
-      setActiveProgram(data.activeProgram);
-      const nextDays = data.persistence === 'disabled' ? getLocalScheduleDays() : data.days;
-      const todayDay = nextDays.find((day) => day.dayOfWeek === new Date().getDay()) ?? nextDays[0];
-      setDays(nextDays);
-      setToday(data.today && todayDay ? { ...todayDay, completed: data.today.completed, completionId: data.today.completionId, date: data.today.date } : data.today);
-      setHistory(data.history);
-    } catch (error) {
-      const now = new Date();
-      const dateOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
-      const fallbackToday = fallbackDays.find((day) => day.dayOfWeek === now.getDay()) ?? fallbackDays[0];
-
-      setPrograms([fallbackProgram]);
-      setActiveProgram(fallbackProgram);
-      const localDays = getLocalScheduleDays();
-      const localToday = localDays.find((day) => day.dayOfWeek === now.getDay()) ?? fallbackToday;
-      setDays(localDays);
-      setToday({ ...localToday, completed: false, completionId: null, date: dateOnly });
-      setHistory([]);
-
-      toast({
-        title: 'Using saved local schedule',
-        description: 'Your schedule is available in this browser.',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (status === 'authenticated') {
-      fetchSchedule();
-    }
-
-    if (status === 'unauthenticated') {
-      setLoading(false);
-    }
-  }, [status]);
+    return {
+      completedThisWeek,
+      totalVolume,
+      totalMinutes,
+      trainingDays,
+      weeklyProgress: trainingDays > 0 ? Math.min(100, (completedThisWeek / trainingDays) * 100) : 100,
+    };
+  }, [days, store.workoutLogs]);
 
   const updateDay = (dayOfWeek: number, patch: Partial<ScheduleDay>) => {
-    setDays((current) =>
-      current.map((day) => (day.dayOfWeek === dayOfWeek ? { ...day, ...patch } : day))
-    );
+    setDays((current) => current.map((day) => (day.dayOfWeek === dayOfWeek ? { ...day, ...patch } : day)));
   };
 
-  const saveSchedule = async () => {
-    if (!activeProgram) return;
+  const saveSchedule = () => {
+    window.localStorage.setItem(scheduleKey, JSON.stringify(days));
+    toast({
+      title: 'Schedule saved',
+      description: 'Your weekly plan is saved on this device.',
+    });
+  };
 
-    if (isFallbackProgram) {
-      saveLocalScheduleDays(days);
-      setToday((current) => {
-        const todayDay = days.find((day) => day.dayOfWeek === new Date().getDay());
-        return current && todayDay ? { ...todayDay, completed: current.completed, completionId: current.completionId, date: current.date } : current;
-      });
-      toast({
-        title: 'Schedule saved',
-        description: 'Your changes are saved in this browser.',
-      });
+  const completeToday = () => {
+    if (todayLog) {
+      store.completeWorkoutLog(todayLog.id, !todayLog.completed);
       return;
     }
 
-    setSaving(true);
-    try {
-      const response = await fetch('/api/schedule', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          programId: activeProgram.id,
-          days: days.map((day) => ({
-            dayOfWeek: day.dayOfWeek,
-            splitTitle: day.splitTitle,
-            exercises: day.exercises,
-            notes: day.notes,
-            isRestDay: day.isRestDay,
-          })),
-        }),
-      });
-      const data = await response.json();
-      if (!response.ok || !data.success) throw new Error(data.error || 'Save failed');
+    const exercise: WorkoutExercise = {
+      exerciseId: `quick-${today.id}`,
+      exerciseName: today.focus || today.splitTitle,
+      sets: [{ reps: 0, weight: 0 }],
+    };
 
-      toast({ title: 'Schedule saved', description: 'Your weekly split is up to date.' });
-      await fetchSchedule(activeProgram.id);
-    } catch (error) {
-      toast({
-        title: 'Could not save schedule',
-        description: error instanceof Error ? error.message : 'Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setSaving(false);
-    }
+    store.addWorkoutLog({
+      name: today.splitTitle,
+      date: getDateKey(),
+      duration: 0,
+      notes: today.notes,
+      completed: true,
+      exercises: [exercise],
+    });
   };
 
-  const toggleCompletion = async (day: ScheduleDay) => {
-    if (!activeProgram) return;
+  const logWorkout = () => {
+    const name = form.name.trim() || today.splitTitle;
+    const exerciseName = form.exerciseName.trim() || today.focus || 'Workout';
+    const setCount = Math.max(1, Number(form.sets) || 1);
+    const reps = Math.max(0, Number(form.reps) || 0);
+    const weight = Math.max(0, Number(form.weight) || 0);
 
-    if (isFallbackProgram) {
-      const nextCompleted = !today?.completed;
-      setToday((current) => (current ? { ...current, completed: !current.completed } : current));
-      toast({
-        title: nextCompleted ? 'Workout completed' : 'Workout reopened',
-        description: 'Today has been updated locally.',
-      });
-      return;
-    }
+    store.addWorkoutLog({
+      name,
+      date: form.date,
+      duration: Math.max(0, Number(form.duration) || 0),
+      notes: form.notes.trim(),
+      completed: true,
+      exercises: [
+        {
+          exerciseId: `manual-${Date.now()}`,
+          exerciseName,
+          sets: Array.from({ length: setCount }, () => ({ reps, weight })),
+        },
+      ],
+    });
 
-    try {
-      const response = await fetch('/api/schedule/completions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          programId: activeProgram.id,
-          dayOfWeek: day.dayOfWeek,
-          date: new Date().toISOString(),
-        }),
-      });
-      const data = await response.json();
-      if (!response.ok || !data.success) throw new Error(data.error || 'Completion update failed');
-
-      toast({
-        title: data.completed ? 'Workout completed' : 'Workout reopened',
-        description: data.completed ? `${day.splitTitle} added to history.` : `${day.splitTitle} removed from today.`,
-      });
-      await fetchSchedule(activeProgram.id);
-    } catch (error) {
-      toast({
-        title: 'Could not update completion',
-        description: error instanceof Error ? error.message : 'Please try again.',
-        variant: 'destructive',
-      });
-    }
+    setForm(emptyForm());
+    toast({
+      title: 'Workout logged',
+      description: `${name} was added to your tracker.`,
+    });
   };
-
-  const createProgram = async () => {
-    if (!newProgramName.trim()) return;
-    try {
-      const response = await fetch('/api/schedule', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newProgramName.trim() }),
-      });
-      const data = await response.json();
-      if (!response.ok || !data.success) throw new Error(data.error || 'Program create failed');
-      setNewProgramName('');
-      toast({ title: 'Program created', description: `${data.program.name} is ready to edit.` });
-      await fetchSchedule(data.program.id);
-    } catch (error) {
-      toast({
-        title: 'Could not create program',
-        description: error instanceof Error ? error.message : 'Please try again.',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const setActiveProgramId = async (programId: string) => {
-    try {
-      await fetch('/api/schedule', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ programId, isActive: true }),
-      });
-      await fetchSchedule(programId);
-    } catch {
-      toast({ title: 'Could not switch program', variant: 'destructive' });
-    }
-  };
-
-  const deleteProgram = async () => {
-    if (!activeProgram) return;
-
-    if (isFallbackProgram) {
-      toast({
-        title: 'Default program kept',
-        description: 'Create database storage to manage multiple programs online.',
-      });
-      return;
-    }
-
-    try {
-      const response = await fetch(`/api/schedule?programId=${activeProgram.id}`, { method: 'DELETE' });
-      const data = await response.json();
-      if (!response.ok || !data.success) throw new Error(data.error || 'Delete failed');
-      toast({ title: 'Program deleted' });
-      await fetchSchedule();
-    } catch (error) {
-      toast({
-        title: 'Could not delete program',
-        description: error instanceof Error ? error.message : 'Please keep at least one program.',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  if ((status === 'loading' || loading) && days.length === 0) {
-    return (
-      <div className="min-h-screen bg-black pt-28 text-white">
-        <div className="mx-auto flex min-h-[60vh] max-w-7xl items-center justify-center px-4">
-          <Loader2 className="h-8 w-8 animate-spin text-white/70" />
-        </div>
-      </div>
-    );
-  }
-
-  if (status === 'unauthenticated') {
-    return (
-      <div className="min-h-screen bg-black pt-28 text-white">
-        <div className="mx-auto flex min-h-[60vh] max-w-md items-center justify-center px-4">
-          <Card className="w-full border-white/10 bg-white/[0.06] text-white">
-            <CardContent className="p-6 text-center">
-              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-sm bg-white/10 text-white">
-                <Shield className="h-5 w-5" />
-              </div>
-              <h1 className="text-2xl font-black uppercase tracking-tight">Login Required</h1>
-              <p className="mt-2 text-sm text-white/60">
-                Sign in to manage your weekly schedule and training history.
-              </p>
-              <Button onClick={() => openAuthDialog('login')} className="mt-5 w-full rounded-sm bg-white text-black hover:bg-white/90">
-                Login
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="min-h-screen bg-black pt-20 text-white sm:pt-24">
-      <div className="absolute inset-x-0 top-0 h-[460px] bg-[radial-gradient(circle_at_18%_5%,rgba(255,255,255,0.18),transparent_28%),linear-gradient(180deg,#141414_0%,#000_100%)] sm:h-[520px]" />
-      <div className="relative mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-background pt-20 text-foreground sm:pt-24">
+      <div className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
         <motion.div
-          className="mb-8 flex flex-col justify-between gap-5 sm:gap-6 lg:flex-row lg:items-end"
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
+          className="mb-6 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between"
         >
           <div className="max-w-3xl">
-            <Badge className="mb-4 max-w-full rounded-sm border-white/20 bg-white/10 px-3 py-1 text-[11px] uppercase tracking-wide text-white sm:mb-5 sm:text-xs">
-              Weekly Training System
+            <Badge className="mb-4 rounded-md border-primary/25 bg-primary/10 px-3 py-1 text-[11px] uppercase tracking-wide text-primary">
+              Tracker + Schedule
             </Badge>
-            <h1 className="text-[2.65rem] font-black uppercase leading-[0.94] tracking-tight min-[390px]:text-5xl sm:text-6xl lg:text-7xl">
-              Workout Schedule
+            <h1 className="text-4xl font-black uppercase leading-none sm:text-5xl lg:text-6xl">
+              Training Planner
             </h1>
-            <p className="mt-4 max-w-2xl text-base leading-7 text-white/65 sm:text-lg sm:leading-8">
-              Assign splits to each day, see today&apos;s workout, mark sessions complete, and keep a permanent training history.
+            <p className="mt-4 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
+              Plan the week, log today&apos;s work, and keep progress visible without any complicated setup.
             </p>
           </div>
-
-          <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:w-auto lg:min-w-80">
-            <Button onClick={() => fetchSchedule(activeProgram?.id)} variant="outline" className="h-12 rounded-sm border-white/20 bg-white/5 text-white hover:bg-white hover:text-black">
-              <RefreshCcw className="h-4 w-4" />
-              Refresh
-            </Button>
-            <Button onClick={saveSchedule} disabled={saving} className="h-12 rounded-sm bg-white text-black hover:bg-white/90">
-              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-              Save Schedule
-            </Button>
-          </div>
+          <Button onClick={saveSchedule} className="h-12 rounded-lg font-bold">
+            <Save className="h-4 w-4" />
+            Save Schedule
+          </Button>
         </motion.div>
 
-        <div className="mb-8 grid gap-4 lg:grid-cols-[1.4fr_0.9fr]">
-          <Card className="border-white/10 bg-white/[0.06] text-white backdrop-blur-md">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base uppercase tracking-wide">
-                <Dumbbell className="h-4 w-4" />
-                Today&apos;s Workout
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {today && (
-                <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-                  <div>
-                    <p className="text-sm uppercase text-white/50">{formatDate(today.date)}</p>
-                    <h2 className="mt-2 text-4xl font-black uppercase">{today.splitTitle}</h2>
-                    <p className="mt-3 text-white/65">
-                      {today.isRestDay ? 'Recovery day. Mobility, steps, and sleep still count.' : today.exercises.join(', ')}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => toggleCompletion(today)}
-                    className={cn(
-                      'flex min-h-24 min-w-48 items-center justify-center gap-3 rounded-sm border px-6 text-sm font-black uppercase transition-colors',
-                      today.completed
-                        ? 'border-emerald-300 bg-emerald-300 text-black'
-                        : 'border-white/25 bg-transparent text-white hover:bg-white hover:text-black'
-                    )}
-                  >
-                    <CheckCircle2 className="h-5 w-5" />
-                    {today.completed ? 'Completed' : 'Mark Done'}
-                  </button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card className="border-white/10 bg-white/[0.06] text-white backdrop-blur-md">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base uppercase tracking-wide">
-                <CalendarDays className="h-4 w-4" />
-                Program
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Select value={activeProgram?.id} onValueChange={setActiveProgramId}>
-                <SelectTrigger className="border-white/15 bg-black/40 text-white">
-                  <SelectValue placeholder="Choose program" />
-                </SelectTrigger>
-                <SelectContent>
-                  {programs.map((program) => (
-                    <SelectItem key={program.id} value={program.id}>
-                      {program.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <div className="grid grid-cols-[1fr_auto] gap-2">
-                <Input
-                  value={newProgramName}
-                  onChange={(event) => setNewProgramName(event.target.value)}
-                  placeholder="New program name"
-                  className="border-white/15 bg-black/40 text-white placeholder:text-white/35"
-                />
-                <Button onClick={createProgram} className="rounded-sm bg-white text-black hover:bg-white/90">
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-              <Button
-                onClick={deleteProgram}
-                variant="outline"
-                className="w-full rounded-sm border-red-400/30 bg-red-400/10 text-red-100 hover:bg-red-400 hover:text-black"
-              >
-                <Trash2 className="h-4 w-4" />
-                Delete Current Program
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4">
+        <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {[
-            { label: 'Active Program', value: activeProgram?.name || 'Program' },
-            { label: 'This Week', value: `${completedThisWeek} done` },
-            { label: 'Training Days', value: `${days.filter((day) => !day.isRestDay).length}/7` },
-            { label: 'History', value: `${history.length} logs` },
+            { label: 'This Week', value: `${stats.completedThisWeek}/${stats.trainingDays}`, icon: CheckCircle2 },
+            { label: 'Total Volume', value: `${Math.round(stats.totalVolume).toLocaleString()} kg`, icon: Activity },
+            { label: 'Minutes Logged', value: `${stats.totalMinutes} min`, icon: Clock },
+            { label: 'Sessions', value: `${store.workoutLogs.length}`, icon: ListChecks },
           ].map((stat) => (
-            <div key={stat.label} className="rounded-lg border border-white/10 bg-white/[0.05] p-4">
-              <p className="text-xs uppercase tracking-wide text-white/45">{stat.label}</p>
-              <p className="mt-2 truncate text-xl font-black">{stat.value}</p>
+            <div key={stat.label} className="rounded-lg border bg-card p-4 shadow-sm">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{stat.label}</p>
+                <stat.icon className="h-4 w-4 text-primary" />
+              </div>
+              <p className="mt-3 truncate text-2xl font-black">{stat.value}</p>
             </div>
           ))}
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
-          <div className="grid gap-4 md:grid-cols-2">
-            {days.map((day) => {
-              const isToday = today?.dayOfWeek === day.dayOfWeek;
-              const exercisesText = day.exercises.join(', ');
+        <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base uppercase tracking-wide">
+                  <Flame className="h-4 w-4 text-primary" />
+                  Today
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-5">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                      {formatDate(getDateKey())}
+                    </p>
+                    <h2 className="mt-2 break-words text-3xl font-black uppercase">{today.splitTitle}</h2>
+                    <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                      {today.isRestDay ? 'Recovery day' : today.focus}
+                    </p>
+                  </div>
+                  <Button
+                    onClick={completeToday}
+                    variant={todayLog?.completed ? 'secondary' : 'default'}
+                    className="h-12 shrink-0 rounded-lg font-bold"
+                  >
+                    <CheckCircle2 className="h-4 w-4" />
+                    {todayLog?.completed ? 'Done' : 'Mark Done'}
+                  </Button>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs font-bold uppercase text-muted-foreground">
+                    <span>Weekly progress</span>
+                    <span>{Math.round(stats.weeklyProgress)}%</span>
+                  </div>
+                  <Progress value={stats.weeklyProgress} className="h-2" />
+                </div>
+              </CardContent>
+            </Card>
 
-              return (
-                <Card
-                  key={day.id}
-                  className={cn(
-                    'overflow-hidden border-white/10 bg-white/[0.045] text-white backdrop-blur-sm',
-                    isToday && 'border-white/60 shadow-[0_0_40px_rgba(255,255,255,0.10)]'
-                  )}
-                >
-                  <div className={cn('h-1 bg-gradient-to-r', dayAccent[day.dayOfWeek])} />
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between gap-3">
-                      <div>
-                        <CardTitle className="text-sm uppercase tracking-wide text-white/55">
-                          {day.dayName}
-                        </CardTitle>
-                        {isToday && <Badge className="mt-2 rounded-sm bg-white text-black">Today</Badge>}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Checkbox
-                          checked={day.isRestDay}
-                          onCheckedChange={(checked) => updateDay(day.dayOfWeek, { isRestDay: Boolean(checked) })}
-                        />
-                        <span className="text-xs text-white/50">Rest</span>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <Label className="text-xs uppercase text-white/45">Split</Label>
-                      <Input
-                        value={day.splitTitle}
-                        onChange={(event) => updateDay(day.dayOfWeek, { splitTitle: event.target.value })}
-                        className="border-white/15 bg-black/35 text-white placeholder:text-white/35"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-xs uppercase text-white/45">Muscle Groups / Exercises</Label>
-                      <Textarea
-                        value={exercisesText}
-                        onChange={(event) =>
-                          updateDay(day.dayOfWeek, {
-                            exercises: event.target.value.split(',').map((item) => item.trim()).filter(Boolean),
-                          })
-                        }
-                        placeholder="Chest, Shoulders, Triceps"
-                        className="min-h-20 resize-none border-white/15 bg-black/35 text-white placeholder:text-white/35"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-xs uppercase text-white/45">Notes</Label>
-                      <Input
-                        value={day.notes || ''}
-                        onChange={(event) => updateDay(day.dayOfWeek, { notes: event.target.value })}
-                        placeholder="Intensity, cardio, mobility..."
-                        className="border-white/15 bg-black/35 text-white placeholder:text-white/35"
-                      />
-                    </div>
-                    {isToday && (
-                      <Button onClick={() => toggleCompletion(day)} className="w-full rounded-sm bg-white text-black hover:bg-white/90">
-                        <CheckCircle2 className="h-4 w-4" />
-                        {today?.completed ? 'Undo Today' : 'Complete Today'}
-                      </Button>
-                    )}
-                  </CardContent>
-                </Card>
-              );
-            })}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base uppercase tracking-wide">
+                  <Dumbbell className="h-4 w-4 text-primary" />
+                  Quick Log
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>Workout</Label>
+                    <Input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder={today.splitTitle} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Date</Label>
+                    <Input type="date" value={form.date} onChange={(event) => setForm({ ...form, date: event.target.value })} />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Main exercise</Label>
+                  <Input value={form.exerciseName} onChange={(event) => setForm({ ...form, exerciseName: event.target.value })} placeholder="Bench press, squat, run..." />
+                </div>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  <div className="space-y-2">
+                    <Label>Sets</Label>
+                    <Input type="number" min={1} value={form.sets} onChange={(event) => setForm({ ...form, sets: event.target.value })} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Reps</Label>
+                    <Input type="number" min={0} value={form.reps} onChange={(event) => setForm({ ...form, reps: event.target.value })} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Kg</Label>
+                    <Input type="number" min={0} value={form.weight} onChange={(event) => setForm({ ...form, weight: event.target.value })} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Minutes</Label>
+                    <Input type="number" min={0} value={form.duration} onChange={(event) => setForm({ ...form, duration: event.target.value })} />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Notes</Label>
+                  <Textarea
+                    value={form.notes}
+                    onChange={(event) => setForm({ ...form, notes: event.target.value })}
+                    placeholder="Energy, pain, personal record, next target..."
+                    className="min-h-20 resize-none"
+                  />
+                </div>
+                <Button onClick={logWorkout} className="h-12 w-full rounded-lg font-bold">
+                  <Plus className="h-4 w-4" />
+                  Log Workout
+                </Button>
+              </CardContent>
+            </Card>
           </div>
 
-          <Card className="h-fit border-white/10 bg-white/[0.06] text-white backdrop-blur-md">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base uppercase tracking-wide">
-                <History className="h-4 w-4" />
-                Completion History
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {history.length === 0 ? (
-                <div className="py-10 text-center text-white/50">
-                  <Clock className="mx-auto mb-3 h-8 w-8" />
-                  <p className="text-sm">No completed workouts yet.</p>
-                </div>
-              ) : (
-                <div className="max-h-[680px] space-y-3 overflow-y-auto pr-1">
-                  {history.map((entry) => (
-                    <div key={entry.id} className="rounded-lg border border-white/10 bg-black/30 p-4">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <p className="font-black uppercase">{entry.splitTitle}</p>
-                          <p className="mt-1 text-xs text-white/50">{formatDate(entry.date)}</p>
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base uppercase tracking-wide">
+                  <CalendarDays className="h-4 w-4 text-primary" />
+                  Weekly Schedule
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {days.map((day) => {
+                  const isToday = day.dayOfWeek === todayIndex;
+
+                  return (
+                    <div
+                      key={day.id}
+                      className={cn(
+                        'rounded-lg border bg-muted/25 p-3 transition-colors',
+                        isToday && 'border-primary/60 bg-primary/10'
+                      )}
+                    >
+                      <div className="mb-3 flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-background text-sm font-black">
+                            {day.dayName}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-black uppercase">{day.splitTitle || 'Training'}</p>
+                            {isToday && <p className="text-xs font-bold uppercase text-primary">Today</p>}
+                          </div>
                         </div>
-                        <Badge className="rounded-sm bg-emerald-300 text-black">{entry.dayName}</Badge>
+                        <div className="flex items-center gap-2">
+                          <Checkbox
+                            checked={day.isRestDay}
+                            onCheckedChange={(checked) => updateDay(day.dayOfWeek, { isRestDay: Boolean(checked) })}
+                          />
+                          <span className="text-xs text-muted-foreground">Rest</span>
+                        </div>
                       </div>
-                      <p className="mt-3 text-xs text-white/40">
-                        Completed {new Date(entry.completedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </p>
+                      <div className="grid gap-2 sm:grid-cols-[0.82fr_1.18fr]">
+                        <Input
+                          value={day.splitTitle}
+                          onChange={(event) => updateDay(day.dayOfWeek, { splitTitle: event.target.value })}
+                          placeholder="Split"
+                        />
+                        <Input
+                          value={day.focus}
+                          onChange={(event) => updateDay(day.dayOfWeek, { focus: event.target.value })}
+                          placeholder="Focus"
+                        />
+                      </div>
+                      <Input
+                        value={day.notes}
+                        onChange={(event) => updateDay(day.dayOfWeek, { notes: event.target.value })}
+                        placeholder="Notes"
+                        className="mt-2"
+                      />
                     </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                  );
+                })}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base uppercase tracking-wide">
+                  <ListChecks className="h-4 w-4 text-primary" />
+                  Recent Workouts
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {store.workoutLogs.length === 0 ? (
+                  <div className="py-10 text-center text-sm text-muted-foreground">
+                    No workouts yet. Log one and your history appears here.
+                  </div>
+                ) : (
+                  <div className="max-h-[520px] space-y-3 overflow-y-auto pr-1">
+                    {store.workoutLogs.slice(0, 8).map((log) => (
+                      <div key={log.id} className="rounded-lg border bg-muted/20 p-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="truncate font-black uppercase">{log.name}</p>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              {formatDate(log.date)} · {log.duration || 0} min · {Math.round(workoutVolume(log)).toLocaleString()} kg
+                            </p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => store.deleteWorkoutLog(log.id)}
+                            aria-label="Delete workout"
+                            className="h-9 w-9 shrink-0 text-muted-foreground hover:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <p className="mt-2 truncate text-xs text-muted-foreground">
+                          {log.exercises.map((exercise) => exercise.exerciseName).join(', ')}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     </div>

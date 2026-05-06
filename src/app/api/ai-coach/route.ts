@@ -19,6 +19,38 @@ function getLatestUserMessage(messages: { role: string; content: string }[]) {
 function getLocalCoachResponse(messages: { role: string; content: string }[]) {
   const latest = getLatestUserMessage(messages).toLowerCase();
 
+  if (latest.includes('review') || latest.includes('progress') || latest.includes('improve')) {
+    return [
+      '**Weekly coaching review**',
+      '',
+      'Focus on three signals: completed sessions, progressive overload, and recovery. If you are not logging workouts yet, start there because the best plan is the one we can measure.',
+      '',
+      '**This week:**',
+      '- Keep your main lifts consistent for 2-4 weeks',
+      '- Add 1 rep or 1-2.5kg only when form is clean',
+      '- Track sleep, energy, soreness, and appetite after each workout',
+      '- If performance drops for 2 sessions in a row, reduce volume by 20-30%',
+      '',
+      '**Next 24 hours:** log one workout with exercises, sets, reps, weight, and one note about how it felt.'
+    ].join('\n');
+  }
+
+  if (latest.includes('7-day') || latest.includes('week') || latest.includes('weekly')) {
+    return [
+      '**7-day training plan**',
+      '',
+      '**Day 1 - Push:** bench press 4 x 6-8, incline dumbbell press 3 x 8-10, shoulder press 3 x 8, triceps pressdown 3 x 12. Rest 90 sec.',
+      '**Day 2 - Pull:** row 4 x 8, lat pulldown 3 x 10, rear delt fly 3 x 15, curls 3 x 10-12. Rest 75-90 sec.',
+      '**Day 3 - Legs:** squat or leg press 4 x 6-10, Romanian deadlift 3 x 8, lunges 3 x 10 each leg, calves 3 x 15.',
+      '**Day 4 - Recovery:** 25-40 min walk, mobility, easy core.',
+      '**Day 5 - Upper:** chest press 3 x 10, cable row 3 x 10, lateral raise 3 x 15, arms 2-3 x 12.',
+      '**Day 6 - Conditioning:** 8-12 intervals or a full-body circuit at moderate intensity.',
+      '**Day 7 - Rest:** sleep, steps, hydration.',
+      '',
+      '**Progression:** add reps first, then weight. Keep 1-2 reps in reserve on most sets.'
+    ].join('\n');
+  }
+
   if (latest.includes('meal') || latest.includes('eat') || latest.includes('nutrition') || latest.includes('protein')) {
     return [
       '**Nutrition game plan**',
