@@ -1,7 +1,13 @@
 import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
+import { ensureAuthSchema } from '@/lib/auth-schema';
 import { db } from '@/lib/db';
 import bcrypt from 'bcryptjs';
+
+const authSecret =
+  process.env.NEXTAUTH_SECRET ||
+  process.env.AUTH_SECRET ||
+  'prime-forge-development-auth-secret-change-before-production';
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -15,6 +21,8 @@ export const authOptions: NextAuthOptions = {
         if (!credentials?.email || !credentials?.password) {
           throw new Error('Email and password are required');
         }
+
+        await ensureAuthSchema();
 
         const user = await db.user.findUnique({
           where: { email: credentials.email },
@@ -66,6 +74,6 @@ export const authOptions: NextAuthOptions = {
   pages: {
     signIn: '/', // Uses the SPA routing
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: authSecret,
   debug: process.env.NODE_ENV === 'development',
 };

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { ensureAuthSchema } from '@/lib/auth-schema';
 import { db } from '@/lib/db';
 import { registerSchema } from '@/lib/validations';
 import { sanitizeInput } from '@/proxy';
@@ -22,6 +23,8 @@ export async function POST(request: Request) {
     }
 
     const { email, name, password } = result.data;
+
+    await ensureAuthSchema();
 
     // Check if user already exists
     const existingUser = await db.user.findUnique({

@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { AtSign, Loader2, Lock, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -33,6 +33,13 @@ export function AuthDialog({ open, defaultMode = 'login', onOpenChange }: AuthDi
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+  useEffect(() => {
+    if (open) {
+      setMode(defaultMode);
+      setError('');
+    }
+  }, [defaultMode, open]);
+
   const resetFeedback = () => setError('');
 
   const handleOpenChange = (nextOpen: boolean) => {
@@ -40,8 +47,6 @@ export function AuthDialog({ open, defaultMode = 'login', onOpenChange }: AuthDi
     if (!nextOpen) {
       setError('');
       setPassword('');
-    } else {
-      setMode(defaultMode);
     }
   };
 
