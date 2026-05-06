@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS "User" (
     "height" REAL,
     "goal" TEXT DEFAULT 'lose_weight',
     "level" TEXT DEFAULT 'beginner',
+    "weeklyGoal" INTEGER DEFAULT 5,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL
 );
@@ -69,10 +70,13 @@ CREATE TABLE IF NOT EXISTS "WorkoutSession" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "userId" TEXT NOT NULL,
     "workoutId" TEXT,
+    "name" TEXT NOT NULL DEFAULT 'Workout',
     "date" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "duration" INTEGER,
     "calories" INTEGER,
     "notes" TEXT,
+    "exercises" TEXT,
+    "completed" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT "WorkoutSession_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );

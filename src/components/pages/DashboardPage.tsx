@@ -24,6 +24,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
+import { openAuthDialog } from '@/lib/auth-dialog';
 import { useAppStore } from '@/lib/store';
 import { useToast } from '@/hooks/use-toast';
 import { progressData, dailyCalorieData, weeklySchedule, exercises } from '@/lib/data';
@@ -39,6 +40,7 @@ import {
   Tooltip, ResponsiveContainer, BarChart, Bar,
   PieChart, Pie, Cell,
 } from 'recharts';
+import { useSession } from 'next-auth/react';
 
 // ─── Avatar Options ────────────────────────────────────────────────────
 const avatarOptions = [
@@ -65,7 +67,7 @@ const levelLabels: Record<string, string> = {
   advanced: 'Advanced',
 };
 
-import type { WorkoutExercise } from '@/lib/store';
+import type { WorkoutExercise, WorkoutLog } from '@/lib/store';
 
 function getInitials(name: string): string {
   if (!name) return '?';
@@ -90,11 +92,31 @@ function getWorkoutDate(date: string) {
   return new Date(`${date}T00:00:00`);
 }
 
+type DashboardResponse = {
+  success: boolean;
+  error?: string;
+  profile?: {
+    name?: string;
+    avatar?: string;
+    weight?: number;
+    height?: number;
+    goal?: string;
+    level?: string;
+    weeklyGoal?: number;
+  };
+  workoutLogs?: WorkoutLog[];
+  workout?: WorkoutLog;
+};
+
 export function DashboardPage() {
   const store = useAppStore();
   const { toast } = useToast();
+  const { status } = useSession();
   const [isEditing, setIsEditing] = useState(false);
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
+  const [dashboardLoading, setDashboardLoading] = useState(false);
+  const [dashboardSaving, setDashboardSaving] = useState(false);
+  const [syncingWorkoutId, setSyncingWorkoutId] = useState<string | null>(null);
   // Detect hydration from localStorage (Zustand persist)
   const emptySubscribe = () => () => {};
   const isHydrated = useSyncExternalStore(emptySubscribe, () => true, () => false);
@@ -135,6 +157,64 @@ export function DashboardPage() {
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
+
+  const applyDashboardData = useCallback((data: DashboardResponse) => {
+    const actions = useAppStore.getState();
+
+    if (data.profile) {
+      actions.setUserProfile({
+        name: data.profile.name,
+        avatar: data.profile.avatar,
+        weight: data.profile.weight,
+        height: data.profile.height,
+        goal: data.profile.goal,
+        level: data.profile.level,
+        weeklyGoal: data.profile.weeklyGoal,
+      });
+      setEditData({
+        name: data.profile.name || '',
+        weight: data.profile.weight ?? 75,
+        height: data.profile.height ?? 175,
+        goal: data.profile.goal || 'lose_weight',
+        level: data.profile.level || 'intermediate',
+        weeklyGoal: data.profile.weeklyGoal ?? 5,
+        avatar: data.profile.avatar || 'emerald',
+      });
+    }
+
+    if (data.workoutLogs) {
+      actions.setWorkoutLogs(data.workoutLogs);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (status !== 'authenticated') return;
+
+    let mounted = true;
+    setDashboardLoading(true);
+
+    fetch('/api/dashboard')
+      .then(async (response) => {
+        const data = (await response.json()) as DashboardResponse;
+        if (!response.ok || !data.success) throw new Error(data.error || 'Could not load dashboard');
+        if (mounted) applyDashboardData(data);
+      })
+      .catch((error) => {
+        if (!mounted) return;
+        toast({
+          title: 'Could not load account data',
+          description: error instanceof Error ? error.message : 'Your local dashboard is still available.',
+          variant: 'destructive',
+        });
+      })
+      .finally(() => {
+        if (mounted) setDashboardLoading(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [applyDashboardData, status, toast]);
 
   const totalCaloriesBurned = dailyCalorieData.reduce((sum, d) => sum + d.burned, 0);
   const completedLogs = store.workoutLogs.filter((log) => log.completed);
@@ -274,8 +354,13 @@ export function DashboardPage() {
   const displayName = store.userName || 'Set Your Name';
   const avatar = getAvatarOption(store.userAvatar || 'emerald');
 
-  const handleSave = () => {
-    store.setUserProfile({
+  const handleSave = async () => {
+    if (status !== 'authenticated') {
+      openAuthDialog('login');
+      return;
+    }
+
+    const profile = {
       name: editData.name.trim() || undefined,
       weight: editData.weight,
       height: editData.height,
@@ -283,13 +368,34 @@ export function DashboardPage() {
       level: editData.level,
       weeklyGoal: editData.weeklyGoal,
       avatar: editData.avatar,
-    });
-    setIsEditing(false);
-    setShowAvatarPicker(false);
-    toast({
-      title: 'Profile saved!',
-      description: 'Your changes have been saved successfully.',
-    });
+    };
+
+    setDashboardSaving(true);
+    try {
+      const response = await fetch('/api/dashboard', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ profile }),
+      });
+      const data = (await response.json()) as DashboardResponse;
+      if (!response.ok || !data.success) throw new Error(data.error || 'Could not save profile');
+
+      store.setUserProfile(data.profile || profile);
+      setIsEditing(false);
+      setShowAvatarPicker(false);
+      toast({
+        title: 'Profile saved',
+        description: 'Your account has been updated.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Could not save profile',
+        description: error instanceof Error ? error.message : 'Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setDashboardSaving(false);
+    }
   };
 
   // ─── Workout Tracker State ─────────────────────────────────
@@ -347,21 +453,106 @@ export function DashboardPage() {
     });
   };
 
-  const handleSaveWorkout = () => {
+  const handleSaveWorkout = async () => {
     if (!workoutForm.name.trim() || workoutForm.exercises.length === 0) {
       toast({ title: 'Missing info', description: 'Add a workout name and at least one exercise.', variant: 'destructive' });
       return;
     }
-    store.addWorkoutLog({
+
+    if (status !== 'authenticated') {
+      openAuthDialog('login');
+      return;
+    }
+
+    const workout = {
       name: workoutForm.name.trim(),
       date: workoutForm.date,
       duration: workoutForm.duration,
       notes: workoutForm.notes.trim(),
       completed: false,
       exercises: workoutForm.exercises,
-    });
-    setShowWorkoutDialog(false);
-    toast({ title: 'Workout logged!', description: `${workoutForm.name} saved with ${workoutForm.exercises.length} exercise${workoutForm.exercises.length > 1 ? 's' : ''}.` });
+    };
+
+    setDashboardSaving(true);
+    try {
+      const response = await fetch('/api/dashboard', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ workout }),
+      });
+      const data = (await response.json()) as DashboardResponse;
+      if (!response.ok || !data.success || !data.workout) throw new Error(data.error || 'Could not save workout');
+
+      store.upsertWorkoutLog(data.workout);
+      setShowWorkoutDialog(false);
+      toast({ title: 'Workout logged', description: `${workoutForm.name} saved to your account.` });
+    } catch (error) {
+      toast({
+        title: 'Could not save workout',
+        description: error instanceof Error ? error.message : 'Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setDashboardSaving(false);
+    }
+  };
+
+  const handleToggleWorkout = async (log: WorkoutLog, completed: boolean) => {
+    if (status !== 'authenticated') {
+      openAuthDialog('login');
+      return;
+    }
+
+    const nextLog = { ...log, completed };
+    setSyncingWorkoutId(log.id);
+    store.upsertWorkoutLog(nextLog);
+
+    try {
+      const response = await fetch('/api/dashboard', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ workoutId: log.id, workout: nextLog }),
+      });
+      const data = (await response.json()) as DashboardResponse;
+      if (!response.ok || !data.success || !data.workout) throw new Error(data.error || 'Could not update workout');
+      store.upsertWorkoutLog(data.workout);
+    } catch (error) {
+      store.upsertWorkoutLog(log);
+      toast({
+        title: 'Could not update workout',
+        description: error instanceof Error ? error.message : 'Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSyncingWorkoutId(null);
+    }
+  };
+
+  const handleDeleteWorkout = async (log: WorkoutLog) => {
+    if (status !== 'authenticated') {
+      openAuthDialog('login');
+      return;
+    }
+
+    setSyncingWorkoutId(log.id);
+    store.deleteWorkoutLog(log.id);
+
+    try {
+      const response = await fetch(`/api/dashboard?workoutId=${encodeURIComponent(log.id)}`, {
+        method: 'DELETE',
+      });
+      const data = (await response.json()) as DashboardResponse;
+      if (!response.ok || !data.success) throw new Error(data.error || 'Could not delete workout');
+    } catch (error) {
+      store.upsertWorkoutLog(log);
+      toast({
+        title: 'Could not delete workout',
+        description: error instanceof Error ? error.message : 'Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSyncingWorkoutId(null);
+    }
   };
 
   const handleCancel = () => {
@@ -378,10 +569,31 @@ export function DashboardPage() {
     setShowAvatarPicker(false);
   };
 
-  if (!isHydrated) {
+  if (!isHydrated || status === 'loading' || (status === 'authenticated' && dashboardLoading)) {
     return (
       <div className="min-h-screen pt-24 pb-16 flex items-center justify-center">
         <div className="animate-pulse text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
+
+  if (status === 'unauthenticated') {
+    return (
+      <div className="flex min-h-screen items-center justify-center px-4 pb-16 pt-24">
+        <Card className="w-full max-w-md border-primary/15">
+          <CardContent className="p-6 text-center">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <Shield className="h-5 w-5" />
+            </div>
+            <h1 className="text-2xl font-black tracking-tight">Login Required</h1>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Sign in to view your dashboard, profile, and workout history.
+            </p>
+            <Button onClick={() => openAuthDialog('login')} className="mt-5 w-full rounded-lg">
+              Login
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -916,7 +1128,8 @@ export function DashboardPage() {
                           )}
                           <span className="text-xs text-muted-foreground flex items-center gap-1"><ListChecks className="h-3 w-3" />{log.exercises.length} exercises</span>
                           <button
-                            onClick={() => store.completeWorkoutLog(log.id, !log.completed)}
+                            onClick={() => handleToggleWorkout(log, !log.completed)}
+                            disabled={syncingWorkoutId === log.id}
                             className={cn(
                               'h-6 px-2 rounded-md flex items-center gap-1 text-xs transition-colors',
                               log.completed
@@ -929,7 +1142,8 @@ export function DashboardPage() {
                             {log.completed ? 'Done' : 'Complete'}
                           </button>
                           <button
-                            onClick={() => store.deleteWorkoutLog(log.id)}
+                            onClick={() => handleDeleteWorkout(log)}
+                            disabled={syncingWorkoutId === log.id}
                             className="h-6 w-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-red-400 hover:bg-red-400/10 transition-colors"
                             aria-label="Delete workout"
                           >
@@ -1121,7 +1335,7 @@ export function DashboardPage() {
             <Button variant="outline" onClick={handleCancel} className="rounded-xl">
               Cancel
             </Button>
-            <Button onClick={handleSave} className="rounded-xl gap-2">
+            <Button onClick={handleSave} className="rounded-xl gap-2" disabled={dashboardSaving}>
               <Save className="h-4 w-4" /> Save Profile
             </Button>
           </DialogFooter>
@@ -1273,7 +1487,7 @@ export function DashboardPage() {
 
           <DialogFooter className="mt-4">
             <Button variant="outline" onClick={() => setShowWorkoutDialog(false)} className="rounded-xl">Cancel</Button>
-            <Button onClick={handleSaveWorkout} className="rounded-xl gap-2" disabled={!workoutForm.name.trim() || workoutForm.exercises.length === 0}>
+            <Button onClick={handleSaveWorkout} className="rounded-xl gap-2" disabled={dashboardSaving || !workoutForm.name.trim() || workoutForm.exercises.length === 0}>
               <Save className="h-4 w-4" /> Save Workout
             </Button>
           </DialogFooter>

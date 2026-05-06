@@ -4,6 +4,7 @@ import { useAppStore, type PageName } from '@/lib/store';
 import { AuthDialog } from '@/components/auth/AuthDialog';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
+import { authDialogEventName, type AuthDialogMode } from '@/lib/auth-dialog';
 import { motion } from 'framer-motion';
 import {
   Dumbbell,
@@ -40,16 +41,26 @@ export function Header() {
   const heroTop = currentPage === 'home' && !scrolled;
   const userName = session?.user?.name || session?.user?.email?.split('@')[0] || 'Member';
 
+  const openAuth = (mode: AuthDialogMode) => {
+    setAuthMode(mode);
+    setAuthOpen(true);
+  };
+
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const openAuth = (mode: 'login' | 'signup') => {
-    setAuthMode(mode);
-    setAuthOpen(true);
-  };
+  useEffect(() => {
+    const handleAuthDialog = (event: Event) => {
+      const mode = (event as CustomEvent<{ mode?: AuthDialogMode }>).detail?.mode || 'login';
+      openAuth(mode);
+    };
+
+    window.addEventListener(authDialogEventName, handleAuthDialog);
+    return () => window.removeEventListener(authDialogEventName, handleAuthDialog);
+  }, []);
 
   return (
     <>

@@ -4,6 +4,20 @@ import { dirname, resolve } from 'path';
 import { tmpdir } from 'os';
 import bcrypt from 'bcryptjs';
 
+export interface StoredWorkoutLog {
+  id: string;
+  date: string;
+  name: string;
+  exercises: {
+    exerciseId: string;
+    exerciseName: string;
+    sets: { reps: number; weight: number }[];
+  }[];
+  duration: number;
+  notes: string;
+  completed?: boolean;
+}
+
 export interface AuthUser {
   id: string;
   email: string;
@@ -12,12 +26,24 @@ export interface AuthUser {
   avatar: string | null;
   passwordHash: string | null;
   createdAt: string;
+  weight?: number | null;
+  height?: number | null;
+  goal?: string | null;
+  level?: string | null;
+  weeklyGoal?: number | null;
+  workoutLogs?: StoredWorkoutLog[];
 }
 
 interface CreateAuthUserInput {
   email: string;
   name: string;
   password: string;
+}
+
+interface FallbackSessionUserInput {
+  id: string;
+  email: string;
+  name?: string | null;
 }
 
 const fallbackStorePath =
@@ -66,6 +92,11 @@ export async function findFallbackUser(email: string) {
   return users.find((user) => user.email === normalizedEmail) || null;
 }
 
+export async function findFallbackUserById(id: string) {
+  const users = await readFallbackUsers();
+  return users.find((user) => user.id === id) || null;
+}
+
 export async function createFallbackUser(input: CreateAuthUserInput) {
   const users = await readFallbackUsers();
   const email = normalizeEmail(input.email);
@@ -82,10 +113,55 @@ export async function createFallbackUser(input: CreateAuthUserInput) {
     avatar: null,
     passwordHash: await bcrypt.hash(input.password, 12),
     createdAt: new Date().toISOString(),
+    weight: 75,
+    height: 175,
+    goal: 'lose_weight',
+    level: 'intermediate',
+    weeklyGoal: 5,
+    workoutLogs: [],
   };
 
   await writeFallbackUsers([...users, user]);
   return { user, alreadyExists: false };
+}
+
+export async function ensureFallbackSessionUser(input: FallbackSessionUserInput) {
+  const users = await readFallbackUsers();
+  const email = normalizeEmail(input.email);
+  const existingIndex = users.findIndex((user) => user.id === input.id || user.email === email);
+
+  if (existingIndex !== -1) {
+    const existing = users[existingIndex];
+    const nextUser = {
+      ...existing,
+      id: existing.id || input.id,
+      email,
+      name: existing.name || input.name || email.split('@')[0],
+    };
+    const nextUsers = [...users];
+    nextUsers[existingIndex] = nextUser;
+    await writeFallbackUsers(nextUsers);
+    return nextUser;
+  }
+
+  const user: AuthUser = {
+    id: input.id,
+    email,
+    name: input.name || email.split('@')[0],
+    role: 'user',
+    avatar: null,
+    passwordHash: null,
+    createdAt: new Date().toISOString(),
+    weight: 75,
+    height: 175,
+    goal: 'lose_weight',
+    level: 'intermediate',
+    weeklyGoal: 5,
+    workoutLogs: [],
+  };
+
+  await writeFallbackUsers([...users, user]);
+  return user;
 }
 
 export async function verifyFallbackUser(email: string, password: string) {
@@ -95,4 +171,20 @@ export async function verifyFallbackUser(email: string, password: string) {
 
   const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
   return isPasswordValid ? user : null;
+}
+
+export async function updateFallbackUser(
+  id: string,
+  patch: Partial<Pick<AuthUser, 'name' | 'avatar' | 'weight' | 'height' | 'goal' | 'level' | 'weeklyGoal' | 'workoutLogs'>>
+) {
+  const users = await readFallbackUsers();
+  const index = users.findIndex((user) => user.id === id);
+
+  if (index === -1) return null;
+
+  const nextUser = { ...users[index], ...patch };
+  const nextUsers = [...users];
+  nextUsers[index] = nextUser;
+  await writeFallbackUsers(nextUsers);
+  return nextUser;
 }

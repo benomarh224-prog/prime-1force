@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { openAuthDialog } from '@/lib/auth-dialog';
 import { cn } from '@/lib/utils';
 import {
   CalendarDays,
@@ -28,8 +29,10 @@ import {
   Plus,
   RefreshCcw,
   Save,
+  Shield,
   Trash2,
 } from 'lucide-react';
+import { useSession } from 'next-auth/react';
 
 type Program = {
   id: string;
@@ -123,6 +126,7 @@ function saveLocalScheduleDays(days: ScheduleDay[]) {
 
 export function SchedulePage() {
   const { toast } = useToast();
+  const { status } = useSession();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [programs, setPrograms] = useState<Program[]>([]);
@@ -181,8 +185,14 @@ export function SchedulePage() {
   };
 
   useEffect(() => {
-    fetchSchedule();
-  }, []);
+    if (status === 'authenticated') {
+      fetchSchedule();
+    }
+
+    if (status === 'unauthenticated') {
+      setLoading(false);
+    }
+  }, [status]);
 
   const updateDay = (dayOfWeek: number, patch: Partial<ScheduleDay>) => {
     setDays((current) =>
@@ -339,11 +349,34 @@ export function SchedulePage() {
     }
   };
 
-  if (loading && days.length === 0) {
+  if ((status === 'loading' || loading) && days.length === 0) {
     return (
       <div className="min-h-screen bg-black pt-28 text-white">
         <div className="mx-auto flex min-h-[60vh] max-w-7xl items-center justify-center px-4">
           <Loader2 className="h-8 w-8 animate-spin text-white/70" />
+        </div>
+      </div>
+    );
+  }
+
+  if (status === 'unauthenticated') {
+    return (
+      <div className="min-h-screen bg-black pt-28 text-white">
+        <div className="mx-auto flex min-h-[60vh] max-w-md items-center justify-center px-4">
+          <Card className="w-full border-white/10 bg-white/[0.06] text-white">
+            <CardContent className="p-6 text-center">
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-sm bg-white/10 text-white">
+                <Shield className="h-5 w-5" />
+              </div>
+              <h1 className="text-2xl font-black uppercase tracking-tight">Login Required</h1>
+              <p className="mt-2 text-sm text-white/60">
+                Sign in to manage your weekly schedule and training history.
+              </p>
+              <Button onClick={() => openAuthDialog('login')} className="mt-5 w-full rounded-sm bg-white text-black hover:bg-white/90">
+                Login
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       </div>
     );

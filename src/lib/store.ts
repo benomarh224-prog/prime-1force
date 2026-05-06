@@ -58,6 +58,8 @@ interface AppState {
     level?: string;
     weeklyGoal?: number;
   }) => void;
+  setWorkoutLogs: (logs: WorkoutLog[]) => void;
+  upsertWorkoutLog: (log: WorkoutLog) => void;
   addWorkoutLog: (log: Omit<WorkoutLog, 'id'>) => void;
   completeWorkoutLog: (id: string, completed?: boolean) => void;
   deleteWorkoutLog: (id: string) => void;
@@ -96,6 +98,12 @@ export const useAppStore = create<AppState>()(
         ...(data.level !== undefined && { userLevel: data.level }),
         ...(data.weeklyGoal !== undefined && { weeklyGoal: data.weeklyGoal }),
       }),
+      setWorkoutLogs: (logs) => set({ workoutLogs: logs }),
+      upsertWorkoutLog: (log) => set((s) => ({
+        workoutLogs: s.workoutLogs.some((item) => item.id === log.id)
+          ? s.workoutLogs.map((item) => (item.id === log.id ? log : item))
+          : [log, ...s.workoutLogs],
+      })),
       addWorkoutLog: (log) => set((s) => ({
         workoutLogs: [
           { ...log, id: `wl-${Date.now()}` },

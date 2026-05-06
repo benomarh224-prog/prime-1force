@@ -19,6 +19,7 @@ model User {
   height        Float?
   goal          String?   @default("lose_weight")
   level         String?   @default("beginner")
+  weeklyGoal    Int?      @default(5)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   workouts      WorkoutSession[]
@@ -88,10 +89,13 @@ model WorkoutSession {
   userId    String
   user      User     @relation(fields: [userId], references: [id])
   workoutId String?
+  name      String    @default("Workout")
   date      DateTime @default(now())
   duration  Int?
   calories  Int?
   notes     String?
+  exercises String?   /// JSON array of workout exercise entries
+  completed Boolean   @default(false)
   createdAt DateTime @default(now())
 }
 
