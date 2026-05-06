@@ -24,9 +24,14 @@ export const authOptions: NextAuthOptions = {
           throw new Error('Invalid email or password');
         }
 
-        // For demo: accept any password. In production, use bcrypt:
-        // const isPasswordValid = await bcrypt.compare(credentials.password, user.passwordHash);
-        // if (!isPasswordValid) throw new Error('Invalid email or password');
+        if (!user.passwordHash) {
+          throw new Error('This account needs a password reset before signing in');
+        }
+
+        const isPasswordValid = await bcrypt.compare(credentials.password, user.passwordHash);
+        if (!isPasswordValid) {
+          throw new Error('Invalid email or password');
+        }
 
         return {
           id: user.id,

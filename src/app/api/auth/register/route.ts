@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { registerSchema } from '@/lib/validations';
 import { sanitizeInput } from '@/proxy';
+import bcrypt from 'bcryptjs';
 
 export async function POST(request: Request) {
   try {
@@ -35,12 +36,13 @@ export async function POST(request: Request) {
       );
     }
 
-    // Create user (password stored as plain text for demo — use bcrypt in production)
+    const passwordHash = await bcrypt.hash(password, 12);
+
     const user = await db.user.create({
       data: {
         email,
         name,
-        // In production: passwordHash: await bcrypt.hash(password, 12)
+        passwordHash,
       },
       select: {
         id: true,

@@ -1,6 +1,7 @@
 'use client';
 
 import { useAppStore, type PageName } from '@/lib/store';
+import { AuthDialog } from '@/components/auth/AuthDialog';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
 import { motion } from 'framer-motion';
@@ -14,7 +15,10 @@ import {
   Bot,
   ArrowRight,
   CalendarDays,
+  LogOut,
+  UserCircle,
 } from 'lucide-react';
+import { signOut, useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 
 const navItems: { label: string; page: PageName; icon: React.ReactNode }[] = [
@@ -29,8 +33,12 @@ const navItems: { label: string; page: PageName; icon: React.ReactNode }[] = [
 
 export function Header() {
   const { currentPage, navigate } = useAppStore();
+  const { data: session, status } = useSession();
   const [scrolled, setScrolled] = useState(false);
+  const [authOpen, setAuthOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const heroTop = currentPage === 'home' && !scrolled;
+  const userName = session?.user?.name || session?.user?.email?.split('@')[0] || 'Member';
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -38,19 +46,25 @@ export function Header() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const openAuth = (mode: 'login' | 'signup') => {
+    setAuthMode(mode);
+    setAuthOpen(true);
+  };
+
   return (
-    <motion.header
-      initial={{ y: -100 }}
-      animate={{ y: 0 }}
-      transition={{ duration: 0.5, ease: 'easeOut' }}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled
-          ? 'glass shadow-[0_16px_42px_oklch(0_0_0_/_0.24)]'
-          : 'bg-transparent'
-      }`}
-    >
-      <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-10">
-        <div className="flex h-16 items-center justify-between">
+    <>
+      <motion.header
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
+        transition={{ duration: 0.5, ease: 'easeOut' }}
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+          scrolled
+            ? 'glass shadow-[0_16px_42px_oklch(0_0_0_/_0.24)]'
+            : 'bg-transparent'
+        }`}
+      >
+        <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-10">
+          <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <button
             onClick={() => navigate('home')}
@@ -90,19 +104,56 @@ export function Header() {
 
           {/* Right side */}
           <div className="flex items-center gap-2">
-            <Button
-              onClick={() => navigate('workouts')}
-              variant={heroTop ? 'outline' : 'default'}
-              className={`hidden sm:flex gap-2 font-semibold ${
-                heroTop
-                  ? 'h-11 rounded-lg border-primary/70 bg-black/20 px-6 uppercase text-white shadow-none hover:bg-primary hover:text-primary-foreground'
-                  : 'rounded-lg neon-glow'
-              }`}
-              size="sm"
-            >
-              {heroTop ? 'Join Now' : 'Start Now'}
-              <ArrowRight className={`h-4 w-4 ${heroTop ? 'hidden' : ''}`} />
-            </Button>
+            {status === 'authenticated' ? (
+              <div className="hidden items-center gap-2 sm:flex">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate('dashboard')}
+                  className={`max-w-44 gap-2 rounded-lg ${
+                    heroTop ? 'border-white/25 bg-black/20 text-white hover:bg-white/10 hover:text-white' : ''
+                  }`}
+                >
+                  <UserCircle className="h-4 w-4" />
+                  <span className="truncate">{userName}</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => signOut({ redirect: false })}
+                  className={`rounded-lg ${heroTop ? 'text-white hover:bg-white/10 hover:text-white' : ''}`}
+                  title="Sign out"
+                >
+                  <LogOut className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <div className="hidden items-center gap-2 sm:flex">
+                <Button
+                  onClick={() => openAuth('login')}
+                  variant="ghost"
+                  className={`rounded-lg font-semibold ${
+                    heroTop ? 'text-white hover:bg-white/10 hover:text-white' : ''
+                  }`}
+                  size="sm"
+                >
+                  Login
+                </Button>
+                <Button
+                  onClick={() => openAuth('signup')}
+                  variant={heroTop ? 'outline' : 'default'}
+                  className={`gap-2 font-semibold ${
+                    heroTop
+                      ? 'h-11 rounded-lg border-primary/70 bg-black/20 px-6 uppercase text-white shadow-none hover:bg-primary hover:text-primary-foreground'
+                      : 'rounded-lg neon-glow'
+                  }`}
+                  size="sm"
+                >
+                  Sign Up
+                  <ArrowRight className={`h-4 w-4 ${heroTop ? 'hidden' : ''}`} />
+                </Button>
+              </div>
+            )}
 
             {/* Mobile Menu */}
             <Sheet>
@@ -137,13 +188,43 @@ export function Header() {
                     ))}
                   </nav>
                   <div className="p-4 border-t space-y-2">
-                    <Button
-                      onClick={() => navigate('workouts')}
-                      className="w-full gap-2 rounded-lg neon-glow font-semibold"
-                    >
-                      Start Now
-                      <ArrowRight className="h-4 w-4" />
-                    </Button>
+                    {status === 'authenticated' ? (
+                      <>
+                        <Button
+                          onClick={() => navigate('dashboard')}
+                          className="w-full gap-2 rounded-lg neon-glow font-semibold"
+                        >
+                          <UserCircle className="h-4 w-4" />
+                          {userName}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => signOut({ redirect: false })}
+                          className="w-full gap-2 rounded-lg border-primary/20"
+                        >
+                          <LogOut className="h-4 w-4" />
+                          Sign out
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button
+                          onClick={() => openAuth('signup')}
+                          className="w-full gap-2 rounded-lg neon-glow font-semibold"
+                        >
+                          Sign Up
+                          <ArrowRight className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => openAuth('login')}
+                          className="w-full gap-2 rounded-lg border-primary/20"
+                        >
+                          <UserCircle className="h-4 w-4" />
+                          Login
+                        </Button>
+                      </>
+                    )}
                     <Button
                       variant="outline"
                       onClick={() => navigate('ai-coach')}
@@ -159,6 +240,8 @@ export function Header() {
           </div>
         </div>
       </div>
-    </motion.header>
+      </motion.header>
+      <AuthDialog open={authOpen} defaultMode={authMode} onOpenChange={setAuthOpen} />
+    </>
   );
 }
