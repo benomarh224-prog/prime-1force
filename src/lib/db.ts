@@ -19,7 +19,14 @@ function ensureSqliteDirectory() {
     ? sqlitePath
     : resolve(schemaDir, sqlitePath);
 
-  mkdirSync(dirname(absolutePath), { recursive: true });
+  try {
+    mkdirSync(dirname(absolutePath), { recursive: true });
+  } catch (error: unknown) {
+    console.warn(
+      '[Database] Could not prepare SQLite directory:',
+      error instanceof Error ? error.message : 'Unknown error'
+    );
+  }
 }
 
 ensureSqliteDirectory();
