@@ -7,6 +7,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Dialog,
@@ -21,7 +28,8 @@ import { useToast } from '@/hooks/use-toast';
 import {
   Search, SlidersHorizontal, Dumbbell, Home, Clock,
   Flame, Heart, X, Plus, Save, Trash2, ListChecks,
-  Calendar, BarChart3, Trophy, NotebookPen,
+  Calendar, BarChart3, Trophy, NotebookPen, PlayCircle,
+  ArrowDownAZ, Filter, Star,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Exercise } from '@/lib/data';
@@ -40,6 +48,14 @@ const categories = [
 
 const difficulties = ['all', 'beginner', 'intermediate', 'advanced'] as const;
 
+const sortOptions = [
+  { value: 'popular', label: 'Recommended' },
+  { value: 'name', label: 'Name A-Z' },
+  { value: 'duration', label: 'Shortest first' },
+  { value: 'calories', label: 'Highest burn' },
+  { value: 'difficulty', label: 'Difficulty' },
+] as const;
+
 const difficultyColor: Record<string, string> = {
   beginner: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
   intermediate: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
@@ -52,8 +68,13 @@ export function WorkoutsPage() {
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('all');
+  const [selectedMuscle, setSelectedMuscle] = useState<string>('all');
+  const [selectedEquipment, setSelectedEquipment] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<string>('popular');
+  const [savedOnly, setSavedOnly] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [logDialogOpen, setLogDialogOpen] = useState(false);
+  const [guideExercise, setGuideExercise] = useState<Exercise | null>(null);
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
   const [quickLog, setQuickLog] = useState({
     date: new Date().toISOString().split('T')[0],
@@ -62,21 +83,47 @@ export function WorkoutsPage() {
     sets: [{ reps: 10, weight: 0 }] as QuickSet[],
   });
 
+  const muscleGroups = Array.from(new Set(exercises.map((exercise) => exercise.muscleGroup))).sort();
+  const equipmentOptions = Array.from(new Set(exercises.map((exercise) => exercise.equipment))).sort();
+  const difficultyRank: Record<string, number> = { beginner: 1, intermediate: 2, advanced: 3 };
+
   const filtered = exercises.filter((ex) => {
     const matchSearch = ex.name.toLowerCase().includes(search.toLowerCase()) ||
-      ex.muscleGroup.toLowerCase().includes(search.toLowerCase());
+      ex.muscleGroup.toLowerCase().includes(search.toLowerCase()) ||
+      ex.equipment.toLowerCase().includes(search.toLowerCase());
     const matchCategory = selectedCategory === 'all' || ex.category === selectedCategory;
     const matchDifficulty = selectedDifficulty === 'all' || ex.difficulty === selectedDifficulty;
-    return matchSearch && matchCategory && matchDifficulty;
+    const matchMuscle = selectedMuscle === 'all' || ex.muscleGroup === selectedMuscle;
+    const matchEquipment = selectedEquipment === 'all' || ex.equipment === selectedEquipment;
+    const matchSaved = !savedOnly || favorites.includes(ex.id);
+    return matchSearch && matchCategory && matchDifficulty && matchMuscle && matchEquipment && matchSaved;
+  }).sort((a, b) => {
+    if (sortBy === 'name') return a.name.localeCompare(b.name);
+    if (sortBy === 'duration') return a.duration - b.duration;
+    if (sortBy === 'calories') return b.calories - a.calories;
+    if (sortBy === 'difficulty') return difficultyRank[a.difficulty] - difficultyRank[b.difficulty];
+    return getLoggedCount(b.id) - getLoggedCount(a.id) || b.calories - a.calories;
   });
 
   const clearFilters = () => {
     setSearch('');
     setSelectedCategory('all');
     setSelectedDifficulty('all');
+    setSelectedMuscle('all');
+    setSelectedEquipment('all');
+    setSavedOnly(false);
+    setSortBy('popular');
   };
 
-  const hasActiveFilters = search || selectedCategory !== 'all' || selectedDifficulty !== 'all';
+  const hasActiveFilters = Boolean(
+    search ||
+    selectedCategory !== 'all' ||
+    selectedDifficulty !== 'all' ||
+    selectedMuscle !== 'all' ||
+    selectedEquipment !== 'all' ||
+    savedOnly ||
+    sortBy !== 'popular'
+  );
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
   sevenDaysAgo.setHours(0, 0, 0, 0);
@@ -97,8 +144,9 @@ export function WorkoutsPage() {
     0
   );
 
-  const getLoggedCount = (exerciseId: string) =>
-    workoutLogs.filter((log) => log.exercises.some((ex) => ex.exerciseId === exerciseId)).length;
+  function getLoggedCount(exerciseId: string) {
+    return workoutLogs.filter((log) => log.exercises.some((ex) => ex.exerciseId === exerciseId)).length;
+  }
 
   const openLogDialog = (exercise: Exercise) => {
     const defaultReps =
@@ -312,30 +360,91 @@ export function WorkoutsPage() {
                 exit={{ opacity: 0, height: 0 }}
                 className="overflow-hidden"
               >
-                <div className="flex items-center gap-3 flex-wrap">
-                  <span className="text-sm font-medium text-muted-foreground">Difficulty:</span>
-                  {difficulties.map((d) => (
+                <div className="rounded-xl border border-border/60 bg-card/70 p-4">
+                  <div className="mb-4 flex items-center gap-2 text-sm font-black uppercase text-muted-foreground">
+                    <Filter className="h-4 w-4 text-primary" />
+                    Fast filters
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Muscle group</Label>
+                      <Select value={selectedMuscle} onValueChange={setSelectedMuscle}>
+                        <SelectTrigger className="h-10 rounded-lg">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All muscles</SelectItem>
+                          {muscleGroups.map((group) => (
+                            <SelectItem key={group} value={group}>{group}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Equipment</Label>
+                      <Select value={selectedEquipment} onValueChange={setSelectedEquipment}>
+                        <SelectTrigger className="h-10 rounded-lg">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Any equipment</SelectItem>
+                          {equipmentOptions.map((equipment) => (
+                            <SelectItem key={equipment} value={equipment}>{equipment}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Difficulty</Label>
+                      <Select value={selectedDifficulty} onValueChange={setSelectedDifficulty}>
+                        <SelectTrigger className="h-10 rounded-lg">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {difficulties.map((difficulty) => (
+                            <SelectItem key={difficulty} value={difficulty} className="capitalize">
+                              {difficulty}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Sort by</Label>
+                      <Select value={sortBy} onValueChange={setSortBy}>
+                        <SelectTrigger className="h-10 rounded-lg">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {sortOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="mt-4 flex flex-wrap items-center gap-2">
                     <Button
-                      key={d}
-                      variant={selectedDifficulty === d ? 'default' : 'outline'}
+                      variant={savedOnly ? 'default' : 'outline'}
                       size="sm"
-                      onClick={() => setSelectedDifficulty(d)}
-                      className="rounded-lg capitalize"
+                      onClick={() => setSavedOnly((value) => !value)}
+                      className="rounded-lg gap-2"
                     >
-                      {d}
+                      <Star className={cn('h-3.5 w-3.5', savedOnly && 'fill-current')} />
+                      Saved only
                     </Button>
-                  ))}
-                  {hasActiveFilters && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={clearFilters}
-                      className="rounded-lg text-muted-foreground gap-1"
-                    >
-                      <X className="h-3 w-3" />
-                      Clear
-                    </Button>
-                  )}
+                    {hasActiveFilters && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={clearFilters}
+                        className="rounded-lg text-muted-foreground gap-1"
+                      >
+                        <X className="h-3 w-3" />
+                        Clear filters
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </motion.div>
             )}
@@ -343,9 +452,15 @@ export function WorkoutsPage() {
         </motion.div>
 
         {/* Results Count */}
-        <p className="text-sm text-muted-foreground mb-4">
-          {filtered.length} exercise{filtered.length !== 1 ? 's' : ''} found
-        </p>
+        <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-muted-foreground">
+            {filtered.length} exercise{filtered.length !== 1 ? 's' : ''} found
+          </p>
+          <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <ArrowDownAZ className="h-3.5 w-3.5" />
+            Sorted by {sortOptions.find((option) => option.value === sortBy)?.label || 'Recommended'}
+          </p>
+        </div>
 
         {/* Exercise Grid */}
         <motion.div
@@ -417,7 +532,7 @@ export function WorkoutsPage() {
                         {exercise.muscleGroup}
                       </Badge>
                     </div>
-                    <div className="mt-4 grid grid-cols-2 gap-2">
+                    <div className="mt-4 grid grid-cols-3 gap-2">
                       <Button
                         variant="outline"
                         size="sm"
@@ -425,6 +540,15 @@ export function WorkoutsPage() {
                         className="rounded-lg"
                       >
                         Details
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setGuideExercise(exercise)}
+                        className="rounded-lg gap-1.5"
+                      >
+                        <PlayCircle className="h-3.5 w-3.5" />
+                        Guide
                       </Button>
                       <Button
                         size="sm"
@@ -435,6 +559,15 @@ export function WorkoutsPage() {
                         Log
                       </Button>
                     </div>
+                    <Button
+                      variant={favorites.includes(exercise.id) ? 'secondary' : 'ghost'}
+                      size="sm"
+                      onClick={() => toggleFavorite(exercise.id)}
+                      className="mt-2 w-full rounded-lg gap-2"
+                    >
+                      <Heart className={cn('h-3.5 w-3.5', favorites.includes(exercise.id) && 'fill-red-500 text-red-500')} />
+                      {favorites.includes(exercise.id) ? 'Saved workout' : 'Save workout'}
+                    </Button>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -455,6 +588,62 @@ export function WorkoutsPage() {
           </div>
         )}
       </div>
+
+      <Dialog open={Boolean(guideExercise)} onOpenChange={(open) => !open && setGuideExercise(null)}>
+        <DialogContent className="max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <PlayCircle className="h-5 w-5 text-primary" />
+              Exercise Guidance
+            </DialogTitle>
+          </DialogHeader>
+
+          {guideExercise && (
+            <div className="space-y-5">
+              <div
+                className="relative aspect-video overflow-hidden rounded-xl bg-cover bg-center"
+                style={{ backgroundImage: `url('${guideExercise.image}')` }}
+              >
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/90 text-primary-foreground shadow-lg">
+                    <PlayCircle className="h-8 w-8" />
+                  </div>
+                </div>
+                <div className="absolute bottom-4 left-4 right-4">
+                  <p className="font-black uppercase text-white drop-shadow">{guideExercise.name}</p>
+                  <p className="text-sm text-white/75 drop-shadow">{guideExercise.muscleGroup} - {guideExercise.equipment}</p>
+                </div>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-lg border bg-muted/25 p-4">
+                  <p className="mb-3 text-xs font-black uppercase text-muted-foreground">Form cues</p>
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    {guideExercise.steps.slice(0, 4).map((step) => (
+                      <li key={step} className="flex gap-2">
+                        <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+                        <span>{step}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="rounded-lg border bg-muted/25 p-4">
+                  <p className="mb-3 text-xs font-black uppercase text-muted-foreground">Coach tips</p>
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    {guideExercise.tips.slice(0, 4).map((tip) => (
+                      <li key={tip} className="flex gap-2">
+                        <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+                        <span>{tip}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={logDialogOpen} onOpenChange={setLogDialogOpen}>
         <DialogContent className="max-h-[85vh] overflow-y-auto">

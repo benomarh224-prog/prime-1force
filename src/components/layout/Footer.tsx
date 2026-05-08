@@ -1,8 +1,9 @@
 'use client';
 
+import Image from 'next/image';
 import { useAppStore } from '@/lib/store';
 import { Separator } from '@/components/ui/separator';
-import { Dumbbell, Facebook, Twitter, Instagram, Heart } from 'lucide-react';
+import { Facebook, Twitter, Instagram, Heart } from 'lucide-react';
 
 export function Footer() {
   const { navigate } = useAppStore();
@@ -14,9 +15,7 @@ export function Footer() {
           {/* Brand */}
           <div className="md:col-span-1">
             <button onClick={() => navigate('home')} className="flex items-center gap-2 mb-4">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-lg shadow-sm">
-                P
-              </div>
+              <Image src="/logo.svg" alt="Prime Forge" width={36} height={36} className="rounded-lg" />
               <span className="text-xl font-black uppercase tracking-tight">
                 Prime<span className="text-primary"> Forge</span>
               </span>

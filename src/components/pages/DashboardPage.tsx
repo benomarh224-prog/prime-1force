@@ -33,6 +33,7 @@ import {
   Dumbbell, Trophy, Edit3, Save, X, Check,
   Weight, Ruler, Activity, Apple, Camera,
   Plus, Trash2, Clock, ClipboardList, ListChecks, Award, Shield, BarChart3,
+  CheckCircle2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -117,6 +118,7 @@ export function DashboardPage() {
   const [dashboardLoading, setDashboardLoading] = useState(false);
   const [dashboardSaving, setDashboardSaving] = useState(false);
   const [syncingWorkoutId, setSyncingWorkoutId] = useState<string | null>(null);
+  const [profileSuccess, setProfileSuccess] = useState(false);
   // Detect hydration from localStorage (Zustand persist)
   const emptySubscribe = () => () => {};
   const isHydrated = useSyncExternalStore(emptySubscribe, () => true, () => false);
@@ -383,6 +385,10 @@ export function DashboardPage() {
       store.setUserProfile(data.profile || profile);
       setIsEditing(false);
       setShowAvatarPicker(false);
+      setProfileSuccess(true);
+      window.requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
       toast({
         title: 'Profile saved',
         description: 'Your account has been updated.',
@@ -569,6 +575,12 @@ export function DashboardPage() {
     setShowAvatarPicker(false);
   };
 
+  useEffect(() => {
+    if (!profileSuccess) return;
+    const timeout = window.setTimeout(() => setProfileSuccess(false), 4500);
+    return () => window.clearTimeout(timeout);
+  }, [profileSuccess]);
+
   if (!isHydrated || status === 'loading' || (status === 'authenticated' && dashboardLoading)) {
     return (
       <div className="min-h-screen pt-24 pb-16 flex items-center justify-center">
@@ -620,6 +632,17 @@ export function DashboardPage() {
             </Button>
           </motion.div>
         </motion.div>
+
+        {profileSuccess && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 flex items-center gap-3 rounded-lg border border-primary/30 bg-primary/10 px-4 py-3 text-sm text-primary"
+          >
+            <CheckCircle2 className="h-4 w-4 shrink-0" />
+            <span className="font-semibold">Profile saved successfully.</span>
+          </motion.div>
+        )}
 
         {/* Stats Cards Row */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">

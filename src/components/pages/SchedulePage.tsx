@@ -1,14 +1,34 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import {
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { motion } from 'framer-motion';
 import {
   Activity,
+  Bell,
   CalendarDays,
+  CalendarPlus,
   CheckCircle2,
   Clock,
   Dumbbell,
   Flame,
+  GripVertical,
   ListChecks,
   Plus,
   Save,
@@ -102,11 +122,92 @@ function workoutVolume(log: WorkoutLog) {
   );
 }
 
+function SortableScheduleDay({
+  day,
+  isToday,
+  onUpdate,
+}: {
+  day: ScheduleDay;
+  isToday: boolean;
+  onUpdate: (dayOfWeek: number, patch: Partial<ScheduleDay>) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: day.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        'rounded-lg border bg-muted/25 p-3 transition-colors',
+        isToday && 'border-primary/60 bg-primary/10',
+        isDragging && 'relative z-10 shadow-2xl ring-1 ring-primary/40'
+      )}
+    >
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <button
+            type="button"
+            className="flex h-10 w-8 shrink-0 cursor-grab items-center justify-center rounded-md text-muted-foreground hover:bg-background hover:text-primary active:cursor-grabbing"
+            aria-label={`Drag ${day.dayName}`}
+            {...attributes}
+            {...listeners}
+          >
+            <GripVertical className="h-4 w-4" />
+          </button>
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-background text-sm font-black">
+            {day.dayName}
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-black uppercase">{day.splitTitle || 'Training'}</p>
+            {isToday && <p className="text-xs font-bold uppercase text-primary">Today</p>}
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Checkbox
+            checked={day.isRestDay}
+            onCheckedChange={(checked) => onUpdate(day.dayOfWeek, { isRestDay: Boolean(checked) })}
+          />
+          <span className="text-xs text-muted-foreground">Rest</span>
+        </div>
+      </div>
+      <div className="grid gap-2 sm:grid-cols-[0.82fr_1.18fr]">
+        <Input
+          value={day.splitTitle}
+          onChange={(event) => onUpdate(day.dayOfWeek, { splitTitle: event.target.value })}
+          placeholder="Split"
+        />
+        <Input
+          value={day.focus}
+          onChange={(event) => onUpdate(day.dayOfWeek, { focus: event.target.value })}
+          placeholder="Focus"
+        />
+      </div>
+      <Input
+        value={day.notes}
+        onChange={(event) => onUpdate(day.dayOfWeek, { notes: event.target.value })}
+        placeholder="Notes"
+        className="mt-2"
+      />
+    </div>
+  );
+}
+
 export function SchedulePage() {
   const { toast } = useToast();
   const store = useAppStore();
   const [days, setDays] = useState<ScheduleDay[]>(() => readSchedule());
   const [form, setForm] = useState<WorkoutForm>(() => emptyForm());
+  const [remindersEnabled, setRemindersEnabled] = useState(false);
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
   const todayIndex = new Date().getDay();
   const today = days.find((day) => day.dayOfWeek === todayIndex) ?? days[0];
   const todayLog = store.workoutLogs.find((log) => log.date === getDateKey());
@@ -136,11 +237,96 @@ export function SchedulePage() {
     setDays((current) => current.map((day) => (day.dayOfWeek === dayOfWeek ? { ...day, ...patch } : day)));
   };
 
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    setDays((current) => {
+      const oldIndex = current.findIndex((day) => day.id === active.id);
+      const newIndex = current.findIndex((day) => day.id === over.id);
+      if (oldIndex === -1 || newIndex === -1) return current;
+      return arrayMove(current, oldIndex, newIndex);
+    });
+  };
+
   const saveSchedule = () => {
     window.localStorage.setItem(scheduleKey, JSON.stringify(days));
     toast({
       title: 'Schedule saved',
       description: 'Your weekly plan is saved on this device.',
+    });
+  };
+
+  const enableReminders = async () => {
+    if (typeof window === 'undefined' || !('Notification' in window)) {
+      toast({
+        title: 'Reminders unavailable',
+        description: 'This browser does not support workout notifications.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') {
+      toast({
+        title: 'Notifications blocked',
+        description: 'Allow notifications in your browser to receive workout reminders.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setRemindersEnabled(true);
+    new Notification('Prime Forge reminders enabled', {
+      body: `Today is ${today.splitTitle}. Your plan is ready when you are.`,
+    });
+    toast({
+      title: 'Reminders enabled',
+      description: 'Prime Forge can now show browser workout reminders.',
+    });
+  };
+
+  const downloadCalendar = () => {
+    const monday = new Date();
+    monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7));
+    monday.setHours(9, 0, 0, 0);
+
+    const formatIcsDate = (date: Date) =>
+      date.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z');
+
+    const events = days
+      .filter((day) => !day.isRestDay)
+      .map((day, index) => {
+        const start = new Date(monday);
+        start.setDate(monday.getDate() + ((day.dayOfWeek + 6) % 7));
+        const end = new Date(start);
+        end.setMinutes(end.getMinutes() + 60);
+
+        return [
+          'BEGIN:VEVENT',
+          `UID:prime-forge-${day.id}-${index}@primeforge.local`,
+          `DTSTAMP:${formatIcsDate(new Date())}`,
+          `DTSTART:${formatIcsDate(start)}`,
+          `DTEND:${formatIcsDate(end)}`,
+          `SUMMARY:Prime Forge - ${day.splitTitle || 'Workout'}`,
+          `DESCRIPTION:${(day.focus || day.notes || 'Training session').replace(/\n/g, ' ')}`,
+          'END:VEVENT',
+        ].join('\r\n');
+      })
+      .join('\r\n');
+
+    const calendar = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Prime Forge//Training Planner//EN', events, 'END:VCALENDAR'].join('\r\n');
+    const url = URL.createObjectURL(new Blob([calendar], { type: 'text/calendar;charset=utf-8' }));
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = 'prime-forge-training-plan.ics';
+    anchor.click();
+    URL.revokeObjectURL(url);
+
+    toast({
+      title: 'Calendar exported',
+      description: 'Import the .ics file into Google Calendar, Apple Calendar, or Outlook.',
     });
   };
 
@@ -214,10 +400,20 @@ export function SchedulePage() {
               Plan the week, log today&apos;s work, and keep progress visible without any complicated setup.
             </p>
           </div>
-          <Button onClick={saveSchedule} className="h-12 rounded-lg font-bold">
-            <Save className="h-4 w-4" />
-            Save Schedule
-          </Button>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Button onClick={enableReminders} variant={remindersEnabled ? 'secondary' : 'outline'} className="h-12 rounded-lg font-bold">
+              <Bell className="h-4 w-4" />
+              {remindersEnabled ? 'Reminders On' : 'Enable Reminders'}
+            </Button>
+            <Button onClick={downloadCalendar} variant="outline" className="h-12 rounded-lg font-bold">
+              <CalendarPlus className="h-4 w-4" />
+              Export Calendar
+            </Button>
+            <Button onClick={saveSchedule} className="h-12 rounded-lg font-bold">
+              <Save className="h-4 w-4" />
+              Save Schedule
+            </Button>
+          </div>
         </motion.div>
 
         <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -341,57 +537,24 @@ export function SchedulePage() {
                   Weekly Schedule
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                {days.map((day) => {
-                  const isToday = day.dayOfWeek === todayIndex;
-
-                  return (
-                    <div
-                      key={day.id}
-                      className={cn(
-                        'rounded-lg border bg-muted/25 p-3 transition-colors',
-                        isToday && 'border-primary/60 bg-primary/10'
-                      )}
-                    >
-                      <div className="mb-3 flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-background text-sm font-black">
-                            {day.dayName}
-                          </div>
-                          <div className="min-w-0">
-                            <p className="truncate text-sm font-black uppercase">{day.splitTitle || 'Training'}</p>
-                            {isToday && <p className="text-xs font-bold uppercase text-primary">Today</p>}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Checkbox
-                            checked={day.isRestDay}
-                            onCheckedChange={(checked) => updateDay(day.dayOfWeek, { isRestDay: Boolean(checked) })}
-                          />
-                          <span className="text-xs text-muted-foreground">Rest</span>
-                        </div>
-                      </div>
-                      <div className="grid gap-2 sm:grid-cols-[0.82fr_1.18fr]">
-                        <Input
-                          value={day.splitTitle}
-                          onChange={(event) => updateDay(day.dayOfWeek, { splitTitle: event.target.value })}
-                          placeholder="Split"
+              <CardContent>
+                <p className="mb-3 text-xs text-muted-foreground">
+                  Drag days to rearrange the plan. Edits are saved locally and can be exported to your calendar.
+                </p>
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                  <SortableContext items={days.map((day) => day.id)} strategy={verticalListSortingStrategy}>
+                    <div className="space-y-3">
+                      {days.map((day) => (
+                        <SortableScheduleDay
+                          key={day.id}
+                          day={day}
+                          isToday={day.dayOfWeek === todayIndex}
+                          onUpdate={updateDay}
                         />
-                        <Input
-                          value={day.focus}
-                          onChange={(event) => updateDay(day.dayOfWeek, { focus: event.target.value })}
-                          placeholder="Focus"
-                        />
-                      </div>
-                      <Input
-                        value={day.notes}
-                        onChange={(event) => updateDay(day.dayOfWeek, { notes: event.target.value })}
-                        placeholder="Notes"
-                        className="mt-2"
-                      />
+                      ))}
                     </div>
-                  );
-                })}
+                  </SortableContext>
+                </DndContext>
               </CardContent>
             </Card>
 

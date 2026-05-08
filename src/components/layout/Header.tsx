@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useAppStore, type PageName } from '@/lib/store';
 import { AuthDialog } from '@/components/auth/AuthDialog';
 import { Button } from '@/components/ui/button';
@@ -81,11 +82,9 @@ export function Header() {
             onClick={() => navigate('home')}
             className={`flex min-w-0 items-center gap-3 group ${heroTop ? 'text-white' : ''}`}
           >
-            <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg font-bold text-lg transition-transform group-hover:scale-105 ${
-              heroTop ? 'border border-primary/70 bg-black/25 text-primary shadow-sm backdrop-blur-sm' : 'bg-primary text-primary-foreground'
-            }`}>
-              P
-            </div>
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-transform group-hover:scale-105">
+              <Image src="/logo.svg" alt="Prime Forge" width={36} height={36} className="rounded-lg" />
+            </span>
             <span className={`truncate text-lg sm:text-xl font-black uppercase tracking-tight ${heroTop ? 'text-white' : ''}`}>
               Prime<span className={heroTop ? 'text-white' : 'text-primary'}> Forge</span>
             </span>
@@ -177,7 +176,8 @@ export function Header() {
                 <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
                 <div className="flex flex-col h-full">
                   <div className="flex items-center justify-between p-4 border-b">
-                    <span className="text-lg font-black uppercase tracking-tight">
+                    <span className="flex items-center gap-3 text-lg font-black uppercase tracking-tight">
+                      <Image src="/logo.svg" alt="Prime Forge" width={36} height={36} className="rounded-lg" />
                       Prime<span className="text-primary"> Forge</span>
                     </span>
                   </div>

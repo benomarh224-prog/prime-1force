@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import {
   Mail, Phone, MapPin, Send,
   Facebook, Twitter, Instagram,
-  Loader2, CheckCircle2,
+  Loader2, CheckCircle2, Clock, Navigation,
 } from 'lucide-react';
 
 const contactInfo = [
@@ -24,6 +24,12 @@ const socials = [
   { icon: <Instagram className="h-5 w-5" />, label: 'Instagram', href: 'https://www.instagram.com/elliot_alderson112?igsh=MTdsc21jaG90dWl5OA%3D%3D&utm_source=qr' },
   { icon: <Facebook className="h-5 w-5" />, label: 'Facebook', href: 'https://www.facebook.com/share/1JQCj2ChYT/?mibextid=wwXIfr' },
   { icon: <Twitter className="h-5 w-5" />, label: 'X', href: 'https://x.com/ho50539?s=21' },
+];
+
+const businessHours = [
+  { day: 'Monday - Friday', hours: '8:00 AM - 8:00 PM' },
+  { day: 'Saturday', hours: '9:00 AM - 5:00 PM' },
+  { day: 'Sunday', hours: 'Recovery support by email' },
 ];
 
 type ContactApiResponse = {
@@ -158,6 +164,23 @@ export function ContactPage() {
                 </p>
               </CardContent>
             </Card>
+
+            <Card className="border-border/50">
+              <CardContent className="p-5">
+                <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide">
+                  <Clock className="h-4 w-4 text-primary" />
+                  Business Hours
+                </h3>
+                <div className="space-y-3">
+                  {businessHours.map((item) => (
+                    <div key={item.day} className="flex items-start justify-between gap-4 text-sm">
+                      <span className="font-medium">{item.day}</span>
+                      <span className="text-right text-muted-foreground">{item.hours}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           </motion.div>
 
           {/* Contact Form */}
@@ -257,6 +280,43 @@ export function ContactPage() {
             </Card>
           </motion.div>
         </div>
+
+        <motion.div
+          className="mx-auto mt-10 max-w-5xl"
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+        >
+          <Card className="overflow-hidden border-border/50">
+            <CardContent className="p-0">
+              <div className="flex flex-col gap-4 border-b p-5 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="flex items-center gap-2 text-lg font-black uppercase">
+                    <Navigation className="h-4 w-4 text-primary" />
+                    Visit Prime Forge
+                  </h2>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Casablanca, Morocco - central training consultation area
+                  </p>
+                </div>
+                <a
+                  href="https://www.openstreetmap.org/search?query=Casablanca%2C%20Morocco"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex h-11 items-center justify-center rounded-lg border px-4 text-sm font-semibold transition-colors hover:border-primary/40 hover:text-primary"
+                >
+                  Open map
+                </a>
+              </div>
+              <iframe
+                title="Prime Forge location map"
+                src="https://www.openstreetmap.org/export/embed.html?bbox=-7.733%2C33.472%2C-7.487%2C33.654&layer=mapnik&marker=33.5731%2C-7.5898"
+                className="h-[340px] w-full border-0"
+                loading="lazy"
+              />
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
     </div>
   );

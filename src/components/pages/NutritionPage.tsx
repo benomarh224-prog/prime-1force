@@ -11,10 +11,13 @@ import {
   Flame,
   Leaf,
   Moon,
+  Plus,
   Scale,
+  Search,
   ShoppingBasket,
   Sun,
   Target,
+  Trash2,
   Utensils,
   Wheat,
 } from 'lucide-react';
@@ -26,7 +29,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { mealPlans } from '@/lib/data';
+import { foodDatabase, mealPlans, type FoodItem } from '@/lib/data';
 import { useAppStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
 
@@ -51,6 +54,33 @@ const activityLevels = [
   { value: 'very_active', label: 'Athlete', desc: 'Hard daily work', multiplier: 1.9 },
 ];
 
+type SelectedFood = FoodItem & {
+  grams: number;
+};
+
+const localFoodIds = new Set([
+  'couscous',
+  'tuna',
+  'eggs',
+  'whole-milk',
+  'olive-oil',
+  'tomato',
+  'mixed-salad',
+  'bread-whole',
+  'shrimp',
+  'orange-juice',
+]);
+
+function scaleFood(food: SelectedFood) {
+  const factor = food.grams / food.servingGrams;
+  return {
+    calories: Math.round(food.calories * factor),
+    protein: Math.round(food.protein * factor),
+    carbs: Math.round(food.carbs * factor),
+    fat: Math.round(food.fat * factor),
+  };
+}
+
 function getGoalLabel(goal: string) {
   if (goal === 'lose_weight') return 'fat loss';
   if (goal === 'gain_muscle') return 'muscle gain';
@@ -63,6 +93,8 @@ export function NutritionPage() {
   const [gender, setGender] = useState<'male' | 'female'>('male');
   const [age, setAge] = useState('25');
   const [activityLevel, setActivityLevel] = useState('moderate');
+  const [foodSearch, setFoodSearch] = useState('');
+  const [selectedFoods, setSelectedFoods] = useState<SelectedFood[]>([]);
 
   const totals = useMemo(() => {
     const calories = mealPlans.reduce((sum, meal) => sum + meal.calories, 0);
@@ -103,6 +135,52 @@ export function NutritionPage() {
     { name: 'Carbs', value: calculator.carbs * 4, grams: calculator.carbs, fill: macroColors.carbs },
     { name: 'Fat', value: calculator.fat * 9, grams: calculator.fat, fill: macroColors.fat },
   ];
+
+  const foodMatches = foodDatabase
+    .filter((food) => {
+      const query = foodSearch.toLowerCase().trim();
+      if (!query) return localFoodIds.has(food.id);
+      return food.name.toLowerCase().includes(query) || food.category.toLowerCase().includes(query);
+    })
+    .slice(0, 10);
+
+  const builderTotals = selectedFoods.reduce(
+    (totals, food) => {
+      const scaled = scaleFood(food);
+      return {
+        calories: totals.calories + scaled.calories,
+        protein: totals.protein + scaled.protein,
+        carbs: totals.carbs + scaled.carbs,
+        fat: totals.fat + scaled.fat,
+      };
+    },
+    { calories: 0, protein: 0, carbs: 0, fat: 0 }
+  );
+
+  const shoppingList = [
+    ...new Set([
+      ...mealPlans.flatMap((meal) => meal.ingredients),
+      ...selectedFoods.map((food) => food.name),
+    ]),
+  ].sort((a, b) => a.localeCompare(b));
+
+  const addFood = (food: FoodItem) => {
+    setSelectedFoods((current) => [
+      ...current,
+      {
+        ...food,
+        grams: food.servingGrams,
+      },
+    ]);
+  };
+
+  const updateFoodGrams = (index: number, grams: number) => {
+    setSelectedFoods((current) =>
+      current.map((food, foodIndex) =>
+        foodIndex === index ? { ...food, grams: Math.max(1, grams) } : food
+      )
+    );
+  };
 
   return (
     <div className="min-h-screen pb-16 pt-24">
@@ -166,10 +244,14 @@ export function NutritionPage() {
         </div>
 
         <Tabs defaultValue="planner" className="space-y-6">
-          <TabsList className="grid w-full max-w-xl grid-cols-3 rounded-lg">
+          <TabsList className="grid w-full max-w-2xl grid-cols-4 rounded-lg">
             <TabsTrigger value="planner" className="gap-2 rounded-md">
               <Utensils className="h-4 w-4" />
               Meals
+            </TabsTrigger>
+            <TabsTrigger value="builder" className="gap-2 rounded-md">
+              <ShoppingBasket className="h-4 w-4" />
+              Builder
             </TabsTrigger>
             <TabsTrigger value="macros" className="gap-2 rounded-md">
               <Scale className="h-4 w-4" />
@@ -246,6 +328,125 @@ export function NutritionPage() {
                 </motion.section>
               );
             })}
+          </TabsContent>
+
+          <TabsContent value="builder">
+            <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+              <Card className="border-border/50">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base uppercase">
+                    <ShoppingBasket className="h-4 w-4 text-primary" />
+                    Meal Customizer
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-5">
+                  <div className="relative">
+                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      value={foodSearch}
+                      onChange={(event) => setFoodSearch(event.target.value)}
+                      placeholder="Search foods or local staples..."
+                      className="h-11 rounded-lg pl-10"
+                    />
+                  </div>
+
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {foodMatches.map((food) => (
+                      <button
+                        key={food.id}
+                        onClick={() => addFood(food)}
+                        className="flex items-center justify-between gap-3 rounded-lg border bg-muted/20 p-3 text-left transition-colors hover:border-primary/40 hover:bg-primary/10"
+                      >
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold">{food.name}</p>
+                          <p className="text-xs text-muted-foreground">{food.servingSize} - {food.calories} cal</p>
+                        </div>
+                        <Plus className="h-4 w-4 shrink-0 text-primary" />
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="space-y-3">
+                    {selectedFoods.length === 0 ? (
+                      <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+                        Add foods to build a custom meal and generate a shopping list.
+                      </div>
+                    ) : (
+                      selectedFoods.map((food, index) => {
+                        const scaled = scaleFood(food);
+                        return (
+                          <div key={`${food.id}-${index}`} className="grid gap-3 rounded-lg border bg-muted/20 p-3 sm:grid-cols-[1fr_120px_auto] sm:items-center">
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-semibold">{food.name}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {scaled.calories} cal - P {scaled.protein}g / C {scaled.carbs}g / F {scaled.fat}g
+                              </p>
+                            </div>
+                            <Input
+                              type="number"
+                              min={1}
+                              value={food.grams}
+                              onChange={(event) => updateFoodGrams(index, Number(event.target.value))}
+                              className="h-10 rounded-lg"
+                            />
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setSelectedFoods((current) => current.filter((_, foodIndex) => foodIndex !== index))}
+                              className="rounded-lg text-muted-foreground hover:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <div className="space-y-6">
+                <Card className="border-border/50">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-base uppercase">
+                      <Calculator className="h-4 w-4 text-primary" />
+                      Custom Meal Totals
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="grid grid-cols-2 gap-3">
+                    {[
+                      { label: 'Calories', value: builderTotals.calories, suffix: 'cal' },
+                      { label: 'Protein', value: builderTotals.protein, suffix: 'g' },
+                      { label: 'Carbs', value: builderTotals.carbs, suffix: 'g' },
+                      { label: 'Fat', value: builderTotals.fat, suffix: 'g' },
+                    ].map((total) => (
+                      <div key={total.label} className="rounded-lg border bg-muted/20 p-4">
+                        <p className="text-2xl font-black">{total.value}<span className="ml-1 text-sm text-muted-foreground">{total.suffix}</span></p>
+                        <p className="text-xs font-bold uppercase text-muted-foreground">{total.label}</p>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+
+                <Card className="border-border/50">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-base uppercase">
+                      <ShoppingBasket className="h-4 w-4 text-primary" />
+                      Shopping List
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid max-h-[420px] gap-2 overflow-y-auto pr-1 sm:grid-cols-2">
+                      {shoppingList.map((item) => (
+                        <div key={item} className="rounded-lg border bg-muted/20 px-3 py-2 text-sm">
+                          {item}
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
           </TabsContent>
 
           <TabsContent value="macros">

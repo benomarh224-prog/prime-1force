@@ -1,5 +1,7 @@
 import { NextAuthOptions } from 'next-auth';
+import AppleProvider from 'next-auth/providers/apple';
 import CredentialsProvider from 'next-auth/providers/credentials';
+import GoogleProvider from 'next-auth/providers/google';
 import { ensureAuthSchema } from '@/lib/auth-schema';
 import { verifyFallbackUser } from '@/lib/auth-users';
 import { db } from '@/lib/db';
@@ -86,6 +88,22 @@ export const authOptions: NextAuthOptions = {
         }
       },
     }),
+    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+      ? [
+          GoogleProvider({
+            clientId: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+          }),
+        ]
+      : []),
+    ...(process.env.APPLE_CLIENT_ID && process.env.APPLE_CLIENT_SECRET
+      ? [
+          AppleProvider({
+            clientId: process.env.APPLE_CLIENT_ID,
+            clientSecret: process.env.APPLE_CLIENT_SECRET,
+          }),
+        ]
+      : []),
   ],
   session: {
     strategy: 'jwt',
@@ -94,14 +112,14 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id;
+        token.id = user.id || token.sub;
         token.role = (user as { role?: string }).role || 'user';
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
-        (session.user as { id?: string }).id = token.id as string;
+        (session.user as { id?: string }).id = (token.id || token.sub) as string;
         (session.user as { role?: string }).role = token.role as string;
       }
       return session;

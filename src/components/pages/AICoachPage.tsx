@@ -8,15 +8,21 @@ import {
   Bot,
   Brain,
   CalendarCheck,
+  Camera,
   Dumbbell,
+  FileVideo,
   Heart,
+  ImageIcon,
   Loader2,
   MessageCircle,
+  Mic,
   Send,
   Sparkles,
   Target,
   Trash2,
+  Upload,
   User,
+  Volume2,
   Zap,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -24,6 +30,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Textarea } from '@/components/ui/textarea';
 import { useAppStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
 
@@ -33,6 +40,22 @@ interface Message {
   content: string;
   timestamp: Date;
 }
+
+type MediaAttachment = {
+  name: string;
+  type: string;
+  size: number;
+  previewUrl: string;
+};
+
+type SpeechRecognitionLike = {
+  lang: string;
+  interimResults: boolean;
+  maxAlternatives: number;
+  onresult: ((event: { results: { 0: { transcript: string } }[] }) => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+};
 
 const quickPrompts = [
   { icon: <Dumbbell className="h-4 w-4" />, text: 'Build my next 7-day training plan with sets, reps, and rest' },
@@ -63,7 +86,12 @@ export function AICoachPage() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [mode, setMode] = useState(coachModes[0]);
+  const [media, setMedia] = useState<MediaAttachment | null>(null);
+  const [coachMemory, setCoachMemory] = useState('');
+  const [memoryDraft, setMemoryDraft] = useState('');
+  const [listening, setListening] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = () => {
     const viewport = scrollRef.current?.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement | null;
@@ -73,6 +101,18 @@ export function AICoachPage() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  useEffect(() => {
+    const savedMemory = window.localStorage.getItem('prime-forge-coach-memory') || '';
+    setCoachMemory(savedMemory);
+    setMemoryDraft(savedMemory);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (media?.previewUrl) URL.revokeObjectURL(media.previewUrl);
+    };
+  }, [media]);
 
   const buildContextPrompt = () => {
     const completedLogs = workoutLogs.filter((log) => log.completed);
@@ -90,6 +130,7 @@ User Profile:
 - Logged workouts: ${workoutLogs.length} total, ${completedLogs.length} completed
 - Recent workout history: ${recentLogs.length ? recentLogs.join(' | ') : 'No workouts logged yet'}
 - Active coaching mode: ${mode.label}. ${mode.prompt}
+- Saved coach memory: ${coachMemory || 'No extra notes saved yet'}
 
 Guidelines:
 - Be encouraging but honest and science-based
@@ -99,12 +140,75 @@ Guidelines:
 - Keep responses practical and skimmable
 - When giving workouts, specify sets, reps, and rest times
 - When giving nutrition advice, mention macros when relevant
+- If the user uploads image or video context, provide careful form feedback, likely issues, safety cues, and ask for missing visual details instead of pretending certainty
 - When pain, injury, illness, or medical symptoms are mentioned, recommend professional care and avoid diagnosis
 - End with one simple action for the next 24 hours`;
   };
 
+  const handleMediaChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (media?.previewUrl) URL.revokeObjectURL(media.previewUrl);
+    setMedia({
+      name: file.name,
+      type: file.type || 'unknown',
+      size: file.size,
+      previewUrl: URL.createObjectURL(file),
+    });
+    setMode(coachModes.find((coachMode) => coachMode.id === 'form') || coachModes[0]);
+  };
+
+  const buildMediaPrompt = (attachment: MediaAttachment) => {
+    const kind = attachment.type.startsWith('video') ? 'short training video' : 'training image';
+    return `\n\nUploaded ${kind}: ${attachment.name} (${Math.round(attachment.size / 1024)}KB). Analyze my exercise performance from this media context. Give form cues, likely mistakes to check, safety notes, and one next-rep correction. If you need more visual detail, ask for the exact angle, exercise, and rep count.`;
+  };
+
+  const saveMemory = () => {
+    const nextMemory = memoryDraft.trim();
+    setCoachMemory(nextMemory);
+    window.localStorage.setItem('prime-forge-coach-memory', nextMemory);
+  };
+
+  const startVoiceInput = () => {
+    const recognitionConstructor = (window as typeof window & {
+      webkitSpeechRecognition?: new () => SpeechRecognitionLike;
+      SpeechRecognition?: new () => SpeechRecognitionLike;
+    }).SpeechRecognition || (window as typeof window & {
+      webkitSpeechRecognition?: new () => SpeechRecognitionLike;
+    }).webkitSpeechRecognition;
+
+    if (!recognitionConstructor) {
+      setInput((value) => value || 'Voice input is not available in this browser.');
+      return;
+    }
+
+    const recognition = new recognitionConstructor();
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+    recognition.onresult = (event) => {
+      const transcript = event.results[0]?.[0]?.transcript;
+      if (transcript) setInput((value) => `${value ? `${value} ` : ''}${transcript}`);
+    };
+    recognition.onend = () => setListening(false);
+    setListening(true);
+    recognition.start();
+  };
+
+  const speakLastCoachMessage = () => {
+    const lastCoachMessage = [...messages].reverse().find((message) => message.role === 'assistant');
+    if (!lastCoachMessage || !('speechSynthesis' in window)) return;
+
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(lastCoachMessage.content.replace(/[#*_`>-]/g, ' '));
+    utterance.rate = 0.95;
+    utterance.pitch = 0.95;
+    window.speechSynthesis.speak(utterance);
+  };
+
   const handleSend = async (text?: string) => {
-    const message = text || input.trim();
+    const message = `${text || input.trim()}${media ? buildMediaPrompt(media) : ''}`.trim();
     if (!message || isLoading) return;
 
     const userMsg: Message = {
@@ -116,6 +220,10 @@ Guidelines:
 
     setMessages((prev) => [...prev, userMsg]);
     setInput('');
+    if (media) {
+      URL.revokeObjectURL(media.previewUrl);
+      setMedia(null);
+    }
     setIsLoading(true);
 
     try {
@@ -212,6 +320,66 @@ Guidelines:
           </div>
         </motion.div>
 
+        <Card className="mb-4 border-border/50 p-4">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <Camera className="h-4 w-4" />
+              </div>
+              <div>
+                <p className="text-sm font-black uppercase">Form analysis upload</p>
+                <p className="text-sm text-muted-foreground">
+                  Add a short image or video, then ask for cues. The coach will combine it with your progress memory.
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*,video/*"
+                onChange={handleMediaChange}
+                className="hidden"
+              />
+              <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="rounded-lg gap-2">
+                <Upload className="h-4 w-4" />
+                Upload media
+              </Button>
+              <Button variant="outline" onClick={startVoiceInput} className="rounded-lg gap-2">
+                <Mic className={cn('h-4 w-4', listening && 'text-primary')} />
+                {listening ? 'Listening' : 'Voice note'}
+              </Button>
+              <Button variant="outline" onClick={speakLastCoachMessage} className="rounded-lg gap-2">
+                <Volume2 className="h-4 w-4" />
+                Read feedback
+              </Button>
+            </div>
+          </div>
+          {media && (
+            <div className="mt-4 grid gap-3 rounded-lg border bg-muted/25 p-3 sm:grid-cols-[160px_1fr_auto] sm:items-center">
+              <div className="relative aspect-video overflow-hidden rounded-lg bg-background">
+                {media.type.startsWith('video') ? (
+                  <video src={media.previewUrl} className="h-full w-full object-cover" muted controls />
+                ) : (
+                  <img src={media.previewUrl} alt="Uploaded form check" className="h-full w-full object-cover" />
+                )}
+              </div>
+              <div className="min-w-0">
+                <p className="flex items-center gap-2 truncate text-sm font-semibold">
+                  {media.type.startsWith('video') ? <FileVideo className="h-4 w-4 text-primary" /> : <ImageIcon className="h-4 w-4 text-primary" />}
+                  {media.name}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Ask for a form check, depth review, bar path notes, posture cues, or rep-by-rep feedback.
+                </p>
+              </div>
+              <Button variant="ghost" size="icon" onClick={() => setMedia(null)} className="rounded-lg">
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+        </Card>
+
         <div className="mb-4 grid gap-4 lg:grid-cols-[280px_1fr]">
           <div className="hidden space-y-4 lg:block">
             <Card className="border-border/50 p-4">
@@ -224,6 +392,17 @@ Guidelines:
                 <p><span className="font-semibold text-foreground">Level:</span> {userLevel}</p>
                 <p><span className="font-semibold text-foreground">Workouts:</span> {workoutLogs.length} logged</p>
                 <p><span className="font-semibold text-foreground">Weekly target:</span> {weeklyGoal} sessions</p>
+              </div>
+              <div className="mt-4 space-y-2">
+                <Textarea
+                  value={memoryDraft}
+                  onChange={(event) => setMemoryDraft(event.target.value)}
+                  placeholder="Remember injuries, cues, PRs, or preferences..."
+                  className="min-h-24 resize-none rounded-lg text-xs"
+                />
+                <Button onClick={saveMemory} size="sm" className="w-full rounded-lg">
+                  Save Memory
+                </Button>
               </div>
             </Card>
             <Card className="border-border/50 p-4">
@@ -352,7 +531,7 @@ Guidelines:
           />
           <Button
             onClick={() => handleSend()}
-            disabled={!input.trim() || isLoading}
+            disabled={(!input.trim() && !media) || isLoading}
             className="h-12 w-12 shrink-0 rounded-xl neon-glow"
             size="icon"
           >
@@ -373,7 +552,7 @@ Guidelines:
           />
           <Button
             onClick={() => handleSend()}
-            disabled={!input.trim() || isLoading}
+            disabled={(!input.trim() && !media) || isLoading}
             className="h-12 w-12 shrink-0 rounded-xl neon-glow"
             size="icon"
             aria-label="Send message"
