@@ -1,23 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import {
-  DndContext,
-  KeyboardSensor,
-  PointerSensor,
-  closestCenter,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-} from '@dnd-kit/core';
-import {
-  SortableContext,
-  arrayMove,
-  sortableKeyboardCoordinates,
-  useSortable,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
+import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   Activity,
@@ -28,10 +11,13 @@ import {
   Clock,
   Dumbbell,
   Flame,
-  GripVertical,
   ListChecks,
+  Loader2,
   Plus,
+  RefreshCw,
   Save,
+  Sparkles,
+  Target,
   Trash2,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -41,19 +27,61 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
+import { exercises } from '@/lib/data';
 import { useAppStore, type WorkoutExercise, type WorkoutLog } from '@/lib/store';
+import { cn } from '@/lib/utils';
+
+type ProgramSummary = {
+  id: string;
+  name: string;
+  description: string | null;
+  isActive: boolean;
+  createdAt?: string;
+};
 
 type ScheduleDay = {
-  id: string;
+  id?: string;
   dayOfWeek: number;
   dayName: string;
   splitTitle: string;
-  focus: string;
-  notes: string;
+  exercises: string[];
+  notes: string | null;
   isRestDay: boolean;
+};
+
+type Completion = {
+  id: string;
+  date: string;
+  dayOfWeek: number;
+  splitTitle: string;
+  completedAt: string;
+  dayName?: string;
+};
+
+type ScheduleResponse = {
+  success: boolean;
+  error?: string;
+  programs?: ProgramSummary[];
+  activeProgram?: ProgramSummary | null;
+  days?: ScheduleDay[];
+  today?: (ScheduleDay & { date: string; completed: boolean; completionId: string | null }) | null;
+  history?: Completion[];
+};
+
+type WorkoutSessionsResponse = {
+  success: boolean;
+  error?: string;
+  workoutLogs?: WorkoutLog[];
+  workout?: WorkoutLog;
 };
 
 type WorkoutForm = {
@@ -67,21 +95,110 @@ type WorkoutForm = {
   notes: string;
 };
 
-const scheduleKey = 'prime-forge-simple-schedule';
+type BuilderDraft = {
+  name: string;
+  goal: 'strength' | 'muscle' | 'fat-loss' | 'balanced';
+  level: 'beginner' | 'intermediate' | 'advanced';
+  daysPerWeek: string;
+  equipment: 'gym' | 'home' | 'no-equipment';
+};
 
-const defaultDays: ScheduleDay[] = [
-  { id: 'sun', dayOfWeek: 0, dayName: 'Sun', splitTitle: 'Recovery', focus: 'Mobility, walk, stretch', notes: 'Keep it light.', isRestDay: true },
-  { id: 'mon', dayOfWeek: 1, dayName: 'Mon', splitTitle: 'Push', focus: 'Chest, shoulders, triceps', notes: 'Start with your main press.', isRestDay: false },
-  { id: 'tue', dayOfWeek: 2, dayName: 'Tue', splitTitle: 'Pull', focus: 'Back, biceps, rear delts', notes: 'Control every rep.', isRestDay: false },
-  { id: 'wed', dayOfWeek: 3, dayName: 'Wed', splitTitle: 'Legs', focus: 'Quads, hamstrings, calves', notes: 'Warm up hips and knees.', isRestDay: false },
-  { id: 'thu', dayOfWeek: 4, dayName: 'Thu', splitTitle: 'Upper', focus: 'Strength accessories', notes: 'Add weight only if clean.', isRestDay: false },
-  { id: 'fri', dayOfWeek: 5, dayName: 'Fri', splitTitle: 'Conditioning', focus: 'Core, intervals, carries', notes: 'Finish strong, not sloppy.', isRestDay: false },
-  { id: 'sat', dayOfWeek: 6, dayName: 'Sat', splitTitle: 'Full Body', focus: 'Squat, hinge, push, pull', notes: 'Optional pump work.', isRestDay: false },
-];
+const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+const workoutDaysByCount: Record<number, number[]> = {
+  2: [1, 4],
+  3: [1, 3, 5],
+  4: [1, 2, 4, 5],
+  5: [1, 2, 3, 5, 6],
+  6: [1, 2, 3, 4, 5, 6],
+};
+
+const defaultDays: ScheduleDay[] = dayNames.map((dayName, dayOfWeek) => ({
+  dayOfWeek,
+  dayName,
+  splitTitle: dayOfWeek === 0 ? 'Rest Day' : 'Full Body',
+  exercises: dayOfWeek === 0 ? [] : ['Barbell Back Squat', 'Push-Ups', 'Plank Hold'],
+  notes: dayOfWeek === 0 ? 'Walk, stretch, and recover.' : 'Keep 1-2 reps in reserve.',
+  isRestDay: dayOfWeek === 0,
+}));
+
+const exerciseName = (id: string, fallback: string) =>
+  exercises.find((exercise) => exercise.id === id)?.name || fallback;
+
+const programTemplates = {
+  strength: [
+    {
+      splitTitle: 'Upper Strength',
+      exercises: ['bench-press', 'shoulder-press', 'pull-ups', 'bicep-curl'].map((id) => exerciseName(id, id)),
+      notes: 'Work in the 3-6 rep range. Rest 2-3 minutes on heavy sets.',
+    },
+    {
+      splitTitle: 'Lower Strength',
+      exercises: ['barbell-squat', 'deadlift', 'bodyweight-squat', 'plank'].map((id) => exerciseName(id, id)),
+      notes: 'Prioritize clean bracing, depth, and controlled warm-up sets.',
+    },
+    {
+      splitTitle: 'Full Body Power',
+      exercises: ['deadlift', 'bench-press', 'pull-ups', 'burpees'].map((id) => exerciseName(id, id)),
+      notes: 'Move heavy, stay crisp, stop sets before form breaks.',
+    },
+  ],
+  muscle: [
+    {
+      splitTitle: 'Push Hypertrophy',
+      exercises: ['bench-press', 'shoulder-press', 'push-ups', 'plank'].map((id) => exerciseName(id, id)),
+      notes: 'Use 8-12 reps with controlled tempo and a strong squeeze.',
+    },
+    {
+      splitTitle: 'Pull Hypertrophy',
+      exercises: ['pull-ups', 'deadlift', 'bicep-curl', 'plank'].map((id) => exerciseName(id, id)),
+      notes: 'Control the lowering phase and chase quality volume.',
+    },
+    {
+      splitTitle: 'Leg Hypertrophy',
+      exercises: ['barbell-squat', 'bodyweight-squat', 'deadlift', 'burpees'].map((id) => exerciseName(id, id)),
+      notes: 'Keep rest near 60-90 seconds on accessory work.',
+    },
+  ],
+  'fat-loss': [
+    {
+      splitTitle: 'HIIT Conditioning',
+      exercises: ['hiit-cardio', 'burpees', 'push-ups', 'plank'].map((id) => exerciseName(id, id)),
+      notes: 'Alternate hard intervals with enough rest to keep output high.',
+    },
+    {
+      splitTitle: 'Strength Circuit',
+      exercises: ['bodyweight-squat', 'push-ups', 'pull-ups', 'plank'].map((id) => exerciseName(id, id)),
+      notes: 'Move through the circuit smoothly. Rest 60 seconds between rounds.',
+    },
+    {
+      splitTitle: 'Recovery Burn',
+      exercises: ['yoga-flow', 'hiit-cardio', 'plank', 'bodyweight-squat'].map((id) => exerciseName(id, id)),
+      notes: 'Keep intensity moderate and finish feeling better than you started.',
+    },
+  ],
+  balanced: [
+    {
+      splitTitle: 'Full Body A',
+      exercises: ['barbell-squat', 'bench-press', 'pull-ups', 'plank'].map((id) => exerciseName(id, id)),
+      notes: 'Train the main patterns and leave some energy in the tank.',
+    },
+    {
+      splitTitle: 'Full Body B',
+      exercises: ['deadlift', 'shoulder-press', 'bicep-curl', 'yoga-flow'].map((id) => exerciseName(id, id)),
+      notes: 'Balance strength work with mobility and steady effort.',
+    },
+    {
+      splitTitle: 'Conditioning + Core',
+      exercises: ['hiit-cardio', 'burpees', 'push-ups', 'plank'].map((id) => exerciseName(id, id)),
+      notes: 'Keep transitions short and form sharp.',
+    },
+  ],
+} satisfies Record<BuilderDraft['goal'], { splitTitle: string; exercises: string[]; notes: string }[]>;
 
 const emptyForm = (): WorkoutForm => ({
   name: '',
-  date: new Date().toISOString().slice(0, 10),
+  date: getDateKey(),
   duration: '45',
   exerciseName: '',
   sets: '3',
@@ -90,21 +207,10 @@ const emptyForm = (): WorkoutForm => ({
   notes: '',
 });
 
-function readSchedule() {
-  if (typeof window === 'undefined') return defaultDays;
-
-  try {
-    const saved = window.localStorage.getItem(scheduleKey);
-    if (!saved) return defaultDays;
-    const parsed = JSON.parse(saved);
-    return Array.isArray(parsed) && parsed.length === 7 ? (parsed as ScheduleDay[]) : defaultDays;
-  } catch {
-    return defaultDays;
-  }
-}
-
 function getDateKey(date = new Date()) {
-  return date.toISOString().slice(0, 10);
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${date.getFullYear()}-${month}-${day}`;
 }
 
 function formatDate(dateKey: string) {
@@ -122,138 +228,229 @@ function workoutVolume(log: WorkoutLog) {
   );
 }
 
-function SortableScheduleDay({
-  day,
-  isToday,
-  onUpdate,
-}: {
-  day: ScheduleDay;
-  isToday: boolean;
-  onUpdate: (dayOfWeek: number, patch: Partial<ScheduleDay>) => void;
-}) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: day.id });
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
+function splitExerciseText(value: string) {
+  return value
+    .split(/\n|,/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
 
-  return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className={cn(
-        'rounded-lg border bg-muted/25 p-3 transition-colors',
-        isToday && 'border-primary/60 bg-primary/10',
-        isDragging && 'relative z-10 shadow-2xl ring-1 ring-primary/40'
-      )}
-    >
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-3">
-          <button
-            type="button"
-            className="flex h-10 w-8 shrink-0 cursor-grab items-center justify-center rounded-md text-muted-foreground hover:bg-background hover:text-primary active:cursor-grabbing"
-            aria-label={`Drag ${day.dayName}`}
-            {...attributes}
-            {...listeners}
-          >
-            <GripVertical className="h-4 w-4" />
-          </button>
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-background text-sm font-black">
-            {day.dayName}
-          </div>
-          <div className="min-w-0">
-            <p className="truncate text-sm font-black uppercase">{day.splitTitle || 'Training'}</p>
-            {isToday && <p className="text-xs font-bold uppercase text-primary">Today</p>}
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Checkbox
-            checked={day.isRestDay}
-            onCheckedChange={(checked) => onUpdate(day.dayOfWeek, { isRestDay: Boolean(checked) })}
-          />
-          <span className="text-xs text-muted-foreground">Rest</span>
-        </div>
-      </div>
-      <div className="grid gap-2 sm:grid-cols-[0.82fr_1.18fr]">
-        <Input
-          value={day.splitTitle}
-          onChange={(event) => onUpdate(day.dayOfWeek, { splitTitle: event.target.value })}
-          placeholder="Split"
-        />
-        <Input
-          value={day.focus}
-          onChange={(event) => onUpdate(day.dayOfWeek, { focus: event.target.value })}
-          placeholder="Focus"
-        />
-      </div>
-      <Input
-        value={day.notes}
-        onChange={(event) => onUpdate(day.dayOfWeek, { notes: event.target.value })}
-        placeholder="Notes"
-        className="mt-2"
-      />
-    </div>
-  );
+function makeGeneratedDays(builder: BuilderDraft): ScheduleDay[] {
+  const daysPerWeek = Math.max(2, Math.min(6, Number(builder.daysPerWeek) || 4));
+  const activeDays = workoutDaysByCount[daysPerWeek] || workoutDaysByCount[4];
+  const templates = programTemplates[builder.goal];
+  let templateIndex = 0;
+
+  return dayNames.map((dayName, dayOfWeek) => {
+    if (!activeDays.includes(dayOfWeek)) {
+      return {
+        dayOfWeek,
+        dayName,
+        splitTitle: 'Rest Day',
+        exercises: [],
+        notes: builder.goal === 'fat-loss' ? 'Easy walk, mobility, and hydration.' : 'Recover, sleep, and prep your next session.',
+        isRestDay: true,
+      };
+    }
+
+    const template = templates[templateIndex % templates.length];
+    templateIndex += 1;
+
+    return {
+      dayOfWeek,
+      dayName,
+      splitTitle: template.splitTitle,
+      exercises: template.exercises,
+      notes: `${template.notes} Level: ${builder.level}. Equipment: ${builder.equipment}.`,
+      isRestDay: false,
+    };
+  });
 }
 
 export function SchedulePage() {
   const { toast } = useToast();
   const store = useAppStore();
-  const [days, setDays] = useState<ScheduleDay[]>(() => readSchedule());
-  const [form, setForm] = useState<WorkoutForm>(() => emptyForm());
+  const [programs, setPrograms] = useState<ProgramSummary[]>([]);
+  const [activeProgram, setActiveProgram] = useState<ProgramSummary | null>(null);
+  const [selectedProgramId, setSelectedProgramId] = useState('');
+  const [days, setDays] = useState<ScheduleDay[]>(defaultDays);
+  const [history, setHistory] = useState<Completion[]>([]);
+  const [todayCompleted, setTodayCompleted] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [syncingWorkoutId, setSyncingWorkoutId] = useState<string | null>(null);
   const [remindersEnabled, setRemindersEnabled] = useState(false);
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
+  const [form, setForm] = useState<WorkoutForm>(() => emptyForm());
+  const [builder, setBuilder] = useState<BuilderDraft>({
+    name: 'Generated Strength Program',
+    goal: 'strength',
+    level: 'intermediate',
+    daysPerWeek: '4',
+    equipment: 'gym',
+  });
+
   const todayIndex = new Date().getDay();
   const today = days.find((day) => day.dayOfWeek === todayIndex) ?? days[0];
-  const todayLog = store.workoutLogs.find((log) => log.date === getDateKey());
+  const todayDateKey = getDateKey();
+
+  const loadWorkoutSessions = async () => {
+    const response = await fetch('/api/workout-sessions');
+    const data = (await response.json()) as WorkoutSessionsResponse;
+    if (!response.ok || !data.success) throw new Error(data.error || 'Could not load workouts');
+    if (data.workoutLogs) store.setWorkoutLogs(data.workoutLogs);
+  };
+
+  const loadSchedule = async (programId?: string) => {
+    setLoading(true);
+    try {
+      const query = programId ? `?programId=${encodeURIComponent(programId)}` : '';
+      const response = await fetch(`/api/schedule${query}`);
+      const data = (await response.json()) as ScheduleResponse;
+      if (!response.ok || !data.success) throw new Error(data.error || 'Could not load schedule');
+
+      setPrograms(data.programs || []);
+      setActiveProgram(data.activeProgram || null);
+      setSelectedProgramId(data.activeProgram?.id || programId || data.programs?.[0]?.id || '');
+      setDays(data.days?.length ? data.days : defaultDays);
+      setHistory(data.history || []);
+      setTodayCompleted(Boolean(data.today?.completed));
+    } catch (error) {
+      toast({
+        title: 'Could not load program',
+        description: error instanceof Error ? error.message : 'The local planner is still visible.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadSchedule();
+    loadWorkoutSessions().catch((error) => {
+      toast({
+        title: 'Could not load workout logs',
+        description: error instanceof Error ? error.message : 'Existing local logs are still available.',
+        variant: 'destructive',
+      });
+    });
+  }, []);
 
   const stats = useMemo(() => {
-    const now = new Date();
-    const start = new Date(now);
-    start.setDate(now.getDate() - now.getDay());
+    const start = new Date();
+    start.setDate(start.getDate() - start.getDay());
     start.setHours(0, 0, 0, 0);
 
-    const thisWeek = store.workoutLogs.filter((log) => new Date(`${log.date}T00:00:00`) >= start);
-    const completedThisWeek = thisWeek.filter((log) => log.completed).length;
+    const weeklyCompletions = history.filter((item) => new Date(item.date) >= start).length;
+    const trainingDays = days.filter((day) => !day.isRestDay).length;
     const totalVolume = store.workoutLogs.reduce((sum, log) => sum + workoutVolume(log), 0);
     const totalMinutes = store.workoutLogs.reduce((sum, log) => sum + log.duration, 0);
-    const trainingDays = days.filter((day) => !day.isRestDay).length;
 
     return {
-      completedThisWeek,
+      weeklyCompletions,
+      trainingDays,
       totalVolume,
       totalMinutes,
-      trainingDays,
-      weeklyProgress: trainingDays > 0 ? Math.min(100, (completedThisWeek / trainingDays) * 100) : 100,
+      weeklyProgress: trainingDays > 0 ? Math.min(100, (weeklyCompletions / trainingDays) * 100) : 100,
     };
-  }, [days, store.workoutLogs]);
+  }, [days, history, store.workoutLogs]);
 
   const updateDay = (dayOfWeek: number, patch: Partial<ScheduleDay>) => {
     setDays((current) => current.map((day) => (day.dayOfWeek === dayOfWeek ? { ...day, ...patch } : day)));
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
+  const saveSchedule = async () => {
+    if (!selectedProgramId) return;
 
-    setDays((current) => {
-      const oldIndex = current.findIndex((day) => day.id === active.id);
-      const newIndex = current.findIndex((day) => day.id === over.id);
-      if (oldIndex === -1 || newIndex === -1) return current;
-      return arrayMove(current, oldIndex, newIndex);
-    });
+    setSaving(true);
+    try {
+      const response = await fetch('/api/schedule', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          programId: selectedProgramId,
+          name: activeProgram?.name || builder.name,
+          description: activeProgram?.description || `${builder.daysPerWeek} day ${builder.goal} program`,
+          isActive: true,
+          days,
+        }),
+      });
+      const data = (await response.json()) as ScheduleResponse;
+      if (!response.ok || !data.success) throw new Error(data.error || 'Could not save schedule');
+
+      if (data.days) setDays(data.days);
+      if (data.activeProgram) setActiveProgram(data.activeProgram);
+      await loadSchedule(selectedProgramId);
+      toast({ title: 'Program saved', description: 'Your weekly training plan is now stored in the database.' });
+    } catch (error) {
+      toast({
+        title: 'Could not save program',
+        description: error instanceof Error ? error.message : 'Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const saveSchedule = () => {
-    window.localStorage.setItem(scheduleKey, JSON.stringify(days));
+  const saveAsNewProgram = async () => {
+    setSaving(true);
+    try {
+      const response = await fetch('/api/schedule', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: builder.name.trim() || 'Generated Program',
+          description: `${builder.daysPerWeek} day ${builder.goal} plan for ${builder.level} athletes`,
+          isActive: true,
+          days,
+        }),
+      });
+      const data = (await response.json()) as ScheduleResponse & { program?: ProgramSummary & { days?: ScheduleDay[] } };
+      if (!response.ok || !data.success || !data.program?.id) throw new Error(data.error || 'Could not create program');
+
+      await loadSchedule(data.program.id);
+      toast({ title: 'Program created', description: `${data.program.name} is now your active plan.` });
+    } catch (error) {
+      toast({
+        title: 'Could not create program',
+        description: error instanceof Error ? error.message : 'Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const deleteProgram = async () => {
+    if (!selectedProgramId) return;
+
+    setSaving(true);
+    try {
+      const response = await fetch(`/api/schedule?programId=${encodeURIComponent(selectedProgramId)}`, {
+        method: 'DELETE',
+      });
+      const data = (await response.json()) as ScheduleResponse;
+      if (!response.ok || !data.success) throw new Error(data.error || 'Could not delete program');
+
+      await loadSchedule();
+      toast({ title: 'Program deleted', description: 'The next available program is now loaded.' });
+    } catch (error) {
+      toast({
+        title: 'Could not delete program',
+        description: error instanceof Error ? error.message : 'At least one program must remain.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const generateProgram = () => {
+    setDays(makeGeneratedDays(builder));
     toast({
-      title: 'Schedule saved',
-      description: 'Your weekly plan is saved on this device.',
+      title: 'Program generated',
+      description: 'Review the week, tweak anything you want, then save it.',
     });
   };
 
@@ -281,10 +478,7 @@ export function SchedulePage() {
     new Notification('Prime Forge reminders enabled', {
       body: `Today is ${today.splitTitle}. Your plan is ready when you are.`,
     });
-    toast({
-      title: 'Reminders enabled',
-      description: 'Prime Forge can now show browser workout reminders.',
-    });
+    toast({ title: 'Reminders enabled', description: 'Prime Forge can now show browser workout reminders.' });
   };
 
   const downloadCalendar = () => {
@@ -305,61 +499,73 @@ export function SchedulePage() {
 
         return [
           'BEGIN:VEVENT',
-          `UID:prime-forge-${day.id}-${index}@primeforge.local`,
+          `UID:prime-forge-${selectedProgramId || 'program'}-${day.dayOfWeek}-${index}@primeforge.local`,
           `DTSTAMP:${formatIcsDate(new Date())}`,
           `DTSTART:${formatIcsDate(start)}`,
           `DTEND:${formatIcsDate(end)}`,
           `SUMMARY:Prime Forge - ${day.splitTitle || 'Workout'}`,
-          `DESCRIPTION:${(day.focus || day.notes || 'Training session').replace(/\n/g, ' ')}`,
+          `DESCRIPTION:${[...day.exercises, day.notes || ''].join(' | ').replace(/\n/g, ' ')}`,
           'END:VEVENT',
         ].join('\r\n');
       })
       .join('\r\n');
 
-    const calendar = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Prime Forge//Training Planner//EN', events, 'END:VCALENDAR'].join('\r\n');
+    const calendar = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Prime Forge//Program Builder//EN', events, 'END:VCALENDAR'].join('\r\n');
     const url = URL.createObjectURL(new Blob([calendar], { type: 'text/calendar;charset=utf-8' }));
     const anchor = document.createElement('a');
     anchor.href = url;
-    anchor.download = 'prime-forge-training-plan.ics';
+    anchor.download = 'prime-forge-program.ics';
     anchor.click();
     URL.revokeObjectURL(url);
 
-    toast({
-      title: 'Calendar exported',
-      description: 'Import the .ics file into Google Calendar, Apple Calendar, or Outlook.',
-    });
+    toast({ title: 'Calendar exported', description: 'Import the .ics file into your calendar app.' });
   };
 
-  const completeToday = () => {
-    if (todayLog) {
-      store.completeWorkoutLog(todayLog.id, !todayLog.completed);
-      return;
+  const completeToday = async () => {
+    if (!selectedProgramId || !today) return;
+
+    setSaving(true);
+    try {
+      const response = await fetch('/api/schedule/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          programId: selectedProgramId,
+          dayOfWeek: today.dayOfWeek,
+          date: todayDateKey,
+          notes: today.notes,
+        }),
+      });
+      const data = (await response.json()) as { success: boolean; error?: string; completed?: boolean; completion?: Completion | null };
+      if (!response.ok || !data.success) throw new Error(data.error || 'Could not update completion');
+
+      setTodayCompleted(Boolean(data.completed));
+      setHistory((current) => {
+        const withoutToday = current.filter((item) => item.date.slice(0, 10) !== todayDateKey);
+        return data.completed && data.completion ? [data.completion, ...withoutToday] : withoutToday;
+      });
+      toast({
+        title: data.completed ? 'Workout completed' : 'Workout reopened',
+        description: `${today.splitTitle} was updated.`,
+      });
+    } catch (error) {
+      toast({
+        title: 'Could not update today',
+        description: error instanceof Error ? error.message : 'Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSaving(false);
     }
-
-    const exercise: WorkoutExercise = {
-      exerciseId: `quick-${today.id}`,
-      exerciseName: today.focus || today.splitTitle,
-      sets: [{ reps: 0, weight: 0 }],
-    };
-
-    store.addWorkoutLog({
-      name: today.splitTitle,
-      date: getDateKey(),
-      duration: 0,
-      notes: today.notes,
-      completed: true,
-      exercises: [exercise],
-    });
   };
 
-  const logWorkout = () => {
+  const logWorkout = async () => {
     const name = form.name.trim() || today.splitTitle;
-    const exerciseName = form.exerciseName.trim() || today.focus || 'Workout';
+    const exerciseName = form.exerciseName.trim() || today.exercises[0] || today.splitTitle || 'Workout';
     const setCount = Math.max(1, Number(form.sets) || 1);
     const reps = Math.max(0, Number(form.reps) || 0);
     const weight = Math.max(0, Number(form.weight) || 0);
-
-    store.addWorkoutLog({
+    const workout = {
       name,
       date: form.date,
       duration: Math.max(0, Number(form.duration) || 0),
@@ -371,14 +577,53 @@ export function SchedulePage() {
           exerciseName,
           sets: Array.from({ length: setCount }, () => ({ reps, weight })),
         },
-      ],
-    });
+      ] satisfies WorkoutExercise[],
+    };
 
-    setForm(emptyForm());
-    toast({
-      title: 'Workout logged',
-      description: `${name} was added to your tracker.`,
-    });
+    setSaving(true);
+    try {
+      const response = await fetch('/api/workout-sessions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ workout }),
+      });
+      const data = (await response.json()) as WorkoutSessionsResponse;
+      if (!response.ok || !data.success || !data.workout) throw new Error(data.error || 'Could not save workout');
+
+      store.upsertWorkoutLog(data.workout);
+      setForm(emptyForm());
+      toast({ title: 'Workout logged', description: `${name} was saved to your workout history.` });
+    } catch (error) {
+      toast({
+        title: 'Could not save workout',
+        description: error instanceof Error ? error.message : 'Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const deleteWorkout = async (log: WorkoutLog) => {
+    setSyncingWorkoutId(log.id);
+    store.deleteWorkoutLog(log.id);
+
+    try {
+      const response = await fetch(`/api/workout-sessions?workoutId=${encodeURIComponent(log.id)}`, {
+        method: 'DELETE',
+      });
+      const data = (await response.json()) as WorkoutSessionsResponse;
+      if (!response.ok || !data.success) throw new Error(data.error || 'Could not delete workout');
+    } catch (error) {
+      store.upsertWorkoutLog(log);
+      toast({
+        title: 'Could not delete workout',
+        description: error instanceof Error ? error.message : 'Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSyncingWorkoutId(null);
+    }
   };
 
   return (
@@ -391,34 +636,34 @@ export function SchedulePage() {
         >
           <div className="max-w-3xl">
             <Badge className="mb-4 rounded-md border-primary/25 bg-primary/10 px-3 py-1 text-[11px] uppercase tracking-wide text-primary">
-              Tracker + Schedule
+              Real Program Builder
             </Badge>
             <h1 className="text-4xl font-black uppercase leading-none sm:text-5xl lg:text-6xl">
               Training Planner
             </h1>
             <p className="mt-4 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-              Plan the week, log today&apos;s work, and keep progress visible without any complicated setup.
+              Generate a plan, edit every training day, save it to the database, and log completed work.
             </p>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row">
+            <Button onClick={() => loadSchedule(selectedProgramId)} variant="outline" className="h-12 rounded-lg font-bold" disabled={loading}>
+              <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
+              Refresh
+            </Button>
             <Button onClick={enableReminders} variant={remindersEnabled ? 'secondary' : 'outline'} className="h-12 rounded-lg font-bold">
               <Bell className="h-4 w-4" />
               {remindersEnabled ? 'Reminders On' : 'Enable Reminders'}
             </Button>
             <Button onClick={downloadCalendar} variant="outline" className="h-12 rounded-lg font-bold">
               <CalendarPlus className="h-4 w-4" />
-              Export Calendar
-            </Button>
-            <Button onClick={saveSchedule} className="h-12 rounded-lg font-bold">
-              <Save className="h-4 w-4" />
-              Save Schedule
+              Export
             </Button>
           </div>
         </motion.div>
 
         <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {[
-            { label: 'This Week', value: `${stats.completedThisWeek}/${stats.trainingDays}`, icon: CheckCircle2 },
+            { label: 'Program Week', value: `${stats.weeklyCompletions}/${stats.trainingDays}`, icon: CheckCircle2 },
             { label: 'Total Volume', value: `${Math.round(stats.totalVolume).toLocaleString()} kg`, icon: Activity },
             { label: 'Minutes Logged', value: `${stats.totalMinutes} min`, icon: Clock },
             { label: 'Sessions', value: `${store.workoutLogs.length}`, icon: ListChecks },
@@ -433,8 +678,117 @@ export function SchedulePage() {
           ))}
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+        <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
           <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base uppercase tracking-wide">
+                  <Sparkles className="h-4 w-4 text-primary" />
+                  Program Builder
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Saved program</Label>
+                  <Select
+                    value={selectedProgramId}
+                    onValueChange={(value) => {
+                      setSelectedProgramId(value);
+                      loadSchedule(value);
+                    }}
+                  >
+                    <SelectTrigger className="h-11 rounded-lg">
+                      <SelectValue placeholder="Select a program" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {programs.map((program) => (
+                        <SelectItem key={program.id} value={program.id}>
+                          {program.name}{program.isActive ? ' - active' : ''}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Program name</Label>
+                  <Input
+                    value={builder.name}
+                    onChange={(event) => setBuilder({ ...builder, name: event.target.value })}
+                    placeholder="Program name"
+                    className="h-11 rounded-lg"
+                  />
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>Goal</Label>
+                    <Select value={builder.goal} onValueChange={(value: BuilderDraft['goal']) => setBuilder({ ...builder, goal: value })}>
+                      <SelectTrigger className="h-11 rounded-lg">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="strength">Strength</SelectItem>
+                        <SelectItem value="muscle">Muscle gain</SelectItem>
+                        <SelectItem value="fat-loss">Fat loss</SelectItem>
+                        <SelectItem value="balanced">Balanced fitness</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Level</Label>
+                    <Select value={builder.level} onValueChange={(value: BuilderDraft['level']) => setBuilder({ ...builder, level: value })}>
+                      <SelectTrigger className="h-11 rounded-lg">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="beginner">Beginner</SelectItem>
+                        <SelectItem value="intermediate">Intermediate</SelectItem>
+                        <SelectItem value="advanced">Advanced</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Days per week</Label>
+                    <Select value={builder.daysPerWeek} onValueChange={(value) => setBuilder({ ...builder, daysPerWeek: value })}>
+                      <SelectTrigger className="h-11 rounded-lg">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {['2', '3', '4', '5', '6'].map((value) => (
+                          <SelectItem key={value} value={value}>{value} days</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Equipment</Label>
+                    <Select value={builder.equipment} onValueChange={(value: BuilderDraft['equipment']) => setBuilder({ ...builder, equipment: value })}>
+                      <SelectTrigger className="h-11 rounded-lg">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="gym">Gym</SelectItem>
+                        <SelectItem value="home">Home</SelectItem>
+                        <SelectItem value="no-equipment">No equipment</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <Button onClick={generateProgram} variant="outline" className="h-12 rounded-lg font-bold">
+                    <Sparkles className="h-4 w-4" />
+                    Generate Week
+                  </Button>
+                  <Button onClick={saveAsNewProgram} className="h-12 rounded-lg font-bold" disabled={saving}>
+                    {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                    Save New
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base uppercase tracking-wide">
@@ -446,25 +800,26 @@ export function SchedulePage() {
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div className="min-w-0">
                     <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                      {formatDate(getDateKey())}
+                      {formatDate(todayDateKey)}
                     </p>
-                    <h2 className="mt-2 break-words text-3xl font-black uppercase">{today.splitTitle}</h2>
+                    <h2 className="mt-2 break-words text-3xl font-black uppercase">{today?.splitTitle || 'Training'}</h2>
                     <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                      {today.isRestDay ? 'Recovery day' : today.focus}
+                      {today?.isRestDay ? 'Recovery day' : today?.exercises.join(', ') || 'No exercises yet'}
                     </p>
                   </div>
                   <Button
                     onClick={completeToday}
-                    variant={todayLog?.completed ? 'secondary' : 'default'}
+                    variant={todayCompleted ? 'secondary' : 'default'}
                     className="h-12 shrink-0 rounded-lg font-bold"
+                    disabled={saving || !selectedProgramId}
                   >
                     <CheckCircle2 className="h-4 w-4" />
-                    {todayLog?.completed ? 'Done' : 'Mark Done'}
+                    {todayCompleted ? 'Done' : 'Mark Done'}
                   </Button>
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between text-xs font-bold uppercase text-muted-foreground">
-                    <span>Weekly progress</span>
+                    <span>Program progress</span>
                     <span>{Math.round(stats.weeklyProgress)}%</span>
                   </div>
                   <Progress value={stats.weeklyProgress} className="h-2" />
@@ -476,14 +831,14 @@ export function SchedulePage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base uppercase tracking-wide">
                   <Dumbbell className="h-4 w-4 text-primary" />
-                  Quick Log
+                  Quick Workout Log
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label>Workout</Label>
-                    <Input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder={today.splitTitle} />
+                    <Input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder={today?.splitTitle || 'Workout'} />
                   </div>
                   <div className="space-y-2">
                     <Label>Date</Label>
@@ -492,7 +847,7 @@ export function SchedulePage() {
                 </div>
                 <div className="space-y-2">
                   <Label>Main exercise</Label>
-                  <Input value={form.exerciseName} onChange={(event) => setForm({ ...form, exerciseName: event.target.value })} placeholder="Bench press, squat, run..." />
+                  <Input value={form.exerciseName} onChange={(event) => setForm({ ...form, exerciseName: event.target.value })} placeholder={today?.exercises[0] || 'Bench press, squat, run...'} />
                 </div>
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                   <div className="space-y-2">
@@ -521,8 +876,8 @@ export function SchedulePage() {
                     className="min-h-20 resize-none"
                   />
                 </div>
-                <Button onClick={logWorkout} className="h-12 w-full rounded-lg font-bold">
-                  <Plus className="h-4 w-4" />
+                <Button onClick={logWorkout} className="h-12 w-full rounded-lg font-bold" disabled={saving}>
+                  {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
                   Log Workout
                 </Button>
               </CardContent>
@@ -532,36 +887,102 @@ export function SchedulePage() {
           <div className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base uppercase tracking-wide">
-                  <CalendarDays className="h-4 w-4 text-primary" />
-                  Weekly Schedule
-                </CardTitle>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <CardTitle className="flex items-center gap-2 text-base uppercase tracking-wide">
+                    <CalendarDays className="h-4 w-4 text-primary" />
+                    Weekly Program
+                  </CardTitle>
+                  <div className="flex gap-2">
+                    <Button onClick={deleteProgram} variant="outline" size="sm" className="rounded-lg" disabled={saving || programs.length <= 1}>
+                      <Trash2 className="h-4 w-4" />
+                      Delete
+                    </Button>
+                    <Button onClick={saveSchedule} size="sm" className="rounded-lg" disabled={saving || !selectedProgramId}>
+                      {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                      Save
+                    </Button>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
-                <p className="mb-3 text-xs text-muted-foreground">
-                  Drag days to rearrange the plan. Edits are saved locally and can be exported to your calendar.
-                </p>
-                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                  <SortableContext items={days.map((day) => day.id)} strategy={verticalListSortingStrategy}>
-                    <div className="space-y-3">
-                      {days.map((day) => (
-                        <SortableScheduleDay
-                          key={day.id}
-                          day={day}
-                          isToday={day.dayOfWeek === todayIndex}
-                          onUpdate={updateDay}
-                        />
-                      ))}
-                    </div>
-                  </SortableContext>
-                </DndContext>
+                {loading ? (
+                  <div className="flex min-h-72 items-center justify-center text-sm text-muted-foreground">
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Loading program...
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {days.map((day) => (
+                      <div
+                        key={day.dayOfWeek}
+                        className={cn(
+                          'rounded-lg border bg-muted/20 p-4 transition-colors',
+                          day.dayOfWeek === todayIndex && 'border-primary/60 bg-primary/10'
+                        )}
+                      >
+                        <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                          <div className="flex min-w-0 items-center gap-3">
+                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-background text-sm font-black">
+                              {day.dayName.slice(0, 3)}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-black uppercase">{day.splitTitle}</p>
+                              {day.dayOfWeek === todayIndex && <p className="text-xs font-bold uppercase text-primary">Today</p>}
+                            </div>
+                          </div>
+                          <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <Checkbox
+                              checked={day.isRestDay}
+                              onCheckedChange={(checked) =>
+                                updateDay(day.dayOfWeek, {
+                                  isRestDay: Boolean(checked),
+                                  splitTitle: checked ? 'Rest Day' : day.splitTitle === 'Rest Day' ? 'Training' : day.splitTitle,
+                                  exercises: checked ? [] : day.exercises,
+                                })
+                              }
+                            />
+                            Rest day
+                          </label>
+                        </div>
+
+                        <div className="grid gap-3 lg:grid-cols-[0.78fr_1.22fr]">
+                          <div className="space-y-2">
+                            <Label className="text-xs">Split</Label>
+                            <Input
+                              value={day.splitTitle}
+                              onChange={(event) => updateDay(day.dayOfWeek, { splitTitle: event.target.value })}
+                              placeholder="Push, Pull, Legs..."
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-xs">Exercises</Label>
+                            <Textarea
+                              value={day.exercises.join('\n')}
+                              onChange={(event) => updateDay(day.dayOfWeek, { exercises: splitExerciseText(event.target.value), isRestDay: false })}
+                              placeholder="One exercise per line"
+                              className="min-h-20 resize-none"
+                            />
+                          </div>
+                        </div>
+                        <div className="mt-3 space-y-2">
+                          <Label className="text-xs">Notes</Label>
+                          <Input
+                            value={day.notes || ''}
+                            onChange={(event) => updateDay(day.dayOfWeek, { notes: event.target.value })}
+                            placeholder="Intensity, rest periods, progression..."
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base uppercase tracking-wide">
-                  <ListChecks className="h-4 w-4 text-primary" />
+                  <Target className="h-4 w-4 text-primary" />
                   Recent Workouts
                 </CardTitle>
               </CardHeader>
@@ -578,17 +999,18 @@ export function SchedulePage() {
                           <div className="min-w-0">
                             <p className="truncate font-black uppercase">{log.name}</p>
                             <p className="mt-1 text-xs text-muted-foreground">
-                              {formatDate(log.date)} · {log.duration || 0} min · {Math.round(workoutVolume(log)).toLocaleString()} kg
+                              {formatDate(log.date)} - {log.duration || 0} min - {Math.round(workoutVolume(log)).toLocaleString()} kg
                             </p>
                           </div>
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => store.deleteWorkoutLog(log.id)}
+                            onClick={() => deleteWorkout(log)}
+                            disabled={syncingWorkoutId === log.id}
                             aria-label="Delete workout"
                             className="h-9 w-9 shrink-0 text-muted-foreground hover:text-destructive"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            {syncingWorkoutId === log.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                           </Button>
                         </div>
                         <p className="mt-2 truncate text-xs text-muted-foreground">

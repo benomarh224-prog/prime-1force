@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -33,6 +33,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Exercise } from '@/lib/data';
+import type { WorkoutLog } from '@/lib/store';
 
 type QuickSet = {
   reps: number;
@@ -63,7 +64,16 @@ const difficultyColor: Record<string, string> = {
 };
 
 export function WorkoutsPage() {
-  const { setExerciseId, favorites, toggleFavorite, navigate, workoutLogs, addWorkoutLog } = useAppStore();
+  const {
+    setExerciseId,
+    favorites,
+    toggleFavorite,
+    navigate,
+    workoutLogs,
+    setWorkoutLogs,
+    upsertWorkoutLog,
+    addWorkoutLog,
+  } = useAppStore();
   const { toast } = useToast();
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -74,6 +84,7 @@ export function WorkoutsPage() {
   const [savedOnly, setSavedOnly] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [logDialogOpen, setLogDialogOpen] = useState(false);
+  const [savingLog, setSavingLog] = useState(false);
   const [guideExercise, setGuideExercise] = useState<Exercise | null>(null);
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
   const [quickLog, setQuickLog] = useState({
@@ -86,6 +97,29 @@ export function WorkoutsPage() {
   const muscleGroups = Array.from(new Set(exercises.map((exercise) => exercise.muscleGroup))).sort();
   const equipmentOptions = Array.from(new Set(exercises.map((exercise) => exercise.equipment))).sort();
   const difficultyRank: Record<string, number> = { beginner: 1, intermediate: 2, advanced: 3 };
+
+  useEffect(() => {
+    let mounted = true;
+
+    fetch('/api/workout-sessions')
+      .then(async (response) => {
+        const data = (await response.json()) as { success: boolean; error?: string; workoutLogs?: WorkoutLog[] };
+        if (!response.ok || !data.success) throw new Error(data.error || 'Could not load workout history');
+        if (mounted && data.workoutLogs) setWorkoutLogs(data.workoutLogs);
+      })
+      .catch((error) => {
+        if (!mounted) return;
+        toast({
+          title: 'Could not sync workouts',
+          description: error instanceof Error ? error.message : 'Your local history is still available.',
+          variant: 'destructive',
+        });
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [setWorkoutLogs, toast]);
 
   const filtered = exercises.filter((ex) => {
     const matchSearch = ex.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -182,10 +216,10 @@ export function WorkoutsPage() {
     }));
   };
 
-  const saveQuickLog = () => {
+  const saveQuickLog = async () => {
     if (!selectedExercise || quickLog.sets.length === 0) return;
 
-    addWorkoutLog({
+    const workout = {
       name: selectedExercise.name,
       date: quickLog.date,
       duration: quickLog.duration,
@@ -201,12 +235,35 @@ export function WorkoutsPage() {
           })),
         },
       ],
-    });
-    setLogDialogOpen(false);
-    toast({
-      title: 'Workout tracked',
-      description: `${selectedExercise.name} was added to your workout history.`,
-    });
+    };
+
+    setSavingLog(true);
+    try {
+      const response = await fetch('/api/workout-sessions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ workout }),
+      });
+      const data = (await response.json()) as { success: boolean; error?: string; workout?: WorkoutLog };
+      if (!response.ok || !data.success || !data.workout) throw new Error(data.error || 'Could not save workout');
+
+      upsertWorkoutLog(data.workout);
+      setLogDialogOpen(false);
+      toast({
+        title: 'Workout tracked',
+        description: `${selectedExercise.name} was saved to your workout history.`,
+      });
+    } catch (error) {
+      addWorkoutLog(workout);
+      setLogDialogOpen(false);
+      toast({
+        title: 'Saved locally',
+        description: error instanceof Error ? error.message : 'Workout sync failed, so this log stayed on this device.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSavingLog(false);
+    }
   };
 
   return (
@@ -749,9 +806,9 @@ export function WorkoutsPage() {
             <Button variant="outline" onClick={() => setLogDialogOpen(false)} className="rounded-xl">
               Cancel
             </Button>
-            <Button onClick={saveQuickLog} className="rounded-xl gap-2">
+            <Button onClick={saveQuickLog} className="rounded-xl gap-2" disabled={savingLog}>
               <Save className="h-4 w-4" />
-              Save Workout
+              {savingLog ? 'Saving...' : 'Save Workout'}
             </Button>
           </DialogFooter>
         </DialogContent>

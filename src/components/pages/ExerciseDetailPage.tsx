@@ -23,7 +23,8 @@ import {
   BarChart3, Calendar, ListChecks, Plus, Save, Trash2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import type { WorkoutLog } from '@/lib/store';
 
 const difficultyColor: Record<string, string> = {
   beginner: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
@@ -37,10 +38,11 @@ type QuickSet = {
 };
 
 export function ExerciseDetailPage() {
-  const { selectedExerciseId, navigate, favorites, toggleFavorite, workoutLogs, addWorkoutLog } = useAppStore();
+  const { selectedExerciseId, navigate, favorites, toggleFavorite, workoutLogs, setWorkoutLogs, upsertWorkoutLog, addWorkoutLog } = useAppStore();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<'instructions' | 'tips' | 'history'>('instructions');
   const [logDialogOpen, setLogDialogOpen] = useState(false);
+  const [savingLog, setSavingLog] = useState(false);
   const [quickLog, setQuickLog] = useState({
     date: new Date().toISOString().split('T')[0],
     duration: 0,
@@ -49,6 +51,22 @@ export function ExerciseDetailPage() {
   });
 
   const exercise = exercises.find((e) => e.id === selectedExerciseId);
+
+  useEffect(() => {
+    let mounted = true;
+
+    fetch('/api/workout-sessions')
+      .then(async (response) => {
+        const data = (await response.json()) as { success: boolean; error?: string; workoutLogs?: WorkoutLog[] };
+        if (!response.ok || !data.success) throw new Error(data.error || 'Could not load workout history');
+        if (mounted && data.workoutLogs) setWorkoutLogs(data.workoutLogs);
+      })
+      .catch(() => {});
+
+    return () => {
+      mounted = false;
+    };
+  }, [setWorkoutLogs]);
 
   if (!exercise) {
     return (
@@ -119,8 +137,8 @@ export function ExerciseDetailPage() {
     }));
   };
 
-  const saveQuickLog = () => {
-    addWorkoutLog({
+  const saveQuickLog = async () => {
+    const workout = {
       name: exercise.name,
       date: quickLog.date,
       duration: quickLog.duration,
@@ -136,13 +154,37 @@ export function ExerciseDetailPage() {
           })),
         },
       ],
-    });
-    setLogDialogOpen(false);
-    setActiveTab('history');
-    toast({
-      title: 'Exercise logged',
-      description: `${exercise.name} was added to your workout history.`,
-    });
+    };
+
+    setSavingLog(true);
+    try {
+      const response = await fetch('/api/workout-sessions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ workout }),
+      });
+      const data = (await response.json()) as { success: boolean; error?: string; workout?: WorkoutLog };
+      if (!response.ok || !data.success || !data.workout) throw new Error(data.error || 'Could not save workout');
+
+      upsertWorkoutLog(data.workout);
+      setLogDialogOpen(false);
+      setActiveTab('history');
+      toast({
+        title: 'Exercise logged',
+        description: `${exercise.name} was saved to your workout history.`,
+      });
+    } catch (error) {
+      addWorkoutLog(workout);
+      setLogDialogOpen(false);
+      setActiveTab('history');
+      toast({
+        title: 'Saved locally',
+        description: error instanceof Error ? error.message : 'Workout sync failed, so this log stayed on this device.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSavingLog(false);
+    }
   };
 
   return (
@@ -555,9 +597,9 @@ export function ExerciseDetailPage() {
             <Button variant="outline" onClick={() => setLogDialogOpen(false)} className="rounded-xl">
               Cancel
             </Button>
-            <Button onClick={saveQuickLog} className="rounded-xl gap-2">
+            <Button onClick={saveQuickLog} className="rounded-xl gap-2" disabled={savingLog}>
               <Save className="h-4 w-4" />
-              Save Workout
+              {savingLog ? 'Saving...' : 'Save Workout'}
             </Button>
           </DialogFooter>
         </DialogContent>

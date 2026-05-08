@@ -78,6 +78,24 @@ function getFallbackScheduleResponse() {
   };
 }
 
+function normalizeDays(days: ScheduleDayInput[]) {
+  return days
+    .filter((day) => Number.isInteger(day.dayOfWeek) && day.dayOfWeek >= 0 && day.dayOfWeek <= 6)
+    .map((day) => {
+      const exercises = Array.isArray(day.exercises)
+        ? day.exercises.map((item) => String(item).trim()).filter(Boolean)
+        : [];
+
+      return {
+        dayOfWeek: day.dayOfWeek,
+        splitTitle: day.isRestDay ? 'Rest Day' : (day.splitTitle || '').trim() || 'Workout',
+        exercises,
+        notes: day.notes?.trim() || null,
+        isRestDay: Boolean(day.isRestDay),
+      };
+    });
+}
+
 export async function GET(request: Request) {
   try {
     if (!process.env.DATABASE_URL) {
@@ -172,25 +190,38 @@ export async function POST(request: Request) {
     const body = await request.json();
     const name = typeof body.name === 'string' && body.name.trim() ? body.name.trim() : 'New Program';
     const description = typeof body.description === 'string' ? body.description.trim() : null;
+    const isActive = typeof body.isActive === 'boolean' ? body.isActive : true;
+    const requestedDays = Array.isArray(body.days) ? normalizeDays(body.days as ScheduleDayInput[]) : [];
+    const daysToCreate = requestedDays.length > 0
+      ? requestedDays
+      : defaultSchedule.map((day) => ({ ...day, notes: null }));
 
     const program = await db.workoutProgram.create({
       data: {
         userId,
         name,
         description,
-        isActive: false,
+        isActive,
         days: {
-          create: defaultSchedule.map((day) => ({
+          create: daysToCreate.map((day) => ({
             userId,
             dayOfWeek: day.dayOfWeek,
             splitTitle: day.splitTitle,
             exercises: JSON.stringify(day.exercises),
+            notes: day.notes,
             isRestDay: day.isRestDay,
           })),
         },
       },
       include: { days: { orderBy: { dayOfWeek: 'asc' } } },
     });
+
+    if (isActive) {
+      await db.workoutProgram.updateMany({
+        where: { userId, id: { not: program.id } },
+        data: { isActive: false },
+      });
+    }
 
     return NextResponse.json(
       {

@@ -218,6 +218,32 @@ export function DashboardPage() {
     };
   }, [applyDashboardData, status, toast]);
 
+  useEffect(() => {
+    if (status !== 'unauthenticated') return;
+
+    let mounted = true;
+    fetch('/api/workout-sessions')
+      .then(async (response) => {
+        const data = (await response.json()) as DashboardResponse;
+        if (!response.ok || !data.success) throw new Error(data.error || 'Could not load workouts');
+        if (mounted && data.workoutLogs) {
+          useAppStore.getState().setWorkoutLogs(data.workoutLogs);
+        }
+      })
+      .catch((error) => {
+        if (!mounted) return;
+        toast({
+          title: 'Could not load workout history',
+          description: error instanceof Error ? error.message : 'Your local dashboard is still available.',
+          variant: 'destructive',
+        });
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [status, toast]);
+
   const totalCaloriesBurned = dailyCalorieData.reduce((sum, d) => sum + d.burned, 0);
   const completedLogs = store.workoutLogs.filter((log) => log.completed);
   const completedDateKeys = new Set(completedLogs.map((log) => log.date));
@@ -465,11 +491,6 @@ export function DashboardPage() {
       return;
     }
 
-    if (status !== 'authenticated') {
-      openAuthDialog('login');
-      return;
-    }
-
     const workout = {
       name: workoutForm.name.trim(),
       date: workoutForm.date,
@@ -481,7 +502,7 @@ export function DashboardPage() {
 
     setDashboardSaving(true);
     try {
-      const response = await fetch('/api/dashboard', {
+      const response = await fetch('/api/workout-sessions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ workout }),
@@ -491,7 +512,7 @@ export function DashboardPage() {
 
       store.upsertWorkoutLog(data.workout);
       setShowWorkoutDialog(false);
-      toast({ title: 'Workout logged', description: `${workoutForm.name} saved to your account.` });
+      toast({ title: 'Workout logged', description: `${workoutForm.name} saved to your workout history.` });
     } catch (error) {
       toast({
         title: 'Could not save workout',
@@ -504,17 +525,12 @@ export function DashboardPage() {
   };
 
   const handleToggleWorkout = async (log: WorkoutLog, completed: boolean) => {
-    if (status !== 'authenticated') {
-      openAuthDialog('login');
-      return;
-    }
-
     const nextLog = { ...log, completed };
     setSyncingWorkoutId(log.id);
     store.upsertWorkoutLog(nextLog);
 
     try {
-      const response = await fetch('/api/dashboard', {
+      const response = await fetch('/api/workout-sessions', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ workoutId: log.id, workout: nextLog }),
@@ -535,16 +551,11 @@ export function DashboardPage() {
   };
 
   const handleDeleteWorkout = async (log: WorkoutLog) => {
-    if (status !== 'authenticated') {
-      openAuthDialog('login');
-      return;
-    }
-
     setSyncingWorkoutId(log.id);
     store.deleteWorkoutLog(log.id);
 
     try {
-      const response = await fetch(`/api/dashboard?workoutId=${encodeURIComponent(log.id)}`, {
+      const response = await fetch(`/api/workout-sessions?workoutId=${encodeURIComponent(log.id)}`, {
         method: 'DELETE',
       });
       const data = (await response.json()) as DashboardResponse;
