@@ -13,6 +13,28 @@ type WorkoutSessionRecord = {
   completed: boolean;
 };
 
+const LOCAL_WORKOUT_PREFIX = 'local-workout';
+
+function persistenceDisabled() {
+  return !process.env.DATABASE_URL;
+}
+
+function localWorkoutId(existingId?: unknown) {
+  return typeof existingId === 'string' && existingId.trim()
+    ? existingId
+    : `${LOCAL_WORKOUT_PREFIX}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function publicError(error: unknown, fallback: string) {
+  const message = error instanceof Error ? error.message : '';
+
+  if (message.includes('DATABASE_URL') || message.includes('Environment variable not found')) {
+    return 'Workout cloud sync is not configured yet. Your workouts stay on this device.';
+  }
+
+  return message || fallback;
+}
+
 function dateKey(value: Date | string) {
   const date = value instanceof Date ? value : new Date(value);
   return Number.isNaN(date.getTime())
@@ -56,6 +78,13 @@ function normalizeWorkout(input: Partial<WorkoutLog>): Omit<WorkoutLog, 'id'> {
   };
 }
 
+function serializeLocalWorkout(input: Partial<WorkoutLog>, existingId?: unknown): WorkoutLog {
+  return {
+    id: localWorkoutId(existingId ?? input.id),
+    ...normalizeWorkout(input),
+  };
+}
+
 function serializeSession(session: WorkoutSessionRecord): WorkoutLog {
   return {
     id: session.id,
@@ -70,6 +99,13 @@ function serializeSession(session: WorkoutSessionRecord): WorkoutLog {
 
 export async function GET() {
   try {
+    if (persistenceDisabled()) {
+      return NextResponse.json({
+        success: true,
+        persistence: 'disabled',
+      });
+    }
+
     const userId = await getScheduleUserId();
     const sessions = await db.workoutSession.findMany({
       where: { userId },
@@ -82,14 +118,13 @@ export async function GET() {
       workoutLogs: sessions.map(serializeSession),
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to fetch workouts';
+    const message = publicError(error, 'Failed to fetch workouts');
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
 
 export async function POST(request: Request) {
   try {
-    const userId = await getScheduleUserId();
     const body = await request.json();
     const workout = normalizeWorkout(body.workout || body);
 
@@ -97,6 +132,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'At least one exercise is required' }, { status: 400 });
     }
 
+    if (persistenceDisabled()) {
+      return NextResponse.json(
+        {
+          success: true,
+          persistence: 'disabled',
+          workout: serializeLocalWorkout(workout, body.workout?.id || body.id),
+        },
+        { status: 201 }
+      );
+    }
+
+    const userId = await getScheduleUserId();
     const created = await db.workoutSession.create({
       data: {
         userId,
@@ -111,14 +158,13 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, workout: serializeSession(created) }, { status: 201 });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to save workout';
+    const message = publicError(error, 'Failed to save workout');
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
 
 export async function PATCH(request: Request) {
   try {
-    const userId = await getScheduleUserId();
     const body = await request.json();
     const workoutId = typeof body.workoutId === 'string' ? body.workoutId : body.workout?.id;
 
@@ -128,6 +174,15 @@ export async function PATCH(request: Request) {
 
     const workout = normalizeWorkout({ ...body.workout, id: workoutId });
 
+    if (persistenceDisabled()) {
+      return NextResponse.json({
+        success: true,
+        persistence: 'disabled',
+        workout: serializeLocalWorkout({ ...workout, id: workoutId }, workoutId),
+      });
+    }
+
+    const userId = await getScheduleUserId();
     await db.workoutSession.updateMany({
       where: { id: workoutId, userId },
       data: {
@@ -150,14 +205,13 @@ export async function PATCH(request: Request) {
 
     return NextResponse.json({ success: true, workout: serializeSession(updated) });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to update workout';
+    const message = publicError(error, 'Failed to update workout');
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
 
 export async function DELETE(request: Request) {
   try {
-    const userId = await getScheduleUserId();
     const url = new URL(request.url);
     const workoutId = url.searchParams.get('workoutId');
 
@@ -165,13 +219,21 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ success: false, error: 'workoutId is required' }, { status: 400 });
     }
 
+    if (persistenceDisabled()) {
+      return NextResponse.json({
+        success: true,
+        persistence: 'disabled',
+      });
+    }
+
+    const userId = await getScheduleUserId();
     await db.workoutSession.deleteMany({
       where: { id: workoutId, userId },
     });
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to delete workout';
+    const message = publicError(error, 'Failed to delete workout');
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
