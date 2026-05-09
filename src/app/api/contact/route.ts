@@ -3,6 +3,26 @@ import { db } from '@/lib/db';
 import { contactSchema } from '@/lib/validations';
 import { sanitizeInput } from '@/proxy';
 
+function persistenceDisabled() {
+  return !process.env.DATABASE_URL;
+}
+
+function isPersistenceError(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+  return [
+    'DATABASE_URL',
+    'Environment variable not found',
+    'Invalid `prisma.',
+    'PrismaClient',
+    'Error querying the database',
+    'Unable to open the database file',
+    'Can\'t reach database server',
+    'no such table',
+    'P1001',
+    'P2021',
+  ].some((needle) => message.includes(needle));
+}
+
 export async function POST(request: Request) {
   try {
     // Parse and validate input
@@ -34,7 +54,7 @@ export async function POST(request: Request) {
       ? subject.replace(/<[^>]*>/g, '').trim()
       : subject) : null;
 
-    if (!process.env.DATABASE_URL) {
+    if (persistenceDisabled()) {
       return NextResponse.json(
         {
           success: true,
@@ -59,6 +79,17 @@ export async function POST(request: Request) {
       message: 'Message received successfully',
     });
   } catch (error: unknown) {
+    if (isPersistenceError(error)) {
+      return NextResponse.json(
+        {
+          success: true,
+          delivery: 'direct',
+          message: 'Message prepared successfully',
+        },
+        { status: 202 }
+      );
+    }
+
     // Hide sensitive errors in production
     if (process.env.NODE_ENV === 'production') {
       console.error('[Contact] Error:', error instanceof Error ? error.message : 'Unknown error');

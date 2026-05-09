@@ -2,9 +2,36 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { ensureDefaultProgram, getScheduleUserId, toDateOnly, weekDays } from '@/lib/schedule';
 
+function persistenceDisabled() {
+  return !process.env.DATABASE_URL;
+}
+
+function isPersistenceError(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+  return [
+    'DATABASE_URL',
+    'Environment variable not found',
+    'Invalid `prisma.',
+    'PrismaClient',
+    'Error querying the database',
+    'Unable to open the database file',
+    'Can\'t reach database server',
+    'no such table',
+    'P1001',
+    'P2021',
+  ].some((needle) => message.includes(needle));
+}
+
+function publicError(error: unknown, fallback: string) {
+  const message = error instanceof Error ? error.message : '';
+  return isPersistenceError(error)
+    ? 'Training completion cloud sync is not configured yet. Your planner can still run locally.'
+    : message || fallback;
+}
+
 export async function GET(request: Request) {
   try {
-    if (!process.env.DATABASE_URL) {
+    if (persistenceDisabled()) {
       return NextResponse.json({ success: true, persistence: 'disabled', history: [] });
     }
 
@@ -28,14 +55,18 @@ export async function GET(request: Request) {
       })),
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to fetch completion history';
+    if (isPersistenceError(error)) {
+      return NextResponse.json({ success: true, persistence: 'disabled', history: [] });
+    }
+
+    const message = publicError(error, 'Failed to fetch completion history');
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
 
 export async function POST(request: Request) {
   try {
-    if (!process.env.DATABASE_URL) {
+    if (persistenceDisabled()) {
       return NextResponse.json({
         success: true,
         persistence: 'disabled',
@@ -96,18 +127,28 @@ export async function POST(request: Request) {
       },
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to update completion';
+    if (isPersistenceError(error)) {
+      return NextResponse.json({
+        success: true,
+        persistence: 'disabled',
+        completed: true,
+        completion: null,
+      });
+    }
+
+    const message = publicError(error, 'Failed to update completion');
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
 
 export async function DELETE(request: Request) {
+  let hasCompletionId = false;
+
   try {
-    if (!process.env.DATABASE_URL) {
+    if (persistenceDisabled()) {
       return NextResponse.json({ success: true, persistence: 'disabled' });
     }
 
-    const userId = await getScheduleUserId();
     const url = new URL(request.url);
     const completionId = url.searchParams.get('id');
 
@@ -115,13 +156,20 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ success: false, error: 'Completion id is required' }, { status: 400 });
     }
 
+    hasCompletionId = true;
+
+    const userId = await getScheduleUserId();
     await db.workoutCompletion.deleteMany({
       where: { id: completionId, userId },
     });
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to delete completion';
+    if (hasCompletionId && isPersistenceError(error)) {
+      return NextResponse.json({ success: true, persistence: 'disabled' });
+    }
+
+    const message = publicError(error, 'Failed to delete completion');
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }

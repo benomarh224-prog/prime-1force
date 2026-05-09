@@ -13,9 +13,39 @@ type ScheduleDayInput = {
   dayOfWeek: number;
   splitTitle: string;
   exercises?: string[];
-  notes?: string;
+  notes?: string | null;
   isRestDay?: boolean;
 };
+
+function persistenceDisabled() {
+  return !process.env.DATABASE_URL;
+}
+
+function publicError(error: unknown, fallback: string) {
+  const message = error instanceof Error ? error.message : '';
+
+  if (message.includes('DATABASE_URL') || message.includes('Environment variable not found')) {
+    return 'Training plan cloud sync is not configured yet. Your planner can still run locally.';
+  }
+
+  return message || fallback;
+}
+
+function isPersistenceError(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+  return [
+    'DATABASE_URL',
+    'Environment variable not found',
+    'Invalid `prisma.',
+    'PrismaClient',
+    'Error querying the database',
+    'Unable to open the database file',
+    'Can\'t reach database server',
+    'no such table',
+    'P1001',
+    'P2021',
+  ].some((needle) => message.includes(needle));
+}
 
 function serializeDay(day: {
   id: string;
@@ -34,19 +64,30 @@ function serializeDay(day: {
   };
 }
 
-function getFallbackScheduleResponse() {
-  const today = new Date();
-  const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  const days = defaultSchedule.map((day) => ({
-    id: `fallback-${day.dayOfWeek}`,
+function serializeFallbackDay(day: {
+  id?: string;
+  dayOfWeek: number;
+  splitTitle: string;
+  exercises: string[];
+  notes?: string | null;
+  isRestDay: boolean;
+}) {
+  return {
+    id: day.id || `fallback-${day.dayOfWeek}`,
     dayOfWeek: day.dayOfWeek,
     splitTitle: day.splitTitle,
     exercises: day.exercises,
-    notes: null,
+    notes: day.notes || null,
     isRestDay: day.isRestDay,
     dayName: weekDays[day.dayOfWeek],
-    updatedAt: today.toISOString(),
-  }));
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+function getFallbackScheduleResponse() {
+  const today = new Date();
+  const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const days = defaultSchedule.map((day) => serializeFallbackDay({ ...day, notes: null }));
   const todayDay = days.find((day) => day.dayOfWeek === today.getDay()) ?? days[0];
 
   return {
@@ -96,9 +137,29 @@ function normalizeDays(days: ScheduleDayInput[]) {
     });
 }
 
+function fallbackProgramResponse(input: {
+  id?: string;
+  name?: string;
+  description?: string | null;
+  isActive?: boolean;
+  days?: ScheduleDayInput[];
+}) {
+  const normalizedDays = normalizeDays(input.days || []);
+  const fallbackDays = (normalizedDays.length ? normalizedDays : defaultSchedule.map((day) => ({ ...day, notes: null })))
+    .map((day) => serializeFallbackDay(day));
+
+  return {
+    id: input.id || `fallback-program-${Date.now()}`,
+    name: input.name?.trim() || 'Push / Pull / Legs',
+    description: input.description ?? null,
+    isActive: input.isActive ?? true,
+    days: fallbackDays,
+  };
+}
+
 export async function GET(request: Request) {
   try {
-    if (!process.env.DATABASE_URL) {
+    if (persistenceDisabled()) {
       return NextResponse.json(getFallbackScheduleResponse());
     }
 
@@ -179,14 +240,19 @@ export async function GET(request: Request) {
       })),
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to fetch schedule';
+    if (isPersistenceError(error)) {
+      return NextResponse.json(getFallbackScheduleResponse());
+    }
+
+    const message = publicError(error, 'Failed to fetch schedule');
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
 
 export async function POST(request: Request) {
+  let fallbackProgram: ReturnType<typeof fallbackProgramResponse> | null = null;
+
   try {
-    const userId = await getScheduleUserId();
     const body = await request.json();
     const name = typeof body.name === 'string' && body.name.trim() ? body.name.trim() : 'New Program';
     const description = typeof body.description === 'string' ? body.description.trim() : null;
@@ -195,7 +261,25 @@ export async function POST(request: Request) {
     const daysToCreate = requestedDays.length > 0
       ? requestedDays
       : defaultSchedule.map((day) => ({ ...day, notes: null }));
+    fallbackProgram = fallbackProgramResponse({
+      name,
+      description,
+      isActive,
+      days: daysToCreate,
+    });
 
+    if (persistenceDisabled()) {
+      return NextResponse.json(
+        {
+          success: true,
+          persistence: 'disabled',
+          program: fallbackProgram,
+        },
+        { status: 201 }
+      );
+    }
+
+    const userId = await getScheduleUserId();
     const program = await db.workoutProgram.create({
       data: {
         userId,
@@ -237,15 +321,52 @@ export async function POST(request: Request) {
       { status: 201 }
     );
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to create program';
+    if (fallbackProgram && isPersistenceError(error)) {
+      return NextResponse.json(
+        {
+          success: true,
+          persistence: 'disabled',
+          program: fallbackProgram,
+        },
+        { status: 201 }
+      );
+    }
+
+    const message = publicError(error, 'Failed to create program');
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
 
 export async function PATCH(request: Request) {
+  let fallbackProgram: ReturnType<typeof fallbackProgramResponse> | null = null;
+
   try {
-    const userId = await getScheduleUserId();
     const body = await request.json();
+    const days = Array.isArray(body.days) ? (body.days as ScheduleDayInput[]) : [];
+    const fallbackProgramId = typeof body.programId === 'string' && body.programId ? body.programId : 'fallback-program';
+    fallbackProgram = fallbackProgramResponse({
+      id: fallbackProgramId,
+      name: typeof body.name === 'string' && body.name.trim() ? body.name.trim() : 'Push / Pull / Legs',
+      description: typeof body.description === 'string' ? body.description.trim() : null,
+      isActive: typeof body.isActive === 'boolean' ? body.isActive : true,
+      days,
+    });
+
+    if (persistenceDisabled()) {
+      return NextResponse.json({
+        success: true,
+        persistence: 'disabled',
+        activeProgram: {
+          id: fallbackProgram.id,
+          name: fallbackProgram.name,
+          description: fallbackProgram.description,
+          isActive: fallbackProgram.isActive,
+        },
+        days: fallbackProgram.days,
+      });
+    }
+
+    const userId = await getScheduleUserId();
     const programId = typeof body.programId === 'string' ? body.programId : await ensureDefaultProgram(userId);
 
     const program = await db.workoutProgram.findFirst({
@@ -274,8 +395,6 @@ export async function PATCH(request: Request) {
         });
       }
     }
-
-    const days = Array.isArray(body.days) ? (body.days as ScheduleDayInput[]) : [];
 
     for (const day of days) {
       if (!Number.isInteger(day.dayOfWeek) || day.dayOfWeek < 0 || day.dayOfWeek > 6) continue;
@@ -329,14 +448,29 @@ export async function PATCH(request: Request) {
       days: updated?.days.map(serializeDay) ?? [],
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to update schedule';
+    if (fallbackProgram && isPersistenceError(error)) {
+      return NextResponse.json({
+        success: true,
+        persistence: 'disabled',
+        activeProgram: {
+          id: fallbackProgram.id,
+          name: fallbackProgram.name,
+          description: fallbackProgram.description,
+          isActive: fallbackProgram.isActive,
+        },
+        days: fallbackProgram.days,
+      });
+    }
+
+    const message = publicError(error, 'Failed to update schedule');
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
 
 export async function DELETE(request: Request) {
+  let hasProgramId = false;
+
   try {
-    const userId = await getScheduleUserId();
     const url = new URL(request.url);
     const programId = url.searchParams.get('programId');
 
@@ -344,6 +478,16 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ success: false, error: 'programId is required' }, { status: 400 });
     }
 
+    hasProgramId = true;
+
+    if (persistenceDisabled()) {
+      return NextResponse.json({
+        success: true,
+        persistence: 'disabled',
+      });
+    }
+
+    const userId = await getScheduleUserId();
     const programCount = await db.workoutProgram.count({ where: { userId } });
     if (programCount <= 1) {
       return NextResponse.json(
@@ -360,7 +504,14 @@ export async function DELETE(request: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to delete program';
+    if (hasProgramId && isPersistenceError(error)) {
+      return NextResponse.json({
+        success: true,
+        persistence: 'disabled',
+      });
+    }
+
+    const message = publicError(error, 'Failed to delete program');
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
