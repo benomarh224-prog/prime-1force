@@ -574,8 +574,8 @@ export function WorkoutsPage() {
                     </div>
                   </div>
                   <CardContent className="p-4">
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-3 text-muted-foreground">
+                    <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <Clock className="h-3.5 w-3.5" />
                           {exercise.duration} min
@@ -585,16 +585,16 @@ export function WorkoutsPage() {
                           {exercise.calories} cal
                         </span>
                       </div>
-                      <Badge variant="outline" className="text-xs">
+                      <Badge variant="outline" className="max-w-full text-xs">
                         {exercise.muscleGroup}
                       </Badge>
                     </div>
-                    <div className="mt-4 grid grid-cols-3 gap-2">
+                    <div className="mt-4 grid grid-cols-1 gap-2 min-[390px]:grid-cols-3">
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => setExerciseId(exercise.id)}
-                        className="rounded-lg"
+                        className="w-full rounded-lg"
                       >
                         Details
                       </Button>
@@ -602,7 +602,7 @@ export function WorkoutsPage() {
                         variant="outline"
                         size="sm"
                         onClick={() => setGuideExercise(exercise)}
-                        className="rounded-lg gap-1.5"
+                        className="w-full rounded-lg gap-1.5"
                       >
                         <PlayCircle className="h-3.5 w-3.5" />
                         Guide
@@ -610,7 +610,7 @@ export function WorkoutsPage() {
                       <Button
                         size="sm"
                         onClick={() => openLogDialog(exercise)}
-                        className="rounded-lg gap-1.5"
+                        className="w-full rounded-lg gap-1.5"
                       >
                         <Plus className="h-3.5 w-3.5" />
                         Log
@@ -720,7 +720,7 @@ export function WorkoutsPage() {
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label className="text-xs">Date</Label>
                   <Input

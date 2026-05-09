@@ -244,22 +244,22 @@ export function NutritionPage() {
         </div>
 
         <Tabs defaultValue="planner" className="space-y-6">
-          <TabsList className="grid w-full max-w-2xl grid-cols-4 rounded-lg">
-            <TabsTrigger value="planner" className="gap-2 rounded-md">
+          <TabsList className="grid h-11 w-full max-w-2xl grid-cols-4 rounded-lg">
+            <TabsTrigger value="planner" className="gap-1 rounded-md px-1 text-xs sm:gap-2 sm:px-2 sm:text-sm">
               <Utensils className="h-4 w-4" />
-              Meals
+              <span className="hidden min-[380px]:inline">Meals</span>
             </TabsTrigger>
-            <TabsTrigger value="builder" className="gap-2 rounded-md">
+            <TabsTrigger value="builder" className="gap-1 rounded-md px-1 text-xs sm:gap-2 sm:px-2 sm:text-sm">
               <ShoppingBasket className="h-4 w-4" />
-              Builder
+              <span className="hidden min-[380px]:inline">Builder</span>
             </TabsTrigger>
-            <TabsTrigger value="macros" className="gap-2 rounded-md">
+            <TabsTrigger value="macros" className="gap-1 rounded-md px-1 text-xs sm:gap-2 sm:px-2 sm:text-sm">
               <Scale className="h-4 w-4" />
-              Macros
+              <span className="hidden min-[380px]:inline">Macros</span>
             </TabsTrigger>
-            <TabsTrigger value="calculator" className="gap-2 rounded-md">
+            <TabsTrigger value="calculator" className="gap-1 rounded-md px-1 text-xs sm:gap-2 sm:px-2 sm:text-sm">
               <Calculator className="h-4 w-4" />
-              Calc
+              <span className="hidden min-[380px]:inline">Calc</span>
             </TabsTrigger>
           </TabsList>
 

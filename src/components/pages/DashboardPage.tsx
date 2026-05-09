@@ -626,19 +626,19 @@ export function DashboardPage() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <motion.div
-          className="mb-8 flex items-center justify-between"
+          className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <div>
+          <div className="min-w-0">
             <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
               Your <span className="gradient-text">Dashboard</span>
             </h1>
             <p className="text-muted-foreground mt-1">Track your fitness journey</p>
           </div>
-          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
-            <Button onClick={startEditing} className="rounded-xl gap-2">
+          <motion.div className="w-full sm:w-auto" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
+            <Button onClick={startEditing} className="w-full rounded-xl gap-2 sm:w-auto">
               <Edit3 className="h-4 w-4" /> Edit Profile
             </Button>
           </motion.div>
@@ -1094,7 +1094,7 @@ export function DashboardPage() {
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
-                  <div className="flex justify-center gap-4 mt-2">
+                  <div className="mt-2 flex flex-wrap justify-center gap-x-4 gap-y-2">
                     {macroData.map((m) => (
                       <div key={m.name} className="flex items-center gap-1.5 text-xs">
                         <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: m.fill }} />
@@ -1117,12 +1117,12 @@ export function DashboardPage() {
         >
           <Card className="border-border/50">
             <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <CardTitle className="text-base flex items-center gap-2">
                   <ClipboardList className="h-4 w-4 text-primary" />
                   Workout Tracker
                 </CardTitle>
-                <Button onClick={openWorkoutDialog} size="sm" className="rounded-lg gap-1.5 h-8 text-xs">
+                <Button onClick={openWorkoutDialog} size="sm" className="h-8 w-full rounded-lg gap-1.5 text-xs sm:w-auto">
                   <Plus className="h-3.5 w-3.5" /> Log Workout
                 </Button>
               </div>
@@ -1144,10 +1144,10 @@ export function DashboardPage() {
                         log.completed ? 'border-primary/40' : 'border-border/50'
                       )}
                     >
-                      <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <p className="font-semibold text-sm">{log.name}</p>
+                      <div className="mb-2 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="break-words text-sm font-semibold">{log.name}</p>
                             {log.completed && (
                               <Badge className="h-5 border-primary/20 bg-primary/10 text-primary text-[10px]">
                                 Complete
@@ -1156,7 +1156,7 @@ export function DashboardPage() {
                           </div>
                           <p className="text-xs text-muted-foreground">{new Date(log.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</p>
                         </div>
-                        <div className="flex items-center gap-3">
+                        <div className="flex flex-wrap items-center gap-2 sm:justify-end">
                           {log.duration > 0 && (
                             <span className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="h-3 w-3" />{log.duration}m</span>
                           )}
@@ -1387,7 +1387,7 @@ export function DashboardPage() {
 
           <div className="space-y-5 mt-2">
             {/* Workout Name & Date */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label className="text-xs">Workout Name *</Label>
                 <Input
@@ -1418,7 +1418,7 @@ export function DashboardPage() {
                 value={workoutForm.duration || ''}
                 placeholder="60"
                 onChange={(e) => setWorkoutForm({ ...workoutForm, duration: Number(e.target.value) })}
-                className="h-9 rounded-lg w-32"
+                className="h-9 w-full rounded-lg sm:w-32"
               />
             </div>
 

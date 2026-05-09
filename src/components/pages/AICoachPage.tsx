@@ -278,7 +278,7 @@ Guidelines:
   };
 
   return (
-    <div className="flex min-h-screen flex-col pb-28 pt-24 lg:pb-16">
+    <div className="flex min-h-screen flex-col pb-48 pt-24 lg:pb-16">
       <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 sm:px-6 lg:px-8">
         <motion.div
           className="mb-6 flex flex-col justify-between gap-4 lg:flex-row lg:items-end"
@@ -297,7 +297,7 @@ Guidelines:
               </span>
               AI <span className="gradient-text">Coach</span>
             </h1>
-            <p className="ml-[52px] mt-1 max-w-2xl text-muted-foreground">
+            <p className="mt-2 max-w-2xl text-sm text-muted-foreground sm:ml-[52px] sm:text-base">
               Plans, form checks, food strategy, weekly reviews, and motivation based on your profile.
             </p>
           </div>
@@ -333,7 +333,7 @@ Guidelines:
                 </p>
               </div>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="grid w-full gap-2 min-[420px]:grid-cols-3 lg:flex lg:w-auto lg:flex-wrap">
               <input
                 ref={fileInputRef}
                 type="file"
@@ -341,15 +341,15 @@ Guidelines:
                 onChange={handleMediaChange}
                 className="hidden"
               />
-              <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="rounded-lg gap-2">
+              <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="w-full rounded-lg gap-2 lg:w-auto">
                 <Upload className="h-4 w-4" />
                 Upload media
               </Button>
-              <Button variant="outline" onClick={startVoiceInput} className="rounded-lg gap-2">
+              <Button variant="outline" onClick={startVoiceInput} className="w-full rounded-lg gap-2 lg:w-auto">
                 <Mic className={cn('h-4 w-4', listening && 'text-primary')} />
                 {listening ? 'Listening' : 'Voice note'}
               </Button>
-              <Button variant="outline" onClick={speakLastCoachMessage} className="rounded-lg gap-2">
+              <Button variant="outline" onClick={speakLastCoachMessage} className="w-full rounded-lg gap-2 lg:w-auto">
                 <Volume2 className="h-4 w-4" />
                 Read feedback
               </Button>
@@ -422,7 +422,7 @@ Guidelines:
             </Card>
           </div>
 
-        <Card className="flex min-h-[620px] flex-1 flex-col border-border/50">
+        <Card className="flex min-h-[58svh] flex-1 flex-col overflow-hidden border-border/50 sm:min-h-[620px]">
           <div className="flex items-center justify-between border-b px-4 py-3 sm:px-6">
             <div className="flex items-center gap-2">
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
@@ -446,7 +446,7 @@ Guidelines:
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3 }}
-                    className={cn('flex gap-3', msg.role === 'user' ? 'justify-end' : 'justify-start')}
+                    className={cn('flex min-w-0 gap-3', msg.role === 'user' ? 'justify-end' : 'justify-start')}
                   >
                     {msg.role === 'assistant' && (
                       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
@@ -455,7 +455,7 @@ Guidelines:
                     )}
                     <div
                       className={cn(
-                        'max-w-[86%] rounded-2xl px-4 py-3 text-sm leading-relaxed sm:max-w-[78%]',
+                        'max-w-[calc(100%-2.75rem)] overflow-hidden break-words rounded-2xl px-4 py-3 text-sm leading-relaxed sm:max-w-[78%]',
                         msg.role === 'user'
                           ? 'rounded-br-md bg-primary text-primary-foreground'
                           : 'rounded-bl-md bg-muted'
@@ -540,7 +540,7 @@ Guidelines:
         </div>
       </div>
 
-      <div className="fixed inset-x-0 bottom-[5.2rem] z-40 border-t border-border/70 bg-background/95 px-4 py-3 shadow-[0_-14px_38px_oklch(0_0_0_/_0.32)] backdrop-blur-xl lg:hidden">
+      <div className="fixed inset-x-0 bottom-[calc(5.2rem+env(safe-area-inset-bottom))] z-40 border-t border-border/70 bg-background/95 px-3 py-3 shadow-[0_-14px_38px_oklch(0_0_0_/_0.32)] backdrop-blur-xl sm:px-4 lg:hidden">
         <div className="mx-auto flex max-w-md gap-2">
           <Input
             placeholder={`Ask Coach in ${mode.label} mode...`}

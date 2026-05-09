@@ -352,10 +352,10 @@ export function HomePage() {
         </div>
 
         <div className="relative z-10 mx-auto flex min-h-[92svh] w-full max-w-[1400px] items-center px-4 pb-24 pt-24 sm:px-10 sm:pb-28 sm:pt-28 lg:px-16">
-          <div className="max-w-[760px]">
+          <div className="hero-copy-frame min-w-0">
             <motion.div
               className="mb-7 flex items-center gap-4 text-xs font-semibold uppercase tracking-wide text-primary sm:mb-9 sm:gap-7 sm:text-sm"
-              initial={{ opacity: 0, y: 14 }}
+              initial={false}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.65 }}
             >
@@ -364,8 +364,8 @@ export function HomePage() {
             </motion.div>
 
             <motion.h1
-              className="max-w-4xl text-5xl font-black uppercase leading-[0.92] tracking-tight text-balance sm:text-7xl md:text-8xl lg:text-[8rem]"
-              initial={{ opacity: 0, y: 26 }}
+              className="max-w-full text-5xl font-black uppercase leading-[0.92] tracking-tight text-balance sm:text-7xl md:text-8xl lg:max-w-4xl lg:text-[8rem]"
+              initial={false}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.75, delay: 0.1 }}
             >
@@ -373,8 +373,8 @@ export function HomePage() {
             </motion.h1>
 
             <motion.p
-              className="mt-6 max-w-xl text-base leading-relaxed text-white/80 sm:mt-8 sm:text-xl"
-              initial={{ opacity: 0, y: 18 }}
+              className="hero-subcopy mt-6 text-base leading-relaxed text-white/80 sm:mt-8 sm:text-xl"
+              initial={false}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.65, delay: 0.22 }}
             >
@@ -383,7 +383,7 @@ export function HomePage() {
 
             <motion.div
               className="mt-9 flex w-full flex-col items-stretch gap-4 sm:mt-11 sm:w-auto sm:flex-row sm:items-center"
-              initial={{ opacity: 0, y: 18 }}
+              initial={false}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.65, delay: 0.34 }}
             >
@@ -403,8 +403,8 @@ export function HomePage() {
             </motion.div>
 
             <motion.div
-              className="mt-10 grid max-w-3xl grid-cols-1 overflow-hidden rounded-lg border border-primary/15 bg-black/35 shadow-2xl shadow-black/30 backdrop-blur-md sm:mt-14 sm:grid-cols-3"
-              initial="hidden"
+              className="mt-10 grid w-full max-w-3xl grid-cols-1 overflow-hidden rounded-lg border border-primary/15 bg-black/35 shadow-2xl shadow-black/30 backdrop-blur-md sm:mt-14 sm:grid-cols-3"
+              initial={false}
               animate="visible"
               variants={staggerContainer}
             >
@@ -576,10 +576,10 @@ export function HomePage() {
                       { name: 'Protein Intake', stat: '145g / 160g', icon: <Target className="h-3.5 w-3.5 text-emerald-400" /> },
                       { name: 'Water', stat: '2.1L / 3L', icon: <Activity className="h-3.5 w-3.5 text-sky-400" /> },
                     ].map((a) => (
-                      <div key={a.name} className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/30">
+                      <div key={a.name} className="flex items-center gap-3 rounded-lg bg-muted/30 p-2.5">
                         {a.icon}
-                        <span className="flex-1 text-xs font-medium">{a.name}</span>
-                        <span className="text-[11px] text-muted-foreground">{a.stat}</span>
+                        <span className="min-w-0 flex-1 truncate text-xs font-medium">{a.name}</span>
+                        <span className="shrink-0 text-[11px] text-muted-foreground">{a.stat}</span>
                       </div>
                     ))}
                   </div>

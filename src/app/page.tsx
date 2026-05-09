@@ -50,11 +50,11 @@ export default function MainApp() {
     <div className="min-h-screen flex flex-col">
       <Header />
       <main className="flex-1 pb-24 lg:pb-0">
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={currentPage}
             variants={pageVariants}
-            initial="initial"
+            initial={false}
             animate="animate"
             exit="exit"
             transition={{ duration: 0.3, ease: 'easeInOut' }}

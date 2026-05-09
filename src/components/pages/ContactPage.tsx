@@ -129,9 +129,9 @@ export function ContactPage() {
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0">
                       {info.icon}
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-sm text-muted-foreground">{info.label}</p>
-                      <p className="text-sm font-medium">{info.value}</p>
+                      <p className="break-words text-sm font-medium">{info.value}</p>
                     </div>
                   </div>
                 ))}
@@ -174,7 +174,7 @@ export function ContactPage() {
                 <div className="space-y-3">
                   {businessHours.map((item) => (
                     <div key={item.day} className="flex items-start justify-between gap-4 text-sm">
-                      <span className="font-medium">{item.day}</span>
+                      <span className="min-w-0 font-medium">{item.day}</span>
                       <span className="text-right text-muted-foreground">{item.hours}</span>
                     </div>
                   ))}

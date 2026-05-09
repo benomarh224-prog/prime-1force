@@ -41,6 +41,11 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --breakpoint-sm: 40rem;
+  --breakpoint-md: 48rem;
+  --breakpoint-lg: 64rem;
+  --breakpoint-xl: 80rem;
+  --breakpoint-2xl: 96rem;
   --color-neon: var(--neon);
   --color-neon-dim: var(--neon-dim);
 }
@@ -93,6 +98,10 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    overflow-x: hidden;
+  }
+
   body {
     @apply bg-background text-foreground;
     min-width: 320px;
@@ -195,6 +204,51 @@
   }
 }
 
+.hero-copy-frame {
+  width: calc(100vw - 2rem);
+  max-width: 760px;
+}
+
+.hero-subcopy {
+  width: calc(100vw - 2rem);
+  max-width: calc(100vw - 2rem);
+  overflow-wrap: break-word;
+  white-space: normal;
+}
+
+@media (min-width: 640px) {
+  .hero-copy-frame {
+    width: 100%;
+  }
+
+  .hero-subcopy {
+    width: auto;
+    max-width: 36rem;
+  }
+}
+
+.mobile-bottom-nav {
+  width: 100vw;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.mobile-bottom-nav-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  width: 100%;
+}
+
+.mobile-bottom-nav-item {
+  min-width: 0;
+}
+
+.mobile-bottom-nav-label {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 @media (max-width: 640px) {
   body {
     -webkit-tap-highlight-color: transparent;
@@ -205,11 +259,8 @@
     overflow-wrap: anywhere;
   }
 
-  button,
-  a,
   input,
-  textarea,
-  [role="button"] {
+  textarea {
     min-height: 44px;
   }
 

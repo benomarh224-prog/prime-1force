@@ -38,6 +38,7 @@ export function Header() {
   const { data: session, status } = useSession();
   const [scrolled, setScrolled] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const heroTop = currentPage === 'home' && !scrolled;
   const userName = session?.user?.name || session?.user?.email?.split('@')[0] || 'Member';
@@ -45,6 +46,16 @@ export function Header() {
   const openAuth = (mode: AuthDialogMode) => {
     setAuthMode(mode);
     setAuthOpen(true);
+  };
+
+  const navigateFromMobile = (page: PageName) => {
+    navigate(page);
+    setMobileMenuOpen(false);
+  };
+
+  const openAuthFromMobile = (mode: AuthDialogMode) => {
+    setMobileMenuOpen(false);
+    openAuth(mode);
   };
 
   useEffect(() => {
@@ -66,7 +77,7 @@ export function Header() {
   return (
     <>
       <motion.header
-        initial={{ y: -100 }}
+        initial={false}
         animate={{ y: 0 }}
         transition={{ duration: 0.5, ease: 'easeOut' }}
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -166,22 +177,22 @@ export function Header() {
             )}
 
             {/* Mobile Menu */}
-            <Sheet>
+            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className={`lg:hidden rounded-lg ${heroTop ? 'text-white hover:bg-white/10 hover:text-white' : ''}`}>
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[min(88vw,20rem)] p-0 luxury-surface">
+              <SheetContent side="right" className="w-[min(92vw,20rem)] p-0 luxury-surface">
                 <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
-                <div className="flex flex-col h-full">
-                  <div className="flex items-center justify-between p-4 border-b">
+                <div className="flex min-h-full flex-col">
+                  <div className="flex shrink-0 items-center justify-between border-b p-4">
                     <span className="flex items-center gap-3 text-lg font-black uppercase tracking-tight">
                       <Image src="/logo.svg" alt="Prime Forge" width={36} height={36} className="rounded-lg" />
                       Prime<span className="text-primary"> Forge</span>
                     </span>
                   </div>
-                  <nav className="flex flex-col p-2 gap-1 flex-1">
+                  <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto p-2">
                     {navItems.map((item) => (
                       <Button
                         key={item.page}
@@ -191,26 +202,29 @@ export function Header() {
                             ? 'bg-primary/10 text-primary font-medium'
                             : 'text-muted-foreground'
                         }`}
-                        onClick={() => navigate(item.page)}
+                        onClick={() => navigateFromMobile(item.page)}
                       >
                         {item.icon}
                         {item.label}
                       </Button>
                     ))}
                   </nav>
-                  <div className="p-4 border-t space-y-2">
+                  <div className="shrink-0 space-y-2 border-t p-4">
                     {status === 'authenticated' ? (
                       <>
                         <Button
-                          onClick={() => navigate('dashboard')}
+                          onClick={() => navigateFromMobile('dashboard')}
                           className="w-full gap-2 rounded-lg neon-glow font-semibold"
                         >
                           <UserCircle className="h-4 w-4" />
-                          {userName}
+                          <span className="truncate">{userName}</span>
                         </Button>
                         <Button
                           variant="outline"
-                          onClick={() => signOut({ redirect: false })}
+                          onClick={() => {
+                            setMobileMenuOpen(false);
+                            signOut({ redirect: false });
+                          }}
                           className="w-full gap-2 rounded-lg border-primary/20"
                         >
                           <LogOut className="h-4 w-4" />
@@ -220,7 +234,7 @@ export function Header() {
                     ) : (
                       <>
                         <Button
-                          onClick={() => openAuth('signup')}
+                          onClick={() => openAuthFromMobile('signup')}
                           className="w-full gap-2 rounded-lg neon-glow font-semibold"
                         >
                           Sign Up
@@ -228,7 +242,7 @@ export function Header() {
                         </Button>
                         <Button
                           variant="outline"
-                          onClick={() => openAuth('login')}
+                          onClick={() => openAuthFromMobile('login')}
                           className="w-full gap-2 rounded-lg border-primary/20"
                         >
                           <UserCircle className="h-4 w-4" />
@@ -238,7 +252,7 @@ export function Header() {
                     )}
                     <Button
                       variant="outline"
-                      onClick={() => navigate('ai-coach')}
+                      onClick={() => navigateFromMobile('ai-coach')}
                       className="w-full gap-2 rounded-lg border-primary/20"
                     >
                       <Bot className="h-4 w-4" />

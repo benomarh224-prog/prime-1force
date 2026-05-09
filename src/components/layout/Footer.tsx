@@ -85,7 +85,7 @@ export function Footer() {
                 </a>
               ))}
             </div>
-            <p className="text-sm text-muted-foreground mt-4">
+            <p className="mt-4 break-words text-sm text-muted-foreground">
               houssambenomar17@gmail.com
             </p>
           </div>
@@ -94,8 +94,8 @@ export function Footer() {
         <Separator className="my-8" />
 
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} Prime Forge. All rights reserved.</p>
-          <p className="flex items-center gap-1">
+          <p className="text-center sm:text-left">&copy; {new Date().getFullYear()} Prime Forge. All rights reserved.</p>
+          <p className="flex items-center gap-1 text-center">
             Built with <Heart className="h-3 w-3 text-red-500 fill-red-500" /> for fitness enthusiasts
           </p>
         </div>

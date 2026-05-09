@@ -15,8 +15,8 @@ export function MobileBottomNav() {
   const { currentPage, navigate } = useAppStore();
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-primary/15 bg-background/90 px-2 pb-[max(0.65rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-16px_42px_oklch(0_0_0_/_0.34)] backdrop-blur-xl lg:hidden">
-      <div className="mx-auto grid max-w-md grid-cols-4 gap-1">
+    <nav className="mobile-bottom-nav fixed inset-x-0 bottom-0 z-50 border-t border-primary/15 bg-background/90 px-1.5 pb-[max(0.65rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-16px_42px_oklch(0_0_0_/_0.34)] backdrop-blur-xl lg:hidden">
+      <div className="mobile-bottom-nav-grid mx-auto grid max-w-md gap-1">
         {navItems.map((item) => {
           const active = currentPage === item.page || (currentPage === 'exercise-detail' && item.page === 'workouts');
 
@@ -26,14 +26,14 @@ export function MobileBottomNav() {
               type="button"
               onClick={() => navigate(item.page)}
               className={cn(
-                'flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg text-[11px] font-semibold transition-colors',
+                'mobile-bottom-nav-item flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg px-1 text-[10px] font-semibold transition-colors min-[380px]:text-[11px]',
                 active
                   ? 'bg-primary/10 text-primary ring-1 ring-primary/20'
                   : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'
               )}
             >
               {item.icon}
-              <span>{item.label}</span>
+              <span className="mobile-bottom-nav-label">{item.label}</span>
             </button>
           );
         })}

@@ -232,8 +232,8 @@ export function ExerciseDetailPage() {
 
           {/* Info overlay */}
           <div className="absolute bottom-0 left-0 right-0 p-6">
-            <div className="flex items-start justify-between">
-              <div>
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
                 <div className="flex gap-2 mb-2">
                   <Badge className={cn("text-xs border", difficultyColor[exercise.difficulty])}>
                     {exercise.difficulty}
@@ -242,7 +242,7 @@ export function ExerciseDetailPage() {
                     {exercise.category === 'no-equipment' ? 'No Equipment' : exercise.category === 'home' ? 'Home' : 'Gym'}
                   </Badge>
                 </div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-white drop-shadow-lg">
+                <h1 className="break-words text-2xl font-bold text-white drop-shadow-lg sm:text-3xl">
                   {exercise.name}
                 </h1>
               </div>
@@ -277,11 +277,11 @@ export function ExerciseDetailPage() {
             { icon: <Dumbbell className="h-5 w-5 text-primary" />, label: 'Equipment', value: exercise.equipment },
           ].map((stat) => (
             <Card key={stat.label} className="border-border/50">
-              <CardContent className="p-4 flex items-center gap-3">
+              <CardContent className="flex items-center gap-3 p-4">
                 {stat.icon}
-                <div>
+                <div className="min-w-0">
                   <p className="text-xs text-muted-foreground">{stat.label}</p>
-                  <p className="text-sm font-semibold">{stat.value}</p>
+                  <p className="break-words text-sm font-semibold">{stat.value}</p>
                 </div>
               </CardContent>
             </Card>
@@ -314,11 +314,11 @@ export function ExerciseDetailPage() {
             { icon: <BarChart3 className="h-5 w-5 text-primary" />, label: 'Best Volume', value: bestVolume > 0 ? `${bestVolume}kg` : '-' },
           ].map((stat) => (
             <Card key={stat.label} className="border-border/50">
-              <CardContent className="p-4 flex items-center gap-3">
+              <CardContent className="flex items-center gap-3 p-4">
                 {stat.icon}
-                <div>
+                <div className="min-w-0">
                   <p className="text-xs text-muted-foreground">{stat.label}</p>
-                  <p className="text-sm font-semibold">{stat.value}</p>
+                  <p className="break-words text-sm font-semibold">{stat.value}</p>
                 </div>
               </CardContent>
             </Card>
@@ -512,7 +512,7 @@ export function ExerciseDetailPage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label className="text-xs">Date</Label>
                 <Input
