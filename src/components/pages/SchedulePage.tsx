@@ -5,13 +5,15 @@ import { motion } from 'framer-motion';
 import {
   Activity,
   Bell,
+  CalendarCheck2,
   CalendarDays,
   CalendarPlus,
   CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
   Clock,
   Dumbbell,
   Flame,
-  ListChecks,
   Loader2,
   Plus,
   RefreshCw,
@@ -221,6 +223,26 @@ function formatDate(dateKey: string) {
   });
 }
 
+function parseDateKey(dateKey: string) {
+  return new Date(`${dateKey}T00:00:00`);
+}
+
+function addDays(dateKey: string, amount: number) {
+  const date = parseDateKey(dateKey);
+  date.setDate(date.getDate() + amount);
+  return getDateKey(date);
+}
+
+function getWeekStart(dateKey: string) {
+  const date = parseDateKey(dateKey);
+  date.setDate(date.getDate() - date.getDay());
+  return getDateKey(date);
+}
+
+function completionDateKey(completion: Completion) {
+  return completion.date.slice(0, 10);
+}
+
 function workoutVolume(log: WorkoutLog) {
   return log.exercises.reduce(
     (total, exercise) => total + exercise.sets.reduce((sum, set) => sum + set.weight * set.reps, 0),
@@ -275,7 +297,7 @@ export function SchedulePage() {
   const [selectedProgramId, setSelectedProgramId] = useState('');
   const [days, setDays] = useState<ScheduleDay[]>(defaultDays);
   const [history, setHistory] = useState<Completion[]>([]);
-  const [todayCompleted, setTodayCompleted] = useState(false);
+  const [selectedDateKey, setSelectedDateKey] = useState(() => getDateKey());
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [syncingWorkoutId, setSyncingWorkoutId] = useState<string | null>(null);
@@ -292,6 +314,26 @@ export function SchedulePage() {
   const todayIndex = new Date().getDay();
   const today = days.find((day) => day.dayOfWeek === todayIndex) ?? days[0];
   const todayDateKey = getDateKey();
+  const selectedDate = parseDateKey(selectedDateKey);
+  const selectedDay = days.find((day) => day.dayOfWeek === selectedDate.getDay()) ?? days[0];
+  const selectedCompletion = history.find((item) => completionDateKey(item) === selectedDateKey);
+  const selectedCompleted = Boolean(selectedCompletion);
+  const selectedWeekStart = getWeekStart(selectedDateKey);
+  const completionDates = useMemo(() => new Set(history.map(completionDateKey)), [history]);
+  const weekPlan = useMemo(
+    () =>
+      Array.from({ length: 7 }, (_, index) => {
+        const dateKey = addDays(selectedWeekStart, index);
+        const date = parseDateKey(dateKey);
+        const day = days.find((item) => item.dayOfWeek === date.getDay()) ?? days[0];
+        return {
+          dateKey,
+          day,
+          completed: completionDates.has(dateKey),
+        };
+      }),
+    [completionDates, days, selectedWeekStart]
+  );
 
   const loadWorkoutSessions = async () => {
     const response = await fetch('/api/workout-sessions');
@@ -313,7 +355,6 @@ export function SchedulePage() {
       setSelectedProgramId(data.activeProgram?.id || programId || data.programs?.[0]?.id || '');
       setDays(data.days?.length ? data.days : defaultDays);
       setHistory(data.history || []);
-      setTodayCompleted(Boolean(data.today?.completed));
     } catch (error) {
       toast({
         title: 'Could not load program',
@@ -337,26 +378,105 @@ export function SchedulePage() {
   }, []);
 
   const stats = useMemo(() => {
-    const start = new Date();
-    start.setDate(start.getDate() - start.getDay());
-    start.setHours(0, 0, 0, 0);
-
-    const weeklyCompletions = history.filter((item) => new Date(item.date) >= start).length;
-    const trainingDays = days.filter((day) => !day.isRestDay).length;
+    const weeklyCompletions = weekPlan.filter((item) => !item.day?.isRestDay && item.completed).length;
+    const trainingDays = weekPlan.filter((item) => !item.day?.isRestDay).length;
     const totalVolume = store.workoutLogs.reduce((sum, log) => sum + workoutVolume(log), 0);
     const totalMinutes = store.workoutLogs.reduce((sum, log) => sum + log.duration, 0);
+    let streak = 0;
+
+    for (let offset = 0; offset < 90; offset += 1) {
+      const dateKey = addDays(todayDateKey, -offset);
+      const day = days.find((item) => item.dayOfWeek === parseDateKey(dateKey).getDay());
+      if (day?.isRestDay) continue;
+      if (!completionDates.has(dateKey)) break;
+      streak += 1;
+    }
 
     return {
       weeklyCompletions,
       trainingDays,
       totalVolume,
       totalMinutes,
+      streak,
       weeklyProgress: trainingDays > 0 ? Math.min(100, (weeklyCompletions / trainingDays) * 100) : 100,
     };
-  }, [days, history, store.workoutLogs]);
+  }, [completionDates, days, store.workoutLogs, todayDateKey, weekPlan]);
 
   const updateDay = (dayOfWeek: number, patch: Partial<ScheduleDay>) => {
     setDays((current) => current.map((day) => (day.dayOfWeek === dayOfWeek ? { ...day, ...patch } : day)));
+  };
+
+  const dayForDate = (dateKey: string) => {
+    const date = parseDateKey(dateKey);
+    return days.find((day) => day.dayOfWeek === date.getDay()) ?? days[0];
+  };
+
+  const makeLocalCompletion = (dateKey: string, day: ScheduleDay): Completion => ({
+    id: `local-completion-${dateKey}-${day.dayOfWeek}`,
+    date: `${dateKey}T00:00:00.000Z`,
+    dayOfWeek: day.dayOfWeek,
+    splitTitle: day.splitTitle,
+    completedAt: new Date().toISOString(),
+    dayName: day.dayName,
+  });
+
+  const setCompletionForDate = async (
+    dateKey: string,
+    day: ScheduleDay,
+    completed: boolean,
+    options: { silent?: boolean } = {}
+  ) => {
+    if (!selectedProgramId || !day) return false;
+
+    setSaving(true);
+    try {
+      const response = await fetch('/api/schedule/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          programId: selectedProgramId,
+          dayOfWeek: day.dayOfWeek,
+          date: dateKey,
+          notes: day.notes,
+          completed,
+        }),
+      });
+      const data = (await response.json()) as {
+        success: boolean;
+        error?: string;
+        completed?: boolean;
+        completion?: Completion | null;
+      };
+      if (!response.ok || !data.success) throw new Error(data.error || 'Could not update completion');
+
+      setHistory((current) => {
+        const withoutDate = current.filter((item) => completionDateKey(item) !== dateKey);
+        if (!data.completed) return withoutDate;
+
+        const completion = data.completion || makeLocalCompletion(dateKey, day);
+        return [completion, ...withoutDate].sort((a, b) => b.date.localeCompare(a.date));
+      });
+
+      if (!options.silent) {
+        toast({
+          title: data.completed ? 'Workout marked done' : 'Workout reopened',
+          description: `${day.splitTitle} on ${formatDate(dateKey)} was updated.`,
+        });
+      }
+
+      return Boolean(data.completed);
+    } catch (error) {
+      if (!options.silent) {
+        toast({
+          title: 'Could not update workout',
+          description: error instanceof Error ? error.message : 'Please try again.',
+          variant: 'destructive',
+        });
+      }
+      return false;
+    } finally {
+      setSaving(false);
+    }
   };
 
   const saveSchedule = async () => {
@@ -521,42 +641,8 @@ export function SchedulePage() {
     toast({ title: 'Calendar exported', description: 'Import the .ics file into your calendar app.' });
   };
 
-  const completeToday = async () => {
-    if (!selectedProgramId || !today) return;
-
-    setSaving(true);
-    try {
-      const response = await fetch('/api/schedule/completions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          programId: selectedProgramId,
-          dayOfWeek: today.dayOfWeek,
-          date: todayDateKey,
-          notes: today.notes,
-        }),
-      });
-      const data = (await response.json()) as { success: boolean; error?: string; completed?: boolean; completion?: Completion | null };
-      if (!response.ok || !data.success) throw new Error(data.error || 'Could not update completion');
-
-      setTodayCompleted(Boolean(data.completed));
-      setHistory((current) => {
-        const withoutToday = current.filter((item) => item.date.slice(0, 10) !== todayDateKey);
-        return data.completed && data.completion ? [data.completion, ...withoutToday] : withoutToday;
-      });
-      toast({
-        title: data.completed ? 'Workout completed' : 'Workout reopened',
-        description: `${today.splitTitle} was updated.`,
-      });
-    } catch (error) {
-      toast({
-        title: 'Could not update today',
-        description: error instanceof Error ? error.message : 'Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setSaving(false);
-    }
+  const toggleSelectedCompletion = () => {
+    setCompletionForDate(selectedDateKey, selectedDay, !selectedCompleted);
   };
 
   const logWorkout = async () => {
@@ -591,6 +677,10 @@ export function SchedulePage() {
       if (!response.ok || !data.success || !data.workout) throw new Error(data.error || 'Could not save workout');
 
       store.upsertWorkoutLog(data.workout);
+      const scheduledDay = dayForDate(form.date);
+      if (scheduledDay && !scheduledDay.isRestDay) {
+        await setCompletionForDate(form.date, scheduledDay, true, { silent: true });
+      }
       setForm(emptyForm());
       toast({ title: 'Workout logged', description: `${name} was saved to your workout history.` });
     } catch (error) {
@@ -663,10 +753,10 @@ export function SchedulePage() {
 
         <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {[
-            { label: 'Program Week', value: `${stats.weeklyCompletions}/${stats.trainingDays}`, icon: CheckCircle2 },
+            { label: 'Selected Week', value: `${stats.weeklyCompletions}/${stats.trainingDays}`, icon: CheckCircle2 },
+            { label: 'Training Streak', value: `${stats.streak} day${stats.streak === 1 ? '' : 's'}`, icon: CalendarCheck2 },
             { label: 'Total Volume', value: `${Math.round(stats.totalVolume).toLocaleString()} kg`, icon: Activity },
             { label: 'Minutes Logged', value: `${stats.totalMinutes} min`, icon: Clock },
-            { label: 'Sessions', value: `${store.workoutLogs.length}`, icon: ListChecks },
           ].map((stat) => (
             <div key={stat.label} className="rounded-lg border bg-card p-4 shadow-sm">
               <div className="flex items-center justify-between gap-3">
@@ -792,34 +882,191 @@ export function SchedulePage() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base uppercase tracking-wide">
+                  <CalendarCheck2 className="h-4 w-4 text-primary" />
+                  Week Tracker
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center justify-between gap-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="rounded-lg"
+                    onClick={() => {
+                      const nextDate = addDays(selectedWeekStart, -7);
+                      setSelectedDateKey(nextDate);
+                      setForm((current) => ({ ...current, date: nextDate }));
+                    }}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Previous
+                  </Button>
+                  <p className="text-center text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                    {formatDate(selectedWeekStart)} - {formatDate(addDays(selectedWeekStart, 6))}
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="rounded-lg"
+                    onClick={() => {
+                      const nextDate = addDays(selectedWeekStart, 7);
+                      setSelectedDateKey(nextDate);
+                      setForm((current) => ({ ...current, date: nextDate }));
+                    }}
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                <div className="space-y-2">
+                  {weekPlan.map(({ dateKey, day, completed }) => {
+                    const isSelected = dateKey === selectedDateKey;
+                    const isPastDue = dateKey < todayDateKey && !completed && !day?.isRestDay;
+                    const status = day?.isRestDay ? 'Rest' : completed ? 'Done' : isPastDue ? 'Missed' : 'Planned';
+
+                    return (
+                      <div
+                        key={dateKey}
+                        className={cn(
+                          'grid gap-3 rounded-lg border bg-muted/20 p-3 sm:grid-cols-[1fr_auto]',
+                          isSelected && 'border-primary/60 bg-primary/10'
+                        )}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedDateKey(dateKey);
+                            setForm((current) => ({ ...current, date: dateKey }));
+                          }}
+                          className="min-w-0 text-left"
+                        >
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="text-sm font-black uppercase">{day?.dayName || formatDate(dateKey)}</span>
+                            <Badge
+                              variant={completed ? 'default' : isPastDue ? 'destructive' : 'secondary'}
+                              className="rounded-md text-[10px] uppercase"
+                            >
+                              {status}
+                            </Badge>
+                          </div>
+                          <p className="mt-1 truncate text-sm font-bold">{day?.splitTitle || 'Workout'}</p>
+                          <p className="mt-1 text-xs text-muted-foreground">{formatDate(dateKey)}</p>
+                        </button>
+
+                        {!day?.isRestDay && (
+                          <Button
+                            variant={completed ? 'secondary' : 'outline'}
+                            size="sm"
+                            className="rounded-lg font-bold"
+                            disabled={saving || !selectedProgramId}
+                            onClick={() => setCompletionForDate(dateKey, day, !completed)}
+                          >
+                            <CheckCircle2 className="h-4 w-4" />
+                            {completed ? 'Reopen' : 'Done'}
+                          </Button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base uppercase tracking-wide">
                   <Flame className="h-4 w-4 text-primary" />
-                  Today
+                  Workout Tracker
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-5">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="h-11 w-11 rounded-lg"
+                    onClick={() => {
+                      const nextDate = addDays(selectedDateKey, -1);
+                      setSelectedDateKey(nextDate);
+                      setForm((current) => ({ ...current, date: nextDate }));
+                    }}
+                    aria-label="Previous day"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <Input
+                    type="date"
+                    value={selectedDateKey}
+                    onChange={(event) => {
+                      const nextDate = event.target.value || todayDateKey;
+                      setSelectedDateKey(nextDate);
+                      setForm((current) => ({ ...current, date: nextDate }));
+                    }}
+                    className="h-11 rounded-lg font-bold"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="h-11 w-11 rounded-lg"
+                    onClick={() => {
+                      const nextDate = addDays(selectedDateKey, 1);
+                      setSelectedDateKey(nextDate);
+                      setForm((current) => ({ ...current, date: nextDate }));
+                    }}
+                    aria-label="Next day"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    className="h-11 rounded-lg font-bold sm:ml-auto"
+                    onClick={() => {
+                      setSelectedDateKey(todayDateKey);
+                      setForm((current) => ({ ...current, date: todayDateKey }));
+                    }}
+                  >
+                    Today
+                  </Button>
+                </div>
+
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div className="min-w-0">
                     <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                      {formatDate(todayDateKey)}
+                      {formatDate(selectedDateKey)}
+                      {selectedDateKey === todayDateKey ? ' - Today' : selectedDateKey > todayDateKey ? ' - Upcoming' : ' - Past'}
                     </p>
-                    <h2 className="mt-2 break-words text-3xl font-black uppercase">{today?.splitTitle || 'Training'}</h2>
+                    <h2 className="mt-2 break-words text-3xl font-black uppercase">{selectedDay?.splitTitle || 'Training'}</h2>
                     <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                      {today?.isRestDay ? 'Recovery day' : today?.exercises.join(', ') || 'No exercises yet'}
+                      {selectedDay?.isRestDay ? 'Recovery day' : selectedDay?.exercises.join(', ') || 'No exercises yet'}
                     </p>
                   </div>
                   <Button
-                    onClick={completeToday}
-                    variant={todayCompleted ? 'secondary' : 'default'}
+                    onClick={toggleSelectedCompletion}
+                    variant={selectedCompleted ? 'secondary' : 'default'}
                     className="h-12 shrink-0 rounded-lg font-bold"
                     disabled={saving || !selectedProgramId}
                   >
                     <CheckCircle2 className="h-4 w-4" />
-                    {todayCompleted ? 'Done' : 'Mark Done'}
+                    {selectedCompleted ? 'Reopen' : 'Mark Done'}
                   </Button>
                 </div>
+                {!selectedDay?.isRestDay && selectedDay?.exercises.length > 0 && (
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {selectedDay.exercises.map((exercise) => (
+                      <div key={exercise} className="flex items-center gap-2 rounded-lg border bg-muted/20 px-3 py-2 text-sm">
+                        <CheckCircle2 className={cn('h-4 w-4', selectedCompleted ? 'text-primary' : 'text-muted-foreground')} />
+                        <span className="min-w-0 truncate">{exercise}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 <div className="space-y-2">
                   <div className="flex justify-between text-xs font-bold uppercase text-muted-foreground">
-                    <span>Program progress</span>
+                    <span>Selected week progress</span>
                     <span>{Math.round(stats.weeklyProgress)}%</span>
                   </div>
                   <Progress value={stats.weeklyProgress} className="h-2" />
@@ -842,7 +1089,15 @@ export function SchedulePage() {
                   </div>
                   <div className="space-y-2">
                     <Label>Date</Label>
-                    <Input type="date" value={form.date} onChange={(event) => setForm({ ...form, date: event.target.value })} />
+                    <Input
+                      type="date"
+                      value={form.date}
+                      onChange={(event) => {
+                        const nextDate = event.target.value || todayDateKey;
+                        setForm({ ...form, date: nextDate });
+                        setSelectedDateKey(nextDate);
+                      }}
+                    />
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -1018,6 +1273,54 @@ export function SchedulePage() {
                         </p>
                       </div>
                     ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base uppercase tracking-wide">
+                  <CalendarCheck2 className="h-4 w-4 text-primary" />
+                  Completion History
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {history.length === 0 ? (
+                  <div className="py-10 text-center text-sm text-muted-foreground">
+                    Mark workouts done and your completed schedule appears here.
+                  </div>
+                ) : (
+                  <div className="max-h-[360px] space-y-3 overflow-y-auto pr-1">
+                    {history.slice(0, 12).map((completion) => {
+                      const dateKey = completionDateKey(completion);
+                      const day = dayForDate(dateKey);
+
+                      return (
+                        <div key={completion.id} className="rounded-lg border bg-muted/20 p-3">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="truncate font-black uppercase">{completion.splitTitle}</p>
+                              <p className="mt-1 text-xs text-muted-foreground">
+                                {formatDate(dateKey)} - finished {new Date(completion.completedAt).toLocaleTimeString('en-US', {
+                                  hour: 'numeric',
+                                  minute: '2-digit',
+                                })}
+                              </p>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-9 shrink-0 rounded-lg text-muted-foreground"
+                              disabled={saving || !selectedProgramId}
+                              onClick={() => setCompletionForDate(dateKey, day, false)}
+                            >
+                              Reopen
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </CardContent>

@@ -2,6 +2,15 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { ensureDefaultProgram, getScheduleUserId, toDateOnly, weekDays } from '@/lib/schedule';
 
+type CompletionRecord = {
+  id: string;
+  date: Date;
+  dayOfWeek: number;
+  splitTitle: string;
+  notes: string | null;
+  completedAt: Date;
+};
+
 function persistenceDisabled() {
   return !process.env.DATABASE_URL;
 }
@@ -27,6 +36,27 @@ function publicError(error: unknown, fallback: string) {
   return isPersistenceError(error)
     ? 'Training completion cloud sync is not configured yet. Your planner can still run locally.'
     : message || fallback;
+}
+
+function serializeCompletion(completion: CompletionRecord) {
+  return {
+    ...completion,
+    date: completion.date.toISOString(),
+    completedAt: completion.completedAt.toISOString(),
+    dayName: weekDays[completion.dayOfWeek],
+  };
+}
+
+function localCompletion(input: { dayOfWeek: number; date: Date; splitTitle?: string; notes?: string | null }) {
+  return {
+    id: `local-completion-${input.date.toISOString().slice(0, 10)}-${input.dayOfWeek}`,
+    date: input.date.toISOString(),
+    dayOfWeek: input.dayOfWeek,
+    splitTitle: input.splitTitle || weekDays[input.dayOfWeek] || 'Workout',
+    notes: input.notes || null,
+    completedAt: new Date().toISOString(),
+    dayName: weekDays[input.dayOfWeek],
+  };
 }
 
 export async function GET(request: Request) {
@@ -66,20 +96,24 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const body = await request.json();
+    const dayOfWeek = Number.isInteger(body.dayOfWeek) ? body.dayOfWeek : new Date().getDay();
+    const date = body.date ? toDateOnly(new Date(body.date)) : toDateOnly(new Date());
+    const requestedCompleted = typeof body.completed === 'boolean' ? body.completed : null;
+    const notes = typeof body.notes === 'string' ? body.notes.trim() : null;
+
     if (persistenceDisabled()) {
+      const completed = requestedCompleted ?? true;
       return NextResponse.json({
         success: true,
         persistence: 'disabled',
-        completed: true,
-        completion: null,
+        completed,
+        completion: completed ? localCompletion({ dayOfWeek, date, notes }) : null,
       });
     }
 
     const userId = await getScheduleUserId();
-    const body = await request.json();
     const programId = typeof body.programId === 'string' ? body.programId : await ensureDefaultProgram(userId);
-    const dayOfWeek = Number.isInteger(body.dayOfWeek) ? body.dayOfWeek : new Date().getDay();
-    const date = body.date ? toDateOnly(new Date(body.date)) : toDateOnly(new Date());
 
     const scheduleDay = await db.workoutScheduleDay.findFirst({
       where: { userId, programId, dayOfWeek },
@@ -100,7 +134,19 @@ export async function POST(request: Request) {
     });
 
     if (existing) {
+      if (requestedCompleted === true) {
+        return NextResponse.json({
+          success: true,
+          completed: true,
+          completion: serializeCompletion(existing),
+        });
+      }
+
       await db.workoutCompletion.delete({ where: { id: existing.id } });
+      return NextResponse.json({ success: true, completed: false, completion: null });
+    }
+
+    if (requestedCompleted === false) {
       return NextResponse.json({ success: true, completed: false, completion: null });
     }
 
@@ -112,19 +158,14 @@ export async function POST(request: Request) {
         date,
         dayOfWeek,
         splitTitle: scheduleDay.splitTitle,
-        notes: typeof body.notes === 'string' ? body.notes.trim() : null,
+        notes,
       },
     });
 
     return NextResponse.json({
       success: true,
       completed: true,
-      completion: {
-        ...completion,
-        date: completion.date.toISOString(),
-        completedAt: completion.completedAt.toISOString(),
-        dayName: weekDays[completion.dayOfWeek],
-      },
+      completion: serializeCompletion(completion),
     });
   } catch (error) {
     if (isPersistenceError(error)) {

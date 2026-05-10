@@ -29,7 +29,8 @@ import {
   Search, SlidersHorizontal, Dumbbell, Home, Clock,
   Flame, Heart, X, Plus, Save, Trash2, ListChecks,
   Calendar, BarChart3, Trophy, NotebookPen, PlayCircle,
-  ArrowDownAZ, Filter, Star,
+  ArrowDownAZ, Filter, Star, CheckCircle2, CalendarCheck2,
+  CirclePause, Loader2, RefreshCw,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Exercise } from '@/lib/data';
@@ -38,6 +39,34 @@ import type { WorkoutLog } from '@/lib/store';
 type QuickSet = {
   reps: number;
   weight: number;
+};
+
+type ScheduleDay = {
+  id?: string;
+  dayOfWeek: number;
+  dayName: string;
+  splitTitle: string;
+  exercises: string[];
+  notes: string | null;
+  isRestDay: boolean;
+};
+
+type TodaySchedule = ScheduleDay & {
+  date: string;
+  completed: boolean;
+  completionId: string | null;
+};
+
+type ScheduleResponse = {
+  success: boolean;
+  error?: string;
+  activeProgram?: {
+    id: string;
+    name: string;
+    description: string | null;
+    isActive: boolean;
+  } | null;
+  today?: TodaySchedule | null;
 };
 
 const categories = [
@@ -63,6 +92,20 @@ const difficultyColor: Record<string, string> = {
   advanced: 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20',
 };
 
+function getDateKey(date = new Date()) {
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
+function formatDate(dateKey: string) {
+  return new Date(`${dateKey}T00:00:00`).toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  });
+}
+
 export function WorkoutsPage() {
   const {
     setExerciseId,
@@ -85,10 +128,16 @@ export function WorkoutsPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [logDialogOpen, setLogDialogOpen] = useState(false);
   const [savingLog, setSavingLog] = useState(false);
+  const [scheduleLoading, setScheduleLoading] = useState(true);
+  const [syncingCompletion, setSyncingCompletion] = useState(false);
+  const [activeProgramId, setActiveProgramId] = useState('');
+  const [activeProgramName, setActiveProgramName] = useState('');
+  const [todayPlan, setTodayPlan] = useState<TodaySchedule | null>(null);
   const [guideExercise, setGuideExercise] = useState<Exercise | null>(null);
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
+  const todayDateKey = getDateKey();
   const [quickLog, setQuickLog] = useState({
-    date: new Date().toISOString().split('T')[0],
+    date: todayDateKey,
     duration: 0,
     notes: '',
     sets: [{ reps: 10, weight: 0 }] as QuickSet[],
@@ -98,23 +147,52 @@ export function WorkoutsPage() {
   const equipmentOptions = Array.from(new Set(exercises.map((exercise) => exercise.equipment))).sort();
   const difficultyRank: Record<string, number> = { beginner: 1, intermediate: 2, advanced: 3 };
 
+  const loadTodaySchedule = async (showSuccessToast = false) => {
+    setScheduleLoading(true);
+    try {
+      const response = await fetch('/api/schedule');
+      const data = (await response.json()) as ScheduleResponse;
+      if (!response.ok || !data.success) throw new Error(data.error || 'Could not load schedule');
+
+      setActiveProgramId(data.activeProgram?.id || '');
+      setActiveProgramName(data.activeProgram?.name || '');
+      setTodayPlan(data.today || null);
+
+      if (showSuccessToast) {
+        toast({ title: 'Plan refreshed', description: 'Today\'s workout status is up to date.' });
+      }
+    } catch (error) {
+      toast({
+        title: 'Could not load today plan',
+        description: error instanceof Error ? error.message : 'You can still log workouts manually.',
+        variant: 'destructive',
+      });
+    } finally {
+      setScheduleLoading(false);
+    }
+  };
+
   useEffect(() => {
     let mounted = true;
 
-    fetch('/api/workout-sessions')
-      .then(async (response) => {
+    const loadWorkoutHistory = async () => {
+      try {
+        const response = await fetch('/api/workout-sessions');
         const data = (await response.json()) as { success: boolean; error?: string; workoutLogs?: WorkoutLog[] };
         if (!response.ok || !data.success) throw new Error(data.error || 'Could not load workout history');
         if (mounted && data.workoutLogs) setWorkoutLogs(data.workoutLogs);
-      })
-      .catch((error) => {
+      } catch (error) {
         if (!mounted) return;
         toast({
           title: 'Could not sync workouts',
           description: error instanceof Error ? error.message : 'Your local history is still available.',
           variant: 'destructive',
         });
-      });
+      }
+    };
+
+    loadWorkoutHistory();
+    loadTodaySchedule();
 
     return () => {
       mounted = false;
@@ -177,10 +255,74 @@ export function WorkoutsPage() {
       ),
     0
   );
+  const todayLogged = workoutLogs.some((log) => log.date === todayDateKey);
+  const todayStatus = todayPlan?.isRestDay
+    ? 'Rest'
+    : todayPlan?.completed
+      ? 'Complete'
+      : todayLogged
+        ? 'Logged'
+        : 'Planned';
 
   function getLoggedCount(exerciseId: string) {
     return workoutLogs.filter((log) => log.exercises.some((ex) => ex.exerciseId === exerciseId)).length;
   }
+
+  const setTodayCompletion = async (completed: boolean, options: { silent?: boolean } = {}) => {
+    if (!todayPlan || !activeProgramId || todayPlan.isRestDay) return false;
+
+    setSyncingCompletion(true);
+    try {
+      const response = await fetch('/api/schedule/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          programId: activeProgramId,
+          dayOfWeek: todayPlan.dayOfWeek,
+          date: todayDateKey,
+          notes: todayPlan.notes,
+          completed,
+        }),
+      });
+      const data = (await response.json()) as {
+        success: boolean;
+        error?: string;
+        completed?: boolean;
+        completion?: { id: string; completedAt: string } | null;
+      };
+      if (!response.ok || !data.success) throw new Error(data.error || 'Could not update today');
+
+      setTodayPlan((current) =>
+        current
+          ? {
+              ...current,
+              completed: Boolean(data.completed),
+              completionId: data.completion?.id || null,
+            }
+          : current
+      );
+
+      if (!options.silent) {
+        toast({
+          title: data.completed ? 'Workout complete' : 'Workout reopened',
+          description: `${todayPlan.splitTitle} is updated for ${formatDate(todayDateKey)}.`,
+        });
+      }
+
+      return Boolean(data.completed);
+    } catch (error) {
+      if (!options.silent) {
+        toast({
+          title: 'Could not update today',
+          description: error instanceof Error ? error.message : 'Please try again.',
+          variant: 'destructive',
+        });
+      }
+      return false;
+    } finally {
+      setSyncingCompletion(false);
+    }
+  };
 
   const openLogDialog = (exercise: Exercise) => {
     const defaultReps =
@@ -248,6 +390,9 @@ export function WorkoutsPage() {
       if (!response.ok || !data.success || !data.workout) throw new Error(data.error || 'Could not save workout');
 
       upsertWorkoutLog(data.workout);
+      if (quickLog.date === todayDateKey && todayPlan && !todayPlan.isRestDay) {
+        await setTodayCompletion(true, { silent: true });
+      }
       setLogDialogOpen(false);
       toast({
         title: 'Workout tracked',
@@ -282,6 +427,98 @@ export function WorkoutsPage() {
           <p className="text-muted-foreground">
             Browse {exercises.length}+ exercises, log sets, and track your progress
           </p>
+        </motion.div>
+
+        <motion.div
+          className="mb-8 overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm"
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.03 }}
+        >
+          <div className="grid gap-0 lg:grid-cols-[1.1fr_0.9fr]">
+            <div className="p-5 sm:p-6">
+              <div className="mb-4 flex flex-wrap items-center gap-2">
+                <Badge className="rounded-md bg-primary/10 text-primary hover:bg-primary/10">
+                  {formatDate(todayDateKey)}
+                </Badge>
+                <Badge
+                  variant={todayPlan?.isRestDay ? 'secondary' : todayPlan?.completed ? 'default' : 'outline'}
+                  className="rounded-md"
+                >
+                  {todayStatus}
+                </Badge>
+                {activeProgramName && (
+                  <Badge variant="outline" className="rounded-md">
+                    {activeProgramName}
+                  </Badge>
+                )}
+              </div>
+
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0">
+                  <p className="text-xs font-black uppercase tracking-wide text-muted-foreground">Today&apos;s workout</p>
+                  <h2 className="mt-2 break-words text-2xl font-black uppercase sm:text-3xl">
+                    {scheduleLoading ? 'Loading plan...' : todayPlan?.splitTitle || 'No plan selected'}
+                  </h2>
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+                    {todayPlan?.isRestDay
+                      ? todayPlan.notes || 'Recovery is part of the program. Keep it easy and come back fresh.'
+                      : todayPlan?.exercises?.length
+                        ? todayPlan.exercises.join(', ')
+                        : 'Log a workout below or build a weekly plan in Schedule.'}
+                  </p>
+                </div>
+
+                <div className="flex shrink-0 gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-11 w-11 rounded-lg"
+                    onClick={() => loadTodaySchedule(true)}
+                    disabled={scheduleLoading}
+                    aria-label="Refresh today plan"
+                  >
+                    <RefreshCw className={cn('h-4 w-4', scheduleLoading && 'animate-spin')} />
+                  </Button>
+                  <Button
+                    onClick={() => setTodayCompletion(!todayPlan?.completed)}
+                    disabled={scheduleLoading || syncingCompletion || !todayPlan || todayPlan.isRestDay}
+                    variant={todayPlan?.completed ? 'secondary' : 'default'}
+                    className="h-11 rounded-lg font-bold"
+                  >
+                    {syncingCompletion ? <Loader2 className="h-4 w-4 animate-spin" /> : todayPlan?.isRestDay ? <CirclePause className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
+                    {todayPlan?.isRestDay ? 'Rest Day' : todayPlan?.completed ? 'Reopen' : 'Complete'}
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <div className="border-t bg-muted/25 p-5 lg:border-l lg:border-t-0 sm:p-6">
+              <div className="grid h-full gap-3 sm:grid-cols-3 lg:grid-cols-1">
+                <div className="rounded-lg border bg-background/70 p-3">
+                  <div className="flex items-center gap-2 text-xs font-black uppercase text-muted-foreground">
+                    <CalendarCheck2 className="h-4 w-4 text-primary" />
+                    Schedule
+                  </div>
+                  <p className="mt-2 text-xl font-black">{todayPlan?.isRestDay ? 'Rest' : todayPlan?.completed ? 'Done' : 'Open'}</p>
+                </div>
+                <div className="rounded-lg border bg-background/70 p-3">
+                  <div className="flex items-center gap-2 text-xs font-black uppercase text-muted-foreground">
+                    <Dumbbell className="h-4 w-4 text-primary" />
+                    Logged today
+                  </div>
+                  <p className="mt-2 text-xl font-black">{todayLogged ? 'Yes' : 'No'}</p>
+                </div>
+                <div className="rounded-lg border bg-background/70 p-3">
+                  <div className="flex items-center gap-2 text-xs font-black uppercase text-muted-foreground">
+                    <ListChecks className="h-4 w-4 text-primary" />
+                    Exercises
+                  </div>
+                  <p className="mt-2 text-xl font-black">{todayPlan?.exercises?.length || 0}</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </motion.div>
 
         {/* Tracking Summary */}
