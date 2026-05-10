@@ -163,6 +163,7 @@ export function AIMealAnalyzer({ dailyTargets }: AIMealAnalyzerProps) {
   const [history, setHistory] = useState<SavedMeal[]>([]);
   const [analyzing, setAnalyzing] = useState(false);
   const [error, setError] = useState('');
+  const [fallbackReason, setFallbackReason] = useState('');
 
   useEffect(() => {
     try {
@@ -206,6 +207,7 @@ export function AIMealAnalyzer({ dailyTargets }: AIMealAnalyzerProps) {
 
   const validateAndSetFile = async (file: File) => {
     setError('');
+    setFallbackReason('');
     setAnalysis(null);
 
     if (!SUPPORTED_TYPES.includes(file.type)) {
@@ -235,6 +237,7 @@ export function AIMealAnalyzer({ dailyTargets }: AIMealAnalyzerProps) {
 
     setAnalyzing(true);
     setError('');
+    setFallbackReason('');
     try {
       const formData = new FormData();
       formData.append('image', selectedFile);
@@ -252,6 +255,7 @@ export function AIMealAnalyzer({ dailyTargets }: AIMealAnalyzerProps) {
       if (!response.ok || !data.success || !data.analysis) throw new Error(data.error || 'Could not analyze meal.');
 
       setAnalysis(data.analysis);
+      setFallbackReason(data.fallback ? data.fallbackReason || data.analysis.accuracyNote : '');
       toast({
         title: data.fallback ? 'Estimate generated' : 'Meal analyzed',
         description: data.fallback
@@ -260,6 +264,7 @@ export function AIMealAnalyzer({ dailyTargets }: AIMealAnalyzerProps) {
       });
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : 'Could not analyze meal.');
+      setFallbackReason('');
     } finally {
       setAnalyzing(false);
     }
@@ -378,6 +383,13 @@ export function AIMealAnalyzer({ dailyTargets }: AIMealAnalyzerProps) {
               <div className="flex items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
                 <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
                 <p>{error}</p>
+              </div>
+            )}
+
+            {fallbackReason && !error && (
+              <div className="flex items-start gap-3 rounded-lg border border-amber-400/30 bg-amber-400/10 p-3 text-sm text-amber-200">
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                <p>{fallbackReason}</p>
               </div>
             )}
 

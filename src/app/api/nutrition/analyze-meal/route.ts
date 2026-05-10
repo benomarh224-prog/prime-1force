@@ -88,6 +88,14 @@ function clamp(value: unknown, min: number, max: number, fallback: number) {
   return Math.max(min, Math.min(max, number));
 }
 
+function normalizeConfidence(value: unknown, fallback: number) {
+  const number = typeof value === 'string' ? Number(value.replace('%', '').trim()) : Number(value);
+  if (!Number.isFinite(number)) return fallback;
+
+  const percent = number > 0 && number <= 1 ? number * 100 : number;
+  return Math.round(Math.max(1, Math.min(100, percent)));
+}
+
 function cleanJsonResponse(content: string) {
   const trimmed = content.trim();
   const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i)?.[1];
@@ -108,7 +116,7 @@ function normalizeAnalysis(value: unknown, provider: VisionProvider): MealAnalys
         protein: Math.round(clamp(food.protein, 0, 250, 15)),
         carbs: Math.round(clamp(food.carbs, 0, 350, 25)),
         fat: Math.round(clamp(food.fat, 0, 200, 10)),
-        confidence: Math.round(clamp(food.confidence, 1, 100, 72)),
+        confidence: normalizeConfidence(food.confidence, 72),
       }))
     : [];
 
@@ -129,7 +137,7 @@ function normalizeAnalysis(value: unknown, provider: VisionProvider): MealAnalys
   return {
     foods,
     totals,
-    confidence: Math.round(clamp(input.confidence, 1, 100, 76)),
+    confidence: normalizeConfidence(input.confidence, 76),
     accuracyNote:
       typeof input.accuracyNote === 'string' && input.accuracyNote.trim()
         ? input.accuracyNote.trim()
@@ -150,11 +158,15 @@ function getGeminiModelCandidates() {
   return uniqueValues([
     process.env.GEMINI_VISION_MODEL || '',
     process.env.AI_VISION_MODEL || '',
+    'gemini-2.5-flash-lite',
+    'gemini-2.5-flash',
     'gemini-2.0-flash',
     'gemini-2.0-flash-lite',
-    'gemini-1.5-flash-latest',
-    'gemini-1.5-flash',
   ]);
+}
+
+function isZAIConfigured() {
+  return Boolean(process.env.ZAI_API_KEY || process.env.ZAI_API_URL || process.env.ZAI_VISION_MODEL);
 }
 
 function getFallbackReason(configuredProviders: VisionProvider[], errors: string[]) {
@@ -411,7 +423,7 @@ async function analyzeMealImage(buffer: Buffer, mimeType: string): Promise<MealA
     },
     {
       name: 'zai-vision',
-      configured: Boolean(process.env.ZAI_API_KEY || process.env.ZAI_API_URL || process.env.AI_VISION_MODEL),
+      configured: isZAIConfigured(),
       analyze: () => analyzeWithZAI(dataUrl),
     },
   ];
