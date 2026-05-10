@@ -41,6 +41,18 @@ type QuickSet = {
   weight: number;
 };
 
+type SessionSet = QuickSet & {
+  done: boolean;
+};
+
+type SessionExercise = {
+  exerciseId: string;
+  exerciseName: string;
+  sourceExercise?: Exercise;
+  sets: SessionSet[];
+  done: boolean;
+};
+
 type ScheduleDay = {
   id?: string;
   dayOfWeek: number;
@@ -106,6 +118,24 @@ function formatDate(dateKey: string) {
   });
 }
 
+function formatTimer(seconds: number) {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  return `${minutes}:${String(remainingSeconds).padStart(2, '0')}`;
+}
+
+function defaultRepsForExercise(exercise?: Exercise) {
+  if (!exercise) return 10;
+  if (exercise.difficulty === 'advanced') return 6;
+  if (exercise.difficulty === 'intermediate') return 8;
+  return 12;
+}
+
+function defaultWeightForExercise(exercise?: Exercise) {
+  if (!exercise || exercise.category === 'no-equipment') return 0;
+  return 20;
+}
+
 export function WorkoutsPage() {
   const {
     setExerciseId,
@@ -128,6 +158,16 @@ export function WorkoutsPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [logDialogOpen, setLogDialogOpen] = useState(false);
   const [savingLog, setSavingLog] = useState(false);
+  const [sessionOpen, setSessionOpen] = useState(false);
+  const [sessionSaving, setSessionSaving] = useState(false);
+  const [sessionName, setSessionName] = useState('');
+  const [sessionNotes, setSessionNotes] = useState('');
+  const [sessionShouldCompleteToday, setSessionShouldCompleteToday] = useState(false);
+  const [sessionStartedAt, setSessionStartedAt] = useState<number | null>(null);
+  const [sessionElapsed, setSessionElapsed] = useState(0);
+  const [restSeconds, setRestSeconds] = useState(90);
+  const [restRunning, setRestRunning] = useState(false);
+  const [sessionExercises, setSessionExercises] = useState<SessionExercise[]>([]);
   const [scheduleLoading, setScheduleLoading] = useState(true);
   const [syncingCompletion, setSyncingCompletion] = useState(false);
   const [activeProgramId, setActiveProgramId] = useState('');
@@ -199,6 +239,30 @@ export function WorkoutsPage() {
     };
   }, [setWorkoutLogs, toast]);
 
+  useEffect(() => {
+    if (!sessionOpen || !sessionStartedAt) return undefined;
+
+    const interval = window.setInterval(() => {
+      setSessionElapsed(Math.floor((Date.now() - sessionStartedAt) / 1000));
+    }, 1000);
+
+    return () => window.clearInterval(interval);
+  }, [sessionOpen, sessionStartedAt]);
+
+  useEffect(() => {
+    if (!sessionOpen || !restRunning) return undefined;
+    if (restSeconds <= 0) {
+      setRestRunning(false);
+      return undefined;
+    }
+
+    const timeout = window.setTimeout(() => {
+      setRestSeconds((current) => Math.max(0, current - 1));
+    }, 1000);
+
+    return () => window.clearTimeout(timeout);
+  }, [restRunning, restSeconds, sessionOpen]);
+
   const filtered = exercises.filter((ex) => {
     const matchSearch = ex.name.toLowerCase().includes(search.toLowerCase()) ||
       ex.muscleGroup.toLowerCase().includes(search.toLowerCase()) ||
@@ -263,10 +327,148 @@ export function WorkoutsPage() {
       : todayLogged
         ? 'Logged'
         : 'Planned';
+  const sessionSetCount = sessionExercises.reduce((sum, exercise) => sum + exercise.sets.length, 0);
+  const sessionDoneSetCount = sessionExercises.reduce(
+    (sum, exercise) => sum + exercise.sets.filter((set) => set.done).length,
+    0
+  );
+  const sessionProgress = sessionSetCount > 0 ? Math.round((sessionDoneSetCount / sessionSetCount) * 100) : 0;
+  const sessionVolume = sessionExercises.reduce(
+    (sum, exercise) => sum + exercise.sets.reduce((setSum, set) => setSum + set.reps * set.weight, 0),
+    0
+  );
 
   function getLoggedCount(exerciseId: string) {
     return workoutLogs.filter((log) => log.exercises.some((ex) => ex.exerciseId === exerciseId)).length;
   }
+
+  const findExercise = (name: string) => {
+    const normalized = name.toLowerCase().trim();
+    return exercises.find((exercise) => exercise.name.toLowerCase() === normalized)
+      || exercises.find((exercise) => exercise.name.toLowerCase().includes(normalized) || normalized.includes(exercise.name.toLowerCase()));
+  };
+
+  const makeSessionExercise = (name: string, fallbackIndex = 0): SessionExercise => {
+    const sourceExercise = findExercise(name);
+    const reps = defaultRepsForExercise(sourceExercise);
+    const weight = defaultWeightForExercise(sourceExercise);
+
+    return {
+      exerciseId: sourceExercise?.id || `session-${fallbackIndex}-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
+      exerciseName: sourceExercise?.name || name,
+      sourceExercise,
+      sets: Array.from({ length: 3 }, () => ({ reps, weight, done: false })),
+      done: false,
+    };
+  };
+
+  const startSession = (mode: 'today' | 'exercise', exercise?: Exercise) => {
+    if (mode === 'today') {
+      if (!todayPlan || todayPlan.isRestDay || todayPlan.exercises.length === 0) return;
+
+      setSessionName(todayPlan.splitTitle);
+      setSessionNotes(todayPlan.notes || '');
+      setSessionExercises(todayPlan.exercises.map((name, index) => makeSessionExercise(name, index)));
+      setSessionShouldCompleteToday(true);
+    } else if (exercise) {
+      setSessionName(exercise.name);
+      setSessionNotes('');
+      setSessionExercises([makeSessionExercise(exercise.name)]);
+      setSessionShouldCompleteToday(false);
+    }
+
+    setRestSeconds(90);
+    setRestRunning(false);
+    setSessionElapsed(0);
+    setSessionStartedAt(Date.now());
+    setSessionOpen(true);
+  };
+
+  const updateSessionSet = (exerciseIndex: number, setIndex: number, field: keyof QuickSet, value: number) => {
+    setSessionExercises((current) =>
+      current.map((exercise, currentExerciseIndex) =>
+        currentExerciseIndex === exerciseIndex
+          ? {
+              ...exercise,
+              sets: exercise.sets.map((set, currentSetIndex) =>
+                currentSetIndex === setIndex ? { ...set, [field]: Math.max(0, value) } : set
+              ),
+            }
+          : exercise
+      )
+    );
+  };
+
+  const toggleSessionSet = (exerciseIndex: number, setIndex: number) => {
+    setSessionExercises((current) =>
+      current.map((exercise, currentExerciseIndex) => {
+        if (currentExerciseIndex !== exerciseIndex) return exercise;
+
+        const sets = exercise.sets.map((set, currentSetIndex) =>
+          currentSetIndex === setIndex ? { ...set, done: !set.done } : set
+        );
+
+        return {
+          ...exercise,
+          sets,
+          done: sets.every((set) => set.done),
+        };
+      })
+    );
+
+    setRestSeconds(90);
+    setRestRunning(true);
+  };
+
+  const toggleSessionExercise = (exerciseIndex: number) => {
+    setSessionExercises((current) =>
+      current.map((exercise, currentExerciseIndex) => {
+        if (currentExerciseIndex !== exerciseIndex) return exercise;
+
+        const done = !exercise.done;
+        return {
+          ...exercise,
+          done,
+          sets: exercise.sets.map((set) => ({ ...set, done })),
+        };
+      })
+    );
+  };
+
+  const addSessionSet = (exerciseIndex: number) => {
+    setSessionExercises((current) =>
+      current.map((exercise, currentExerciseIndex) =>
+        currentExerciseIndex === exerciseIndex
+          ? {
+              ...exercise,
+              sets: [
+                ...exercise.sets,
+                {
+                  reps: exercise.sets[exercise.sets.length - 1]?.reps ?? 10,
+                  weight: exercise.sets[exercise.sets.length - 1]?.weight ?? 0,
+                  done: false,
+                },
+              ],
+              done: false,
+            }
+          : exercise
+      )
+    );
+  };
+
+  const removeSessionSet = (exerciseIndex: number, setIndex: number) => {
+    setSessionExercises((current) =>
+      current.map((exercise, currentExerciseIndex) =>
+        currentExerciseIndex === exerciseIndex
+          ? {
+              ...exercise,
+              sets: exercise.sets.filter((_, currentSetIndex) => currentSetIndex !== setIndex),
+              done: false,
+            }
+          : exercise
+      )
+    );
+  };
 
   const setTodayCompletion = async (completed: boolean, options: { silent?: boolean } = {}) => {
     if (!todayPlan || !activeProgramId || todayPlan.isRestDay) return false;
@@ -411,6 +613,69 @@ export function WorkoutsPage() {
     }
   };
 
+  const finishSession = async () => {
+    if (sessionExercises.length === 0) return;
+
+    const duration = Math.max(1, Math.round(sessionElapsed / 60));
+    const workout = {
+      name: sessionName.trim() || 'Workout Session',
+      date: todayDateKey,
+      duration,
+      notes: [
+        sessionNotes.trim(),
+        `Session mode: ${sessionDoneSetCount}/${sessionSetCount} sets completed.`,
+        restSeconds > 0 && restSeconds < 90 ? `Last rest timer stopped at ${formatTimer(restSeconds)}.` : '',
+      ].filter(Boolean).join('\n'),
+      completed: true,
+      exercises: sessionExercises.map((exercise) => {
+        const completedSets = exercise.sets.filter((set) => set.done);
+        const setsToSave = completedSets.length > 0 ? completedSets : exercise.sets;
+
+        return {
+          exerciseId: exercise.exerciseId,
+          exerciseName: exercise.exerciseName,
+          sets: setsToSave.map((set) => ({
+            reps: Math.max(0, set.reps),
+            weight: Math.max(0, set.weight),
+          })),
+        };
+      }),
+    };
+
+    setSessionSaving(true);
+    try {
+      const response = await fetch('/api/workout-sessions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ workout }),
+      });
+      const data = (await response.json()) as { success: boolean; error?: string; workout?: WorkoutLog };
+      if (!response.ok || !data.success || !data.workout) throw new Error(data.error || 'Could not save workout');
+
+      upsertWorkoutLog(data.workout);
+      if (sessionShouldCompleteToday && todayPlan && !todayPlan.isRestDay) {
+        await setTodayCompletion(true, { silent: true });
+      }
+      setSessionOpen(false);
+      setRestRunning(false);
+      toast({
+        title: 'Workout finished',
+        description: `${workout.name} was saved with ${sessionDoneSetCount || sessionSetCount} tracked sets.`,
+      });
+    } catch (error) {
+      addWorkoutLog(workout);
+      setSessionOpen(false);
+      setRestRunning(false);
+      toast({
+        title: 'Saved locally',
+        description: error instanceof Error ? error.message : 'Workout sync failed, so this session stayed on this device.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSessionSaving(false);
+    }
+  };
+
   return (
     <div className="min-h-screen pt-24 pb-16">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -488,6 +753,14 @@ export function WorkoutsPage() {
                   >
                     {syncingCompletion ? <Loader2 className="h-4 w-4 animate-spin" /> : todayPlan?.isRestDay ? <CirclePause className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
                     {todayPlan?.isRestDay ? 'Rest Day' : todayPlan?.completed ? 'Reopen' : 'Complete'}
+                  </Button>
+                  <Button
+                    onClick={() => startSession('today')}
+                    disabled={scheduleLoading || !todayPlan || todayPlan.isRestDay || todayPlan.exercises.length === 0}
+                    className="h-11 rounded-lg font-bold"
+                  >
+                    <PlayCircle className="h-4 w-4" />
+                    Start
                   </Button>
                 </div>
               </div>
@@ -826,7 +1099,7 @@ export function WorkoutsPage() {
                         {exercise.muscleGroup}
                       </Badge>
                     </div>
-                    <div className="mt-4 grid grid-cols-1 gap-2 min-[390px]:grid-cols-3">
+                    <div className="mt-4 grid grid-cols-1 gap-2 min-[390px]:grid-cols-2">
                       <Button
                         variant="outline"
                         size="sm"
@@ -843,6 +1116,15 @@ export function WorkoutsPage() {
                       >
                         <PlayCircle className="h-3.5 w-3.5" />
                         Guide
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => startSession('exercise', exercise)}
+                        className="w-full rounded-lg gap-1.5"
+                      >
+                        <PlayCircle className="h-3.5 w-3.5" />
+                        Start
                       </Button>
                       <Button
                         size="sm"
@@ -936,6 +1218,212 @@ export function WorkoutsPage() {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={sessionOpen} onOpenChange={setSessionOpen}>
+        <DialogContent className="max-h-[92vh] max-w-5xl overflow-y-auto p-0">
+          <div className="sticky top-0 z-10 border-b bg-background/95 p-4 backdrop-blur sm:p-5">
+            <DialogHeader>
+              <DialogTitle className="flex flex-wrap items-center gap-2">
+                <PlayCircle className="h-5 w-5 text-primary" />
+                Workout Session
+                <Badge variant="outline" className="rounded-md">
+                  {formatTimer(sessionElapsed)}
+                </Badge>
+              </DialogTitle>
+            </DialogHeader>
+
+            <div className="mt-4 grid gap-3 md:grid-cols-[1fr_auto] md:items-end">
+              <div className="space-y-2">
+                <Label className="text-xs">Session name</Label>
+                <Input
+                  value={sessionName}
+                  onChange={(event) => setSessionName(event.target.value)}
+                  className="h-11 rounded-lg font-bold"
+                  placeholder="Workout Session"
+                />
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div className="rounded-lg border bg-muted/25 p-3 text-center">
+                  <p className="text-lg font-black">{sessionProgress}%</p>
+                  <p className="text-[10px] font-bold uppercase text-muted-foreground">Done</p>
+                </div>
+                <div className="rounded-lg border bg-muted/25 p-3 text-center">
+                  <p className="text-lg font-black">{sessionDoneSetCount}/{sessionSetCount}</p>
+                  <p className="text-[10px] font-bold uppercase text-muted-foreground">Sets</p>
+                </div>
+                <div className="rounded-lg border bg-muted/25 p-3 text-center">
+                  <p className="text-lg font-black">{Math.round(sessionVolume).toLocaleString()}</p>
+                  <p className="text-[10px] font-bold uppercase text-muted-foreground">Kg</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-5 p-4 sm:p-5">
+            <div className="grid gap-3 lg:grid-cols-[1fr_18rem]">
+              <div className="rounded-lg border bg-muted/20 p-4">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-black uppercase tracking-wide text-muted-foreground">Rest timer</p>
+                    <p className="mt-1 text-3xl font-black tabular-nums">{formatTimer(restSeconds)}</p>
+                  </div>
+                  <Button
+                    variant={restRunning ? 'secondary' : 'default'}
+                    className="rounded-lg font-bold"
+                    onClick={() => setRestRunning((value) => !value)}
+                  >
+                    {restRunning ? <CirclePause className="h-4 w-4" /> : <PlayCircle className="h-4 w-4" />}
+                    {restRunning ? 'Pause' : 'Start'}
+                  </Button>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {[60, 90, 120].map((seconds) => (
+                    <Button
+                      key={seconds}
+                      variant={restSeconds === seconds ? 'default' : 'outline'}
+                      size="sm"
+                      className="rounded-lg"
+                      onClick={() => {
+                        setRestSeconds(seconds);
+                        setRestRunning(false);
+                      }}
+                    >
+                      {formatTimer(seconds)}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-lg border bg-muted/20 p-4">
+                <p className="text-xs font-black uppercase tracking-wide text-muted-foreground">Finish flow</p>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                  Finish saves the session to history{sessionShouldCompleteToday ? ' and marks today complete.' : '.'}
+                </p>
+                <Button
+                  onClick={finishSession}
+                  disabled={sessionSaving || sessionExercises.length === 0}
+                  className="mt-4 h-11 w-full rounded-lg font-bold"
+                >
+                  {sessionSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                  Finish Workout
+                </Button>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              {sessionExercises.map((exercise, exerciseIndex) => (
+                <div key={`${exercise.exerciseId}-${exerciseIndex}`} className="rounded-lg border bg-card p-4">
+                  <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <button
+                      type="button"
+                      onClick={() => toggleSessionExercise(exerciseIndex)}
+                      className="flex min-w-0 items-start gap-3 text-left"
+                    >
+                      <span className={cn(
+                        'mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border',
+                        exercise.done ? 'border-primary bg-primary text-primary-foreground' : 'bg-muted/40 text-muted-foreground'
+                      )}>
+                        <CheckCircle2 className="h-4 w-4" />
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block truncate font-black uppercase">{exercise.exerciseName}</span>
+                        <span className="mt-1 block text-xs text-muted-foreground">
+                          {exercise.sets.filter((set) => set.done).length}/{exercise.sets.length} sets complete
+                          {exercise.sourceExercise ? ` - ${exercise.sourceExercise.muscleGroup}` : ''}
+                        </span>
+                      </span>
+                    </button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="rounded-lg"
+                      onClick={() => addSessionSet(exerciseIndex)}
+                    >
+                      <Plus className="h-4 w-4" />
+                      Add Set
+                    </Button>
+                  </div>
+
+                  <div className="space-y-2">
+                    {exercise.sets.map((set, setIndex) => (
+                      <div
+                        key={`${exercise.exerciseId}-set-${setIndex}`}
+                        className={cn(
+                          'grid grid-cols-[2.5rem_1fr_1fr_2.5rem_2.5rem] items-center gap-2 rounded-lg border p-2',
+                          set.done ? 'border-primary/40 bg-primary/10' : 'bg-muted/20'
+                        )}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => toggleSessionSet(exerciseIndex, setIndex)}
+                          className={cn(
+                            'flex h-9 w-9 items-center justify-center rounded-lg border text-xs font-black',
+                            set.done ? 'border-primary bg-primary text-primary-foreground' : 'bg-background text-muted-foreground'
+                          )}
+                          aria-label={`Toggle set ${setIndex + 1}`}
+                        >
+                          {setIndex + 1}
+                        </button>
+                        <div className="relative">
+                          <Input
+                            type="number"
+                            min={0}
+                            value={set.weight || ''}
+                            onChange={(event) => updateSessionSet(exerciseIndex, setIndex, 'weight', Number(event.target.value))}
+                            className="h-9 rounded-lg pr-8"
+                            placeholder="0"
+                          />
+                          <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">kg</span>
+                        </div>
+                        <div className="relative">
+                          <Input
+                            type="number"
+                            min={0}
+                            value={set.reps || ''}
+                            onChange={(event) => updateSessionSet(exerciseIndex, setIndex, 'reps', Number(event.target.value))}
+                            className="h-9 rounded-lg pr-10"
+                            placeholder="0"
+                          />
+                          <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">reps</span>
+                        </div>
+                        <Button
+                          variant={set.done ? 'secondary' : 'outline'}
+                          size="icon"
+                          className="h-9 w-9 rounded-lg"
+                          onClick={() => toggleSessionSet(exerciseIndex, setIndex)}
+                          aria-label="Mark set done"
+                        >
+                          <CheckCircle2 className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-9 w-9 rounded-lg text-muted-foreground hover:text-red-400"
+                          disabled={exercise.sets.length === 1}
+                          onClick={() => removeSessionSet(exerciseIndex, setIndex)}
+                          aria-label="Remove set"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs">Session notes</Label>
+              <Textarea
+                value={sessionNotes}
+                onChange={(event) => setSessionNotes(event.target.value)}
+                placeholder="Energy, pain, personal records, next target..."
+                className="min-h-24 resize-none rounded-lg"
+              />
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
 
