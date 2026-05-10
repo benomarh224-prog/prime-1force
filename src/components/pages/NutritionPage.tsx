@@ -15,6 +15,7 @@ import {
   Scale,
   Search,
   ShoppingBasket,
+  ScanLine,
   Sun,
   Target,
   Trash2,
@@ -29,6 +30,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { AIMealAnalyzer } from '@/components/nutrition/AIMealAnalyzer';
 import { foodDatabase, mealPlans, type FoodItem } from '@/lib/data';
 import { useAppStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
@@ -243,8 +245,12 @@ export function NutritionPage() {
           ))}
         </div>
 
-        <Tabs defaultValue="planner" className="space-y-6">
-          <TabsList className="grid h-11 w-full max-w-2xl grid-cols-4 rounded-lg">
+        <Tabs defaultValue="ai-scan" className="space-y-6">
+          <TabsList className="grid h-11 w-full max-w-3xl grid-cols-5 rounded-lg">
+            <TabsTrigger value="ai-scan" className="gap-1 rounded-md px-1 text-xs sm:gap-2 sm:px-2 sm:text-sm">
+              <ScanLine className="h-4 w-4" />
+              <span className="hidden min-[430px]:inline">AI Scan</span>
+            </TabsTrigger>
             <TabsTrigger value="planner" className="gap-1 rounded-md px-1 text-xs sm:gap-2 sm:px-2 sm:text-sm">
               <Utensils className="h-4 w-4" />
               <span className="hidden min-[380px]:inline">Meals</span>
@@ -262,6 +268,10 @@ export function NutritionPage() {
               <span className="hidden min-[380px]:inline">Calc</span>
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="ai-scan">
+            <AIMealAnalyzer dailyTargets={{ calories: calculator.goalCalories, protein: calculator.protein }} />
+          </TabsContent>
 
           <TabsContent value="planner" className="space-y-6">
             {(['breakfast', 'lunch', 'dinner', 'snack'] as const).map((category, index) => {
