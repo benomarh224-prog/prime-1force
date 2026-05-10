@@ -48,7 +48,7 @@ type MealAnalysis = {
   };
   confidence: number;
   accuracyNote: string;
-  provider: 'zai-vision' | 'demo-estimate';
+  provider: 'openai' | 'gemini' | 'openrouter' | 'zai-vision' | 'demo-estimate';
 };
 
 type SavedMeal = MealAnalysis & {
@@ -139,6 +139,18 @@ function NutritionMetricCard({
       </p>
     </div>
   );
+}
+
+function providerLabel(provider: MealAnalysis['provider']) {
+  const labels: Record<MealAnalysis['provider'], string> = {
+    openai: 'OpenAI vision',
+    gemini: 'Gemini vision',
+    openrouter: 'OpenRouter vision',
+    'zai-vision': 'ZAI vision',
+    'demo-estimate': 'Demo estimate',
+  };
+
+  return labels[provider];
 }
 
 export function AIMealAnalyzer({ dailyTargets }: AIMealAnalyzerProps) {
@@ -237,7 +249,7 @@ export function AIMealAnalyzer({ dailyTargets }: AIMealAnalyzerProps) {
       toast({
         title: data.fallback ? 'Estimate generated' : 'Meal analyzed',
         description: data.fallback
-          ? 'AI vision is unavailable, so PrimeForge used a demo estimate.'
+          ? 'Add an AI vision API key to switch from demo estimates to real photo analysis.'
           : 'Nutrition estimates are ready for review.',
       });
     } catch (caughtError) {
@@ -434,7 +446,7 @@ export function AIMealAnalyzer({ dailyTargets }: AIMealAnalyzerProps) {
             </div>
             <div className="flex flex-wrap gap-2">
               <Badge variant={analysis.provider === 'demo-estimate' ? 'secondary' : 'default'} className="rounded-md">
-                {analysis.provider === 'demo-estimate' ? 'Demo estimate' : 'AI vision'}
+                {providerLabel(analysis.provider)}
               </Badge>
               <Badge variant="outline" className="rounded-md">
                 {analysis.confidence}% confidence
