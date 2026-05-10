@@ -26,6 +26,12 @@ type MealAnalysis = {
   provider: VisionProvider;
 };
 
+type MealAnalysisResult = {
+  analysis: MealAnalysis;
+  fallback: boolean;
+  fallbackReason?: string;
+};
+
 type OpenAICompatibleResponse = {
   choices?: Array<{
     message?: {
@@ -48,6 +54,12 @@ type GeminiResponse = {
   error?: {
     message?: string;
   };
+};
+
+type ProviderAttempt = {
+  name: VisionProvider;
+  configured: boolean;
+  analyze: () => Promise<MealAnalysis | null>;
 };
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
@@ -128,6 +140,43 @@ function normalizeAnalysis(value: unknown, provider: VisionProvider): MealAnalys
 
 function parseAnalysis(content: string, provider: VisionProvider) {
   return normalizeAnalysis(JSON.parse(cleanJsonResponse(content)), provider);
+}
+
+function uniqueValues(values: string[]) {
+  return [...new Set(values.filter(Boolean))];
+}
+
+function getGeminiModelCandidates() {
+  return uniqueValues([
+    process.env.GEMINI_VISION_MODEL || '',
+    process.env.AI_VISION_MODEL || '',
+    'gemini-2.0-flash',
+    'gemini-2.0-flash-lite',
+    'gemini-1.5-flash-latest',
+    'gemini-1.5-flash',
+  ]);
+}
+
+function getFallbackReason(configuredProviders: VisionProvider[], errors: string[]) {
+  const combined = errors.join(' ').toLowerCase();
+
+  if (combined.includes('quota') || combined.includes('billing')) {
+    return 'Gemini key is loaded, but Google says its quota is exhausted or billing/API access is disabled. Enable Gemini API quota or use another key.';
+  }
+
+  if (combined.includes('api key not valid') || combined.includes('invalid api key')) {
+    return 'Gemini rejected the API key. Create a fresh Google AI Studio key and update GEMINI_API_KEY.';
+  }
+
+  if (configuredProviders.length === 0) {
+    return 'No AI vision provider is configured. Add GEMINI_API_KEY, OPENAI_API_KEY, or OPENROUTER_API_KEY.';
+  }
+
+  if (errors.length > 0) {
+    return `AI vision failed: ${errors[0]}`;
+  }
+
+  return 'AI vision is unavailable right now, so PrimeForge used a demo estimate.';
 }
 
 function getDemoAnalysis(seed = 0): MealAnalysis {
@@ -255,41 +304,56 @@ async function analyzeWithGemini(buffer: Buffer, mimeType: string) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return null;
 
-  const model = process.env.GEMINI_VISION_MODEL || process.env.AI_VISION_MODEL || 'gemini-2.0-flash';
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${apiKey}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [
-          {
-            role: 'user',
-            parts: [
-              { text: ANALYSIS_PROMPT },
+  const errors: string[] = [];
+  for (const model of getGeminiModelCandidates()) {
+    try {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [
               {
-                inlineData: {
-                  mimeType,
-                  data: buffer.toString('base64'),
-                },
+                role: 'user',
+                parts: [
+                  { text: ANALYSIS_PROMPT },
+                  {
+                    inlineData: {
+                      mimeType,
+                      data: buffer.toString('base64'),
+                    },
+                  },
+                ],
               },
             ],
-          },
-        ],
-        generationConfig: {
-          temperature: 0.1,
-          responseMimeType: 'application/json',
-        },
-      }),
+            generationConfig: {
+              temperature: 0.1,
+              responseMimeType: 'application/json',
+            },
+          }),
+        }
+      );
+
+      const payload = (await response.json()) as GeminiResponse;
+      if (!response.ok) {
+        errors.push(`${model}: ${payload.error?.message || 'Gemini vision request failed'}`);
+        continue;
+      }
+
+      const content = payload.candidates?.[0]?.content?.parts?.map((part) => part.text).join('\n');
+      if (!content) {
+        errors.push(`${model}: Gemini vision response was empty`);
+        continue;
+      }
+
+      return parseAnalysis(content, 'gemini');
+    } catch (error) {
+      errors.push(`${model}: ${error instanceof Error ? error.message : 'Gemini request failed'}`);
     }
-  );
+  }
 
-  const payload = (await response.json()) as GeminiResponse;
-  if (!response.ok) throw new Error(payload.error?.message || 'Gemini vision request failed');
-
-  const content = payload.candidates?.[0]?.content?.parts?.map((part) => part.text).join('\n');
-  if (!content) throw new Error('Gemini vision response was empty');
-  return parseAnalysis(content, 'gemini');
+  throw new Error(errors.join(' | ') || 'Gemini vision request failed');
 }
 
 async function analyzeWithZAI(dataUrl: string) {
@@ -313,29 +377,62 @@ async function analyzeWithZAI(dataUrl: string) {
   return parseAnalysis(content, 'zai-vision');
 }
 
-async function analyzeMealImage(buffer: Buffer, mimeType: string) {
+function createFallbackResult(seed: number, configuredProviders: VisionProvider[], errors: string[]): MealAnalysisResult {
+  const fallbackReason = getFallbackReason(configuredProviders, errors);
+  const analysis = {
+    ...getDemoAnalysis(seed),
+    accuracyNote: fallbackReason,
+  };
+
+  return {
+    analysis,
+    fallback: true,
+    fallbackReason,
+  };
+}
+
+async function analyzeMealImage(buffer: Buffer, mimeType: string): Promise<MealAnalysisResult> {
   const dataUrl = `data:${mimeType};base64,${buffer.toString('base64')}`;
-  const attempts = [
-    () => analyzeWithOpenAI(dataUrl),
-    () => analyzeWithGemini(buffer, mimeType),
-    () => analyzeWithOpenRouter(dataUrl),
-    () => analyzeWithZAI(dataUrl),
+  const attempts: ProviderAttempt[] = [
+    {
+      name: 'openai',
+      configured: Boolean(process.env.OPENAI_API_KEY),
+      analyze: () => analyzeWithOpenAI(dataUrl),
+    },
+    {
+      name: 'gemini',
+      configured: Boolean(process.env.GEMINI_API_KEY),
+      analyze: () => analyzeWithGemini(buffer, mimeType),
+    },
+    {
+      name: 'openrouter',
+      configured: Boolean(process.env.OPENROUTER_API_KEY),
+      analyze: () => analyzeWithOpenRouter(dataUrl),
+    },
+    {
+      name: 'zai-vision',
+      configured: Boolean(process.env.ZAI_API_KEY || process.env.ZAI_API_URL || process.env.AI_VISION_MODEL),
+      analyze: () => analyzeWithZAI(dataUrl),
+    },
   ];
 
+  const configuredProviders = attempts.filter((attempt) => attempt.configured).map((attempt) => attempt.name);
   const errors: string[] = [];
   for (const attempt of attempts) {
+    if (!attempt.configured) continue;
+
     try {
-      const analysis = await attempt();
-      if (analysis) return analysis;
+      const analysis = await attempt.analyze();
+      if (analysis) return { analysis, fallback: false };
     } catch (error) {
-      errors.push(error instanceof Error ? error.message : 'Unknown provider error');
+      errors.push(`${attempt.name}: ${error instanceof Error ? error.message : 'Unknown provider error'}`);
     }
   }
 
   if (errors.length > 0) {
     console.warn('[Meal Analysis] Using demo estimate:', errors.join(' | '));
   }
-  return getDemoAnalysis(buffer.length);
+  return createFallbackResult(buffer.length, configuredProviders, errors);
 }
 
 export async function POST(request: Request) {
@@ -356,12 +453,13 @@ export async function POST(request: Request) {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const analysis = await analyzeMealImage(buffer, file.type);
+    const result = await analyzeMealImage(buffer, file.type);
 
     return NextResponse.json({
       success: true,
-      fallback: analysis.provider === 'demo-estimate',
-      analysis,
+      fallback: result.fallback,
+      fallbackReason: result.fallbackReason,
+      analysis: result.analysis,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Could not analyze meal image';

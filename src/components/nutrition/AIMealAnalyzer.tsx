@@ -242,14 +242,20 @@ export function AIMealAnalyzer({ dailyTargets }: AIMealAnalyzerProps) {
         method: 'POST',
         body: formData,
       });
-      const data = (await response.json()) as { success: boolean; error?: string; analysis?: MealAnalysis; fallback?: boolean };
+      const data = (await response.json()) as {
+        success: boolean;
+        error?: string;
+        analysis?: MealAnalysis;
+        fallback?: boolean;
+        fallbackReason?: string;
+      };
       if (!response.ok || !data.success || !data.analysis) throw new Error(data.error || 'Could not analyze meal.');
 
       setAnalysis(data.analysis);
       toast({
         title: data.fallback ? 'Estimate generated' : 'Meal analyzed',
         description: data.fallback
-          ? 'Add an AI vision API key to switch from demo estimates to real photo analysis.'
+          ? data.fallbackReason || 'AI vision is unavailable right now, so PrimeForge used a demo estimate.'
           : 'Nutrition estimates are ready for review.',
       });
     } catch (caughtError) {
