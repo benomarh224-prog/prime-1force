@@ -189,28 +189,29 @@ export const exercises: Exercise[] = [
   },
   {
     id: 'bicep-curl',
-    name: 'Dumbbell Bicep Curl',
-    description: 'A classic isolation exercise that builds impressive biceps. Stand with dumbbells at your sides and curl them up while keeping your elbows pinned to your torso.',
+    name: 'Machine Bicep Curl',
+    description: 'A controlled arm machine exercise for building biceps without needing free weights. The pad locks your upper arms in place so each rep stays strict.',
     category: 'gym',
     difficulty: 'beginner',
     muscleGroup: 'Biceps',
-    equipment: 'Dumbbells',
+    equipment: 'Bicep Curl Machine',
     duration: 8,
     calories: 45,
     image: '/images/workout-gym-luxe.jpg',
     steps: [
-      'Stand with feet shoulder-width apart holding dumbbells at your sides',
-      'Keep your elbows close to your torso and palms facing forward',
-      'Curl the weight up by flexing at the elbow',
-      'Squeeze your biceps at the top of the movement',
-      'Slowly lower the dumbbells back to the starting position',
+      'Adjust the seat so your elbows line up with the machine pivot',
+      'Place your upper arms firmly against the pad',
+      'Grip the handles with wrists straight',
+      'Curl the handles up by bending your elbows',
+      'Squeeze your biceps briefly at the top',
+      'Lower the handles slowly until your arms are almost straight',
       'Repeat for the desired number of repetitions'
     ],
     tips: [
-      'Avoid swinging your body to generate momentum',
-      'Keep your wrists straight throughout the movement',
-      'Focus on the mind-muscle connection with your biceps',
-      'Try a slight forward lean to isolate the biceps more'
+      'Keep your chest against the pad throughout the set',
+      'Avoid lifting your elbows off the support',
+      'Use a full range of motion without bouncing',
+      'Choose a weight that lets you control the lowering phase'
     ]
   },
   {
@@ -482,28 +483,29 @@ export const exercises: Exercise[] = [
   },
   {
     id: 'shoulder-press',
-    name: 'Dumbbell Shoulder Press',
-    description: 'The premier exercise for building strong, capped shoulders. Targets all three deltoid heads and builds pressing strength that carries over to other upper body movements.',
+    name: 'Lateral Raise Machine',
+    description: 'A shoulder machine that targets the side delts for wider, more capped shoulders. The guided pads keep tension on the delts through the full rep.',
     category: 'gym',
-    difficulty: 'intermediate',
+    difficulty: 'beginner',
     muscleGroup: 'Shoulders',
-    equipment: 'Dumbbells',
+    equipment: 'Lateral Raise Machine',
     duration: 8,
-    calories: 55,
+    calories: 50,
     image: '/images/workout-gym-luxe.jpg',
     steps: [
-      'Sit on a bench with back support (or stand)',
-      'Hold dumbbells at shoulder height with palms facing forward',
-      'Press the dumbbells overhead until arms are fully extended',
-      'Pause briefly at the top',
-      'Lower the dumbbells back to shoulder height with control',
+      'Adjust the seat so your shoulders line up with the machine pivot',
+      'Place your upper arms or elbows against the pads',
+      'Sit tall with your ribs down and feet planted',
+      'Raise the pads out to your sides until elbows reach shoulder height',
+      'Pause briefly while squeezing the side delts',
+      'Lower the pads slowly without letting the stack slam',
       'Repeat for desired repetitions'
     ],
     tips: [
-      'Keep your core engaged to protect your lower back',
-      'Don\'t lock out elbows aggressively at the top',
-      'Avoid using momentum by not leaning back excessively',
-      'Start with lighter weights to master the movement pattern'
+      'Lead with your elbows rather than your hands',
+      'Keep your traps relaxed instead of shrugging',
+      'Use light-to-moderate weight and smooth reps',
+      'Stop around shoulder height to keep tension on the delts'
     ]
   }
 ];
@@ -919,6 +921,52 @@ export const machineGuides: MachineGuide[] = [
     proTip: 'Stop just short of lockout and keep your shoulder blades gently pinned to the pad for smoother reps.'
   },
   {
+    id: 'bicep-curl-machine',
+    name: 'Bicep Curl Machine',
+    category: 'Strength',
+    muscleGroup: 'Biceps',
+    difficulty: 'beginner',
+    image: '/images/workout-gym-luxe.jpg',
+    setup: 'Adjust the seat so your elbows line up with the pivot point. Set your upper arms firmly on the pad and grip the handles with straight wrists.',
+    steps: [
+      'Keep your chest and upper arms pinned to the pad',
+      'Curl the handles upward by bending your elbows',
+      'Squeeze your biceps briefly at the top',
+      'Lower slowly until your arms are almost straight',
+      'Keep the movement smooth from rep to rep'
+    ],
+    commonMistakes: [
+      'Lifting elbows off the pad',
+      'Using momentum to swing the handles',
+      'Cutting the bottom range short',
+      'Letting wrists bend backward'
+    ],
+    proTip: 'Use a slower lowering phase than lifting phase. That keeps the biceps working longer without needing heavy weight.'
+  },
+  {
+    id: 'lateral-raise-machine',
+    name: 'Lateral Raise Machine',
+    category: 'Strength',
+    muscleGroup: 'Side Delts',
+    difficulty: 'beginner',
+    image: '/images/workout-gym-luxe.jpg',
+    setup: 'Adjust the seat so the machine pivot lines up with your shoulders. Place elbows or upper arms against the pads and sit tall.',
+    steps: [
+      'Brace lightly and keep your traps relaxed',
+      'Raise the pads out to your sides',
+      'Stop when elbows reach shoulder height',
+      'Pause briefly at the top',
+      'Lower with control and keep tension on the delts'
+    ],
+    commonMistakes: [
+      'Shrugging the shoulders during each rep',
+      'Swinging the pads upward',
+      'Raising above shoulder height',
+      'Using more weight than you can control'
+    ],
+    proTip: 'Think wide elbows instead of high hands. That keeps the side delts doing the work.'
+  },
+  {
     id: 'seated-row-machine',
     name: 'Seated Row Machine',
     category: 'Strength',
@@ -981,7 +1029,24 @@ export const workoutPrograms: WorkoutProgram[] = [
     schedule: [
       { day: 'Monday', focus: 'Full Body A', exercises: ['Leg Extension Machine 3×12', 'Push-Ups 3×8-12', 'Seated Row Machine 3×10', 'Chest Press Machine 3×10', 'Lat Pulldown 3×10'] },
       { day: 'Wednesday', focus: 'Full Body B', exercises: ['Leg Press 3×12', 'Shoulder Press Machine 3×10', 'Chest Press Machine 3×10', 'Cable Crunch 3×15', 'Face Pulls 3×15'] },
-      { day: 'Friday', focus: 'Full Body C', exercises: ['Leg Extension Machine 3×15', 'Chest Press Machine 3×10', 'Seated Row Machine 3×12', 'Romanian Deadlift 3×10', 'Bicep Curl 2×12'] },
+      { day: 'Friday', focus: 'Full Body C', exercises: ['Leg Extension Machine 3×15', 'Chest Press Machine 3×10', 'Seated Row Machine 3×12', 'Romanian Deadlift 3×10', 'Machine Bicep Curl 2×12'] },
+    ]
+  },
+  {
+    id: 'machine-training',
+    name: 'Machine Training',
+    description: 'A gym-machine program built for simple setup, safer progression, and consistent muscle targeting. Ideal if you want structured training without free weights.',
+    level: 'beginner',
+    duration: '8 weeks',
+    daysPerWeek: 4,
+    goal: 'Build Muscle With Machines',
+    image: '/images/gym-machines.png',
+    highlights: ['4 days per week', 'Machine-only sessions', 'Easy setup', 'Full body coverage', 'Beginner friendly'],
+    schedule: [
+      { day: 'Monday', focus: 'Machine Push', exercises: ['Chest Press Machine 4×10', 'Shoulder Press Machine 3×10', 'Cable Crossover 3×12', 'Tricep Pushdown 3×12', 'Lateral Raise Machine 3×15'] },
+      { day: 'Tuesday', focus: 'Machine Pull', exercises: ['Lat Pulldown Machine 4×10', 'Seated Row Machine 4×10', 'Face Pulls 3×15', 'Machine Bicep Curl 3×12', 'Cable Curl 2×15'] },
+      { day: 'Thursday', focus: 'Machine Legs', exercises: ['Leg Press Machine 4×12', 'Leg Extension Machine 4×12', 'Leg Curl Machine 3×12', 'Calf Raise Machine 4×15', 'Cable Crunch 3×15'] },
+      { day: 'Saturday', focus: 'Machine Full Body', exercises: ['Chest Press Machine 3×12', 'Seated Row Machine 3×12', 'Leg Extension Machine 3×15', 'Shoulder Press Machine 3×12', 'Lat Pulldown Machine 3×12'] },
     ]
   },
   {
@@ -995,11 +1060,11 @@ export const workoutPrograms: WorkoutProgram[] = [
     image: '/images/workout-strength-luxe.jpg',
     highlights: ['6 days per week', '60 min sessions', 'Push/Pull/Legs split', 'Optimal recovery', 'Progressive overload'],
     schedule: [
-      { day: 'Monday', focus: 'Push', exercises: ['Bench Press 4×8', 'OHP 3×10', 'Incline DB Press 3×12', 'Lateral Raises 3×15', 'Tricep Pushdown 3×12'] },
-      { day: 'Tuesday', focus: 'Pull', exercises: ['Deadlift 4×6', 'Pull-Ups 4×8', 'Barbell Row 3×10', 'Face Pulls 3×15', 'Barbell Curl 3×12'] },
+      { day: 'Monday', focus: 'Push', exercises: ['Bench Press 4×8', 'Shoulder Press Machine 3×10', 'Chest Press Machine 3×12', 'Lateral Raise Machine 3×15', 'Tricep Pushdown 3×12'] },
+      { day: 'Tuesday', focus: 'Pull', exercises: ['Deadlift 4×6', 'Pull-Ups 4×8', 'Barbell Row 3×10', 'Face Pulls 3×15', 'Machine Bicep Curl 3×12'] },
       { day: 'Wednesday', focus: 'Legs', exercises: ['Barbell Squat 4×8', 'Leg Press 3×12', 'Romanian Deadlift 3×10', 'Leg Curl 3×12', 'Calf Raises 4×15'] },
-      { day: 'Thursday', focus: 'Push', exercises: ['OHP 4×8', 'DB Bench Press 3×10', 'Cable Flyes 3×15', 'Tricep Dips 3×12', 'Shrugs 3×15'] },
-      { day: 'Friday', focus: 'Pull', exercises: ['Barbell Row 4×8', 'Lat Pulldown 3×10', 'Seated Cable Row 3×12', 'Hammer Curls 3×12', 'Hanging Leg Raise 3×15'] },
+      { day: 'Thursday', focus: 'Push', exercises: ['Shoulder Press Machine 4×8', 'Chest Press Machine 3×10', 'Cable Flyes 3×15', 'Tricep Dips 3×12', 'Shrugs 3×15'] },
+      { day: 'Friday', focus: 'Pull', exercises: ['Barbell Row 4×8', 'Lat Pulldown 3×10', 'Seated Cable Row 3×12', 'Machine Bicep Curl 3×12', 'Hanging Leg Raise 3×15'] },
       { day: 'Saturday', focus: 'Legs', exercises: ['Front Squat 4×8', 'Bulgarian Split Squat 3×10', 'Leg Extension Machine 3×15', 'Hip Thrust 3×12', 'Seated Row Machine 3×12'] },
     ]
   },
@@ -1031,9 +1096,9 @@ export const workoutPrograms: WorkoutProgram[] = [
     image: '/images/workout-squat-luxe.jpg',
     highlights: ['4 days per week', '75 min sessions', 'Heavy compound lifts', '1RM progression', 'Deload every 4th week'],
     schedule: [
-      { day: 'Monday', focus: 'Upper Strength', exercises: ['Bench Press 5×5', 'Barbell Row 5×5', 'OHP 3×8', 'Weighted Pull-Ups 3×8', 'Barbell Curl 3×10'] },
+      { day: 'Monday', focus: 'Upper Strength', exercises: ['Bench Press 5×5', 'Barbell Row 5×5', 'Shoulder Press Machine 3×8', 'Weighted Pull-Ups 3×8', 'Machine Bicep Curl 3×10'] },
       { day: 'Tuesday', focus: 'Lower Strength', exercises: ['Barbell Back Squat 5×5', 'Romanian Deadlift 3×8', 'Leg Press 3×12', 'Weighted Calf Raises 4×10', 'Ab Wheel 3×12'] },
-      { day: 'Thursday', focus: 'Upper Hypertrophy', exercises: ['Incline Bench 4×8', 'Weighted Dips 4×8', 'Cable Row 3×12', 'Lateral Raises 4×15', 'Hammer Curls 3×12'] },
+      { day: 'Thursday', focus: 'Upper Hypertrophy', exercises: ['Incline Bench 4×8', 'Weighted Dips 4×8', 'Cable Row 3×12', 'Lateral Raise Machine 4×15', 'Machine Bicep Curl 3×12'] },
       { day: 'Friday', focus: 'Lower Hypertrophy', exercises: ['Front Squat 4×8', 'Leg Curl 4×12', 'Hip Thrust 4×10', 'Walking Lunges 3×12/leg', 'Hanging Leg Raise 3×15'] },
     ]
   },
@@ -1048,9 +1113,9 @@ export const workoutPrograms: WorkoutProgram[] = [
     image: '/images/workout-pushup-luxe.jpg',
     highlights: ['4 days per week', '55 min sessions', 'Upper/Lower split', '2 rest days', 'Balanced volume'],
     schedule: [
-      { day: 'Monday', focus: 'Upper Body A', exercises: ['Bench Press 4×8', 'Barbell Row 4×8', 'OHP 3×10', 'Lat Pulldown 3×10', 'Face Pulls 3×15'] },
+      { day: 'Monday', focus: 'Upper Body A', exercises: ['Bench Press 4×8', 'Barbell Row 4×8', 'Shoulder Press Machine 3×10', 'Lat Pulldown 3×10', 'Face Pulls 3×15'] },
       { day: 'Tuesday', focus: 'Lower Body A', exercises: ['Back Squat 4×8', 'Romanian Deadlift 3×10', 'Leg Press 3×12', 'Leg Curl 3×12', 'Calf Raises 4×15'] },
-      { day: 'Thursday', focus: 'Upper Body B', exercises: ['Incline DB Press 4×10', 'Pull-Ups 4×8', 'Cable Flyes 3×12', 'Seated Cable Row 3×12', 'DB Curl 3×12'] },
+      { day: 'Thursday', focus: 'Upper Body B', exercises: ['Chest Press Machine 4×10', 'Pull-Ups 4×8', 'Cable Flyes 3×12', 'Seated Cable Row 3×12', 'Machine Bicep Curl 3×12'] },
       { day: 'Friday', focus: 'Lower Body B', exercises: ['Front Squat 3×10', 'Hip Thrust 4×10', 'Bulgarian Split Squat 3×10', 'Leg Extension Machine 3×15', 'Seated Row Machine 3×12'] },
     ]
   },
@@ -1065,9 +1130,9 @@ export const workoutPrograms: WorkoutProgram[] = [
     image: '/images/workout-gym-luxe.jpg',
     highlights: ['5 days per week', '70 min sessions', 'High volume', 'Short rest (60-90s)', 'Mind-muscle connection'],
     schedule: [
-      { day: 'Monday', focus: 'Chest & Triceps', exercises: ['Bench Press 4×10', 'Incline DB Press 4×10', 'Cable Flyes 3×15', 'Dips 3×12', 'Overhead Extension 3×15'] },
-      { day: 'Tuesday', focus: 'Back & Biceps', exercises: ['Deadlift 4×8', 'Pull-Ups 4×10', 'Barbell Row 4×10', 'Cable Curl 3×12', 'Hammer Curl 3×12'] },
-      { day: 'Wednesday', focus: 'Shoulders & Abs', exercises: ['OHP 4×10', 'Lateral Raises 4×15', 'Face Pulls 3×15', 'Hanging Leg Raise 4×15', 'Cable Crunch 3×20'] },
+      { day: 'Monday', focus: 'Chest & Triceps', exercises: ['Bench Press 4×10', 'Chest Press Machine 4×10', 'Cable Flyes 3×15', 'Dips 3×12', 'Overhead Extension 3×15'] },
+      { day: 'Tuesday', focus: 'Back & Biceps', exercises: ['Deadlift 4×8', 'Pull-Ups 4×10', 'Barbell Row 4×10', 'Machine Bicep Curl 3×12', 'Cable Curl 3×12'] },
+      { day: 'Wednesday', focus: 'Shoulders & Abs', exercises: ['Shoulder Press Machine 4×10', 'Lateral Raise Machine 4×15', 'Face Pulls 3×15', 'Hanging Leg Raise 4×15', 'Cable Crunch 3×20'] },
       { day: 'Thursday', focus: 'Legs', exercises: ['Squat 4×10', 'Leg Press 4×12', 'Leg Curl 4×12', 'Leg Extension 3×15', 'Calf Raises 5×15'] },
       { day: 'Friday', focus: 'Full Body Pump', exercises: ['Chest Press Machine 3×12', 'Seated Row Machine 3×12', 'Lunges 3×12/leg', 'Shoulder Press Machine 3×12', 'Leg Extension Machine 3×15'] },
     ]
