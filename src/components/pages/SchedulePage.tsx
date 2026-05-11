@@ -141,7 +141,7 @@ const programTemplates = {
     },
     {
       splitTitle: 'Full Body Power',
-      exercises: ['deadlift', 'bench-press', 'pull-ups', 'burpees'].map((id) => exerciseName(id, id)),
+      exercises: ['deadlift', 'bench-press', 'pull-ups', 'assisted-pull-up-machine'].map((id) => exerciseName(id, id)),
       notes: 'Move heavy, stay crisp, stop sets before form breaks.',
     },
   ],
@@ -158,14 +158,14 @@ const programTemplates = {
     },
     {
       splitTitle: 'Leg Hypertrophy',
-      exercises: ['barbell-squat', 'leg-extension-machine', 'deadlift', 'burpees'].map((id) => exerciseName(id, id)),
+      exercises: ['barbell-squat', 'leg-extension-machine', 'deadlift', 'assisted-pull-up-machine'].map((id) => exerciseName(id, id)),
       notes: 'Keep rest near 60-90 seconds on accessory work.',
     },
   ],
   'fat-loss': [
     {
       splitTitle: 'HIIT Conditioning',
-      exercises: ['hiit-cardio', 'burpees', 'chest-press-machine', 'seated-row-machine'].map((id) => exerciseName(id, id)),
+      exercises: ['hiit-cardio', 'assisted-pull-up-machine', 'chest-press-machine', 'seated-row-machine'].map((id) => exerciseName(id, id)),
       notes: 'Alternate hard intervals with enough rest to keep output high.',
     },
     {
@@ -192,7 +192,7 @@ const programTemplates = {
     },
     {
       splitTitle: 'Conditioning + Core',
-      exercises: ['hiit-cardio', 'burpees', 'chest-press-machine', 'seated-row-machine'].map((id) => exerciseName(id, id)),
+      exercises: ['hiit-cardio', 'assisted-pull-up-machine', 'chest-press-machine', 'seated-row-machine'].map((id) => exerciseName(id, id)),
       notes: 'Keep transitions short and form sharp.',
     },
   ],

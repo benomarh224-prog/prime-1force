@@ -348,30 +348,30 @@ export const exercises: Exercise[] = [
     ]
   },
   {
-    id: 'burpees',
-    name: 'Burpees',
-    description: 'The ultimate full-body conditioning exercise. Burpees combine a squat thrust, plank, push-up, and jump into one explosive movement that torches calories.',
-    category: 'no-equipment',
-    difficulty: 'advanced',
-    muscleGroup: 'Full Body',
-    equipment: 'None',
-    duration: 5,
-    calories: 65,
-    image: '/images/workout-hiit-luxe.jpg',
+    id: 'assisted-pull-up-machine',
+    name: 'Assisted Pull-Up Machine',
+    description: 'A machine-supported pull-up variation that builds back and biceps strength while helping you control the full range of motion.',
+    category: 'gym',
+    difficulty: 'beginner',
+    muscleGroup: 'Back',
+    equipment: 'Assisted Pull-Up Machine',
+    duration: 8,
+    calories: 70,
+    image: '/images/workout-pull-ups.jpeg',
     steps: [
-      'Stand with feet shoulder-width apart',
-      'Drop into a squat position with hands on the ground',
-      'Kick feet back into a plank position',
-      'Perform a push-up (optional for more intensity)',
-      'Jump feet back to hands into squat position',
-      'Explosively jump up with arms overhead',
-      'Land softly and immediately begin the next rep'
+      'Set the assistance weight so you can complete clean reps',
+      'Grip the pull-up handles slightly wider than shoulder-width',
+      'Place knees or feet on the assistance platform',
+      'Start from a full hang with shoulders controlled',
+      'Pull your chest toward the handles by driving elbows down',
+      'Pause briefly near the top',
+      'Lower slowly back to the starting position'
     ],
     tips: [
-      'Pace yourself - burpees are taxing, focus on form over speed',
-      'Land softly on the balls of your feet to protect your knees',
-      'Modify by removing the push-up or jump if needed',
-      'Great for HIIT workouts - try 30 seconds on, 15 seconds off'
+      'Use less assistance only when every rep stays strict',
+      'Avoid kicking or bouncing off the platform',
+      'Keep ribs down and shoulders away from your ears',
+      'Think elbows to ribs instead of chin over bar'
     ]
   },
   {
@@ -384,7 +384,7 @@ export const exercises: Exercise[] = [
     equipment: 'Chest Press Machine',
     duration: 8,
     calories: 65,
-    image: '/images/workout-strength-luxe.jpg',
+    image: '/images/workout-chest-press-machine.jpeg',
     steps: [
       'Adjust the seat so the handles are level with your mid-chest',
       'Sit with your back flat against the pad and feet planted',
@@ -438,7 +438,7 @@ export const exercises: Exercise[] = [
     equipment: 'Seated Row Machine',
     duration: 8,
     calories: 70,
-    image: '/images/workout-gym-luxe.jpg',
+    image: '/images/workout-seated-row-machine.jpeg',
     steps: [
       'Adjust the seat and chest pad so your arms reach the handles comfortably',
       'Sit tall with your chest supported and feet planted',
@@ -465,7 +465,7 @@ export const exercises: Exercise[] = [
     equipment: 'Pull-Up Bar',
     duration: 8,
     calories: 75,
-    image: '/images/workout-strength-luxe.jpg',
+    image: '/images/workout-pull-ups.jpeg',
     steps: [
       'Grip the pull-up bar slightly wider than shoulder-width',
       'Hang with arms fully extended (dead hang position)',
@@ -497,7 +497,7 @@ export const exercises: Exercise[] = [
       'Round 1: 30 seconds high knees + 15 seconds rest',
       'Round 2: 30 seconds mountain climbers + 15 seconds rest',
       'Round 3: 30 seconds jump squats + 15 seconds rest',
-      'Round 4: 30 seconds burpees + 15 seconds rest',
+      'Round 4: 30 seconds mountain climbers + 15 seconds rest',
       'Round 5: 30 seconds plank jacks + 15 seconds rest',
       'Cool down with 2 minutes of stretching'
     ],
@@ -924,12 +924,35 @@ export const machineGuides: MachineGuide[] = [
     proTip: 'Focus on driving your elbows to your hips rather than thinking about pulling the bar. This mental cue activates more lat muscle fibers.'
   },
   {
+    id: 'assisted-pull-up-machine',
+    name: 'Assisted Pull-Up Machine',
+    category: 'Strength',
+    muscleGroup: 'Lats, Biceps, Upper Back',
+    difficulty: 'beginner',
+    image: '/images/workout-pull-ups.jpeg',
+    setup: 'Select an assistance level that lets you move smoothly. Grip the handles, place knees or feet on the support, and start from a controlled hang.',
+    steps: [
+      'Brace your core and keep shoulders controlled',
+      'Pull by driving elbows down toward your ribs',
+      'Bring your chest toward the handles',
+      'Pause briefly near the top',
+      'Lower slowly back to a full hang'
+    ],
+    commonMistakes: [
+      'Using momentum from the assistance pad',
+      'Shrugging shoulders toward the ears',
+      'Cutting the bottom range short',
+      'Reducing assistance before form is stable'
+    ],
+    proTip: 'Progress by lowering assistance gradually, not by rushing reps. Smooth control builds the pull-up fastest.'
+  },
+  {
     id: 'chest-press-machine',
     name: 'Chest Press Machine',
     category: 'Strength',
     muscleGroup: 'Chest, Shoulders, Triceps',
     difficulty: 'beginner',
-    image: '/images/workout-strength-luxe.jpg',
+    image: '/images/workout-chest-press-machine.jpeg',
     setup: 'Adjust the seat height so the handles are at mid-chest level. Sit with your back flat, feet firmly on the floor. Select your weight.',
     steps: [
       'Grip the handles with palms facing forward or slightly inward',
@@ -976,7 +999,7 @@ export const machineGuides: MachineGuide[] = [
     category: 'Strength',
     muscleGroup: 'Biceps',
     difficulty: 'beginner',
-    image: '/images/workout-gym-luxe.jpg',
+    image: '/images/workout-seated-row-machine.jpeg',
     setup: 'Adjust the seat so your elbows line up with the pivot point. Set your upper arms firmly on the pad and grip the handles with straight wrists.',
     steps: [
       'Keep your chest and upper arms pinned to the pad',
@@ -1129,10 +1152,10 @@ export const workoutPrograms: WorkoutProgram[] = [
     image: '/images/workout-hiit-luxe.jpg',
     highlights: ['4 days per week', '30 min sessions', 'HIIT intervals', 'No equipment needed', 'Max calorie burn'],
     schedule: [
-      { day: 'Monday', focus: 'HIIT Cardio', exercises: ['Warm-Up 3 min', 'Burpees 30s/Rest 15s ×4', 'Mountain Climbers 30s/Rest 15s ×4', 'Jump Squats 30s/Rest 15s ×4', 'Cool-Down 3 min'] },
+      { day: 'Monday', focus: 'HIIT Cardio', exercises: ['Warm-Up 3 min', 'Mountain Climbers 30s/Rest 15s ×4', 'Jump Squats 30s/Rest 15s ×4', 'High Knees 30s/Rest 15s ×4', 'Cool-Down 3 min'] },
       { day: 'Tuesday', focus: 'Upper Body Circuit', exercises: ['Push-Ups ×15', 'Pike Push-Ups ×10', 'Tricep Dips ×12', 'Plank Shoulder Taps ×20', 'Rest 60s — Repeat 4 rounds'] },
       { day: 'Thursday', focus: 'Lower Body Circuit', exercises: ['Jump Squats ×15', 'Walking Lunges ×12/leg', 'Glute Bridges ×20', 'Calf Raises ×25', 'Rest 60s — Repeat 4 rounds'] },
-      { day: 'Saturday', focus: 'Full Body HIIT', exercises: ['Burpee to Push-Up ×10', 'Tuck Jumps ×12', 'V-Up Crunches ×15', 'Plank Jacks ×20', 'Rest 60s — Repeat 5 rounds'] },
+      { day: 'Saturday', focus: 'Full Body HIIT', exercises: ['Mountain Climbers ×30', 'Tuck Jumps ×12', 'V-Up Crunches ×15', 'Plank Jacks ×20', 'Rest 60s — Repeat 5 rounds'] },
     ]
   },
   {
