@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { AppProviders } from "@/components/providers/AppProviders";
+import { ScrollToTop } from "@/components/layout/ScrollToTop";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://primeforge.21-0-10-152.sslip.io";
 
@@ -61,6 +62,7 @@ export default function RootLayout({
         className="antialiased bg-background text-foreground"
       >
         <AppProviders>
+          <ScrollToTop />
           {children}
           <Toaster />
         </AppProviders>
