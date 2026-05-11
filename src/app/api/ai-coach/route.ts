@@ -39,7 +39,7 @@ function getLocalCoachResponse(messages: { role: string; content: string }[]) {
     return [
       '**7-day training plan**',
       '',
-      '**Day 1 - Push:** chest press machine 4 x 8-10, shoulder press machine 3 x 8-10, cable fly 3 x 12, triceps pressdown 3 x 12. Rest 90 sec.',
+      '**Day 1 - Push:** chest press machine 4 x 8-10, shoulder press machine 3 x 8-10, cable fly 3 x 12, cable triceps pushdown 3 x 12. Rest 90 sec.',
       '**Day 2 - Pull:** seated row machine 4 x 8, lat pulldown 3 x 10, rear delt fly 3 x 15, machine curls 3 x 10-12. Rest 75-90 sec.',
       '**Day 3 - Legs:** leg press 4 x 6-10, leg extension 3 x 12, leg curl 3 x 12, calves 3 x 15.',
       '**Day 4 - Recovery:** 25-40 min walk, mobility, easy core.',

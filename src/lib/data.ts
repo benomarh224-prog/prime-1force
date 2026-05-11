@@ -170,7 +170,7 @@ export const exercises: Exercise[] = [
     equipment: 'Barbell, Bench',
     duration: 10,
     calories: 85,
-    image: '/images/workout-strength-luxe.jpg',
+    image: '/images/workout-bench-press.jpeg',
     steps: [
       'Lie flat on a bench with your feet firmly on the ground',
       'Grip the barbell slightly wider than shoulder-width apart',
@@ -197,7 +197,7 @@ export const exercises: Exercise[] = [
     equipment: 'Bicep Curl Machine',
     duration: 8,
     calories: 45,
-    image: '/images/workout-gym-luxe.jpg',
+    image: '/images/workout-machine-bicep-curl.jpeg',
     steps: [
       'Adjust the seat so your elbows line up with the machine pivot',
       'Place your upper arms firmly against the pad',
@@ -224,7 +224,7 @@ export const exercises: Exercise[] = [
     equipment: 'Barbell, Squat Rack',
     duration: 12,
     calories: 120,
-    image: '/images/workout-squat-luxe.jpg',
+    image: '/images/workout-barbell-squat.webp',
     steps: [
       'Position the bar on your upper traps, gripping it just outside your shoulders',
       'Unrack the bar and step back with feet shoulder-width apart',
@@ -277,7 +277,7 @@ export const exercises: Exercise[] = [
     equipment: 'Leg Extension Machine',
     duration: 8,
     calories: 55,
-    image: '/images/workout-squat-luxe.jpg',
+    image: '/images/workout-leg-extension-machine.webp',
     steps: [
       'Adjust the back pad so your knees line up with the machine pivot',
       'Place the ankle pad just above your ankles',
@@ -331,7 +331,7 @@ export const exercises: Exercise[] = [
     equipment: 'Shoulder Press Machine',
     duration: 8,
     calories: 60,
-    image: '/images/workout-gym-luxe.jpg',
+    image: '/images/workout-shoulder-press-machine.jpeg',
     steps: [
       'Adjust the seat so the handles start around shoulder height',
       'Sit tall with your back against the pad and feet flat',
@@ -399,6 +399,33 @@ export const exercises: Exercise[] = [
       'Avoid rounding your shoulders forward',
       'Do not lock your elbows hard at the top',
       'Use full control on the way back'
+    ]
+  },
+  {
+    id: 'cable-triceps-pushdown',
+    name: 'Cable Triceps Pushdown',
+    description: 'A cable machine isolation exercise for building triceps. Keep your elbows pinned by your sides and press the handle down until your arms are nearly straight.',
+    category: 'gym',
+    difficulty: 'beginner',
+    muscleGroup: 'Triceps',
+    equipment: 'Cable Machine',
+    duration: 8,
+    calories: 45,
+    image: '/images/workout-cable-triceps-pushdown.jpeg',
+    steps: [
+      'Set the pulley high and attach a straight bar or rope handle',
+      'Stand close to the cable stack with feet planted',
+      'Pin your elbows by your sides and start with forearms bent',
+      'Press the handle down until your arms are almost straight',
+      'Squeeze your triceps briefly at the bottom',
+      'Return the handle upward with control',
+      'Repeat without letting your elbows drift forward'
+    ],
+    tips: [
+      'Keep shoulders down and chest tall',
+      'Avoid leaning your whole body into the rep',
+      'Use a smooth tempo instead of snapping the elbows',
+      'Try rope handles when you want a stronger squeeze at lockout'
     ]
   },
   {
@@ -784,7 +811,7 @@ export const machineGuides: MachineGuide[] = [
     category: 'Strength',
     muscleGroup: 'Quads, Glutes, Hamstrings',
     difficulty: 'beginner',
-    image: '/images/workout-squat-luxe.jpg',
+    image: '/images/workout-leg-extension-machine.webp',
     setup: 'Sit in the seat with your back flat against the pad. Place feet shoulder-width apart on the platform, positioned at the middle of the foot plate.',
     steps: [
       'Unlock the safety latches by pressing the handles to the side',
@@ -850,12 +877,35 @@ export const machineGuides: MachineGuide[] = [
     proTip: 'Try high-to-low (cable flyes) for lower chest, or low-to-high for upper chest. Each angle targets different muscle fibers.'
   },
   {
+    id: 'cable-triceps-pushdown',
+    name: 'Cable Triceps Pushdown',
+    category: 'Strength',
+    muscleGroup: 'Triceps',
+    difficulty: 'beginner',
+    image: '/images/workout-cable-triceps-pushdown.jpeg',
+    setup: 'Set the pulley high and attach a straight bar or rope. Stand close to the stack with elbows tucked by your sides.',
+    steps: [
+      'Grip the handle and brace your core',
+      'Start with elbows bent and upper arms pinned in place',
+      'Press the handle down until your arms are almost straight',
+      'Squeeze the triceps briefly at the bottom',
+      'Return upward slowly without letting elbows drift forward'
+    ],
+    commonMistakes: [
+      'Leaning bodyweight into the handle',
+      'Letting elbows flare or move forward',
+      'Snapping into elbow lockout',
+      'Using too much weight and shortening the range'
+    ],
+    proTip: 'Keep your upper arms still and let the elbow joint do the work. Rope handles let you separate the ends for an extra squeeze.'
+  },
+  {
     id: 'lat-pulldown',
     name: 'Lat Pulldown Machine',
     category: 'Strength',
     muscleGroup: 'Lats, Biceps, Upper Back',
     difficulty: 'beginner',
-    image: '/images/workout-gym-luxe.jpg',
+    image: '/images/workout-shoulder-press-machine.jpeg',
     setup: 'Adjust the thigh pad so it locks your legs in place. Stand up and grab the wide bar, then sit back down. Your arms should be fully extended overhead.',
     steps: [
       'Grip the bar wider than shoulder-width, palms facing away',
@@ -903,7 +953,7 @@ export const machineGuides: MachineGuide[] = [
     category: 'Strength',
     muscleGroup: 'Shoulders, Triceps',
     difficulty: 'beginner',
-    image: '/images/workout-gym-luxe.jpg',
+    image: '/images/workout-machine-bicep-curl.jpeg',
     setup: 'Adjust the seat so the handles start near shoulder height. Sit tall with your back against the pad and your feet flat on the floor.',
     steps: [
       'Grip the handles with elbows slightly in front of your body',
@@ -1043,7 +1093,7 @@ export const workoutPrograms: WorkoutProgram[] = [
     image: '/images/gym-machines.png',
     highlights: ['4 days per week', 'Machine-only sessions', 'Easy setup', 'Full body coverage', 'Beginner friendly'],
     schedule: [
-      { day: 'Monday', focus: 'Machine Push', exercises: ['Chest Press Machine 4×10', 'Shoulder Press Machine 3×10', 'Cable Crossover 3×12', 'Tricep Pushdown 3×12', 'Lateral Raise Machine 3×15'] },
+      { day: 'Monday', focus: 'Machine Push', exercises: ['Chest Press Machine 4×10', 'Shoulder Press Machine 3×10', 'Cable Crossover 3×12', 'Cable Triceps Pushdown 3×12', 'Lateral Raise Machine 3×15'] },
       { day: 'Tuesday', focus: 'Machine Pull', exercises: ['Lat Pulldown Machine 4×10', 'Seated Row Machine 4×10', 'Face Pulls 3×15', 'Machine Bicep Curl 3×12', 'Cable Curl 2×15'] },
       { day: 'Thursday', focus: 'Machine Legs', exercises: ['Leg Press Machine 4×12', 'Leg Extension Machine 4×12', 'Leg Curl Machine 3×12', 'Calf Raise Machine 4×15', 'Cable Crunch 3×15'] },
       { day: 'Saturday', focus: 'Machine Full Body', exercises: ['Chest Press Machine 3×12', 'Seated Row Machine 3×12', 'Leg Extension Machine 3×15', 'Shoulder Press Machine 3×12', 'Lat Pulldown Machine 3×12'] },
@@ -1060,7 +1110,7 @@ export const workoutPrograms: WorkoutProgram[] = [
     image: '/images/workout-strength-luxe.jpg',
     highlights: ['6 days per week', '60 min sessions', 'Push/Pull/Legs split', 'Optimal recovery', 'Progressive overload'],
     schedule: [
-      { day: 'Monday', focus: 'Push', exercises: ['Bench Press 4×8', 'Shoulder Press Machine 3×10', 'Chest Press Machine 3×12', 'Lateral Raise Machine 3×15', 'Tricep Pushdown 3×12'] },
+      { day: 'Monday', focus: 'Push', exercises: ['Bench Press 4×8', 'Shoulder Press Machine 3×10', 'Chest Press Machine 3×12', 'Lateral Raise Machine 3×15', 'Cable Triceps Pushdown 3×12'] },
       { day: 'Tuesday', focus: 'Pull', exercises: ['Deadlift 4×6', 'Pull-Ups 4×8', 'Barbell Row 3×10', 'Face Pulls 3×15', 'Machine Bicep Curl 3×12'] },
       { day: 'Wednesday', focus: 'Legs', exercises: ['Barbell Squat 4×8', 'Leg Press 3×12', 'Romanian Deadlift 3×10', 'Leg Curl 3×12', 'Calf Raises 4×15'] },
       { day: 'Thursday', focus: 'Push', exercises: ['Shoulder Press Machine 4×8', 'Chest Press Machine 3×10', 'Cable Flyes 3×15', 'Tricep Dips 3×12', 'Shrugs 3×15'] },
