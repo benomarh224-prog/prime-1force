@@ -518,7 +518,7 @@ export const exercises: Exercise[] = [
     equipment: 'Lateral Raise Machine',
     duration: 8,
     calories: 50,
-    image: '/images/workout-gym-luxe.jpg',
+    image: '/images/workout-lateral-raise-machine.jpg',
     steps: [
       'Adjust the seat so your shoulders line up with the machine pivot',
       'Place your upper arms or elbows against the pads',
@@ -1022,7 +1022,7 @@ export const machineGuides: MachineGuide[] = [
     category: 'Strength',
     muscleGroup: 'Side Delts',
     difficulty: 'beginner',
-    image: '/images/workout-gym-luxe.jpg',
+    image: '/images/workout-lateral-raise-machine.jpg',
     setup: 'Adjust the seat so the machine pivot lines up with your shoulders. Place elbows or upper arms against the pads and sit tall.',
     steps: [
       'Brace lightly and keep your traps relaxed',
