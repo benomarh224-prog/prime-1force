@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import ZAI from 'z-ai-web-dev-sdk';
 
 type FoodEstimate = {
   name: string;
@@ -11,7 +10,7 @@ type FoodEstimate = {
   confidence: number;
 };
 
-type VisionProvider = 'openai' | 'gemini' | 'openrouter' | 'zai-vision' | 'demo-estimate';
+type NutritionProvider = 'open-food-facts';
 
 type MealAnalysis = {
   foods: FoodEstimate[];
@@ -23,462 +22,112 @@ type MealAnalysis = {
   };
   confidence: number;
   accuracyNote: string;
-  provider: VisionProvider;
+  provider: NutritionProvider;
 };
 
-type MealAnalysisResult = {
-  analysis: MealAnalysis;
-  fallback: boolean;
-  fallbackReason?: string;
+type OpenFoodFactsProduct = {
+  brands?: string;
+  generic_name?: string;
+  nutriments?: Record<string, unknown>;
+  product_name?: string;
+  product_name_en?: string;
+  serving_size?: string;
 };
 
-type OpenAICompatibleResponse = {
-  choices?: Array<{
-    message?: {
-      content?: string;
-    };
-  }>;
-  error?: {
-    message?: string;
-  };
+type OpenFoodFactsResponse = {
+  product?: OpenFoodFactsProduct;
+  status?: number;
+  status_verbose?: string;
 };
 
-type GeminiResponse = {
-  candidates?: Array<{
-    content?: {
-      parts?: Array<{
-        text?: string;
-      }>;
-    };
-  }>;
-  error?: {
-    message?: string;
-  };
-};
+const OPEN_FOOD_FACTS_URL = 'https://world.openfoodfacts.org/api/v2/product/737628064502.json';
 
-type ProviderAttempt = {
-  name: VisionProvider;
-  configured: boolean;
-  analyze: () => Promise<MealAnalysis | null>;
-};
-
-const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
-const SUPPORTED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
-const ANALYSIS_PROMPT = [
-  'Analyze this meal photo for a premium gym nutrition tracker.',
-  'Return only valid JSON with this exact shape:',
-  '{ "foods": [{ "name": string, "servingSize": string, "calories": number, "protein": number, "carbs": number, "fat": number, "confidence": number }], "confidence": number, "accuracyNote": string }.',
-  'Estimate realistic serving sizes and macros from the visible food.',
-  'If a portion is unclear, be conservative and mention the uncertainty in accuracyNote.',
-  'Do not include markdown, prose, or nutrition advice outside the JSON.',
-].join(' ');
-
-let zaiInstance: Awaited<ReturnType<typeof ZAI.create>> | null = null;
-
-async function getZAI() {
-  if (!zaiInstance) {
-    zaiInstance = await ZAI.create();
-  }
-  return zaiInstance;
+function toNumber(value: unknown) {
+  const number = typeof value === 'string' ? Number(value) : value;
+  return typeof number === 'number' && Number.isFinite(number) ? number : null;
 }
 
-function clamp(value: unknown, min: number, max: number, fallback: number) {
-  const number = Number(value);
-  if (!Number.isFinite(number)) return fallback;
-  return Math.max(min, Math.min(max, number));
+function roundMacro(value: number | null) {
+  return Math.max(0, Math.round(value ?? 0));
 }
 
-function normalizeConfidence(value: unknown, fallback: number) {
-  const number = typeof value === 'string' ? Number(value.replace('%', '').trim()) : Number(value);
-  if (!Number.isFinite(number)) return fallback;
-
-  const percent = number > 0 && number <= 1 ? number * 100 : number;
-  return Math.round(Math.max(1, Math.min(100, percent)));
+function readNutriment(nutriments: Record<string, unknown>, servingKey: string, per100gKey: string) {
+  return toNumber(nutriments[servingKey]) ?? toNumber(nutriments[per100gKey]);
 }
 
-function cleanJsonResponse(content: string) {
-  const trimmed = content.trim();
-  const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i)?.[1];
-  const raw = fenced || trimmed;
-  const jsonStart = raw.indexOf('{');
-  const jsonEnd = raw.lastIndexOf('}');
-  return jsonStart >= 0 && jsonEnd > jsonStart ? raw.slice(jsonStart, jsonEnd + 1) : raw;
+function readCalories(nutriments: Record<string, unknown>) {
+  const kcal = readNutriment(nutriments, 'energy-kcal_serving', 'energy-kcal_100g');
+  if (kcal !== null) return kcal;
+
+  const kilojoules = readNutriment(nutriments, 'energy-kj_serving', 'energy-kj_100g');
+  return kilojoules === null ? null : kilojoules / 4.184;
 }
 
-function normalizeAnalysis(value: unknown, provider: VisionProvider): MealAnalysis {
-  const input = value as Partial<MealAnalysis> & { foods?: Partial<FoodEstimate>[] };
-  const foods = Array.isArray(input.foods)
-    ? input.foods.slice(0, 8).map((food, index) => ({
-        name: typeof food.name === 'string' && food.name.trim() ? food.name.trim() : `Food item ${index + 1}`,
-        servingSize:
-          typeof food.servingSize === 'string' && food.servingSize.trim() ? food.servingSize.trim() : 'estimated serving',
-        calories: Math.round(clamp(food.calories, 0, 2500, 250)),
-        protein: Math.round(clamp(food.protein, 0, 250, 15)),
-        carbs: Math.round(clamp(food.carbs, 0, 350, 25)),
-        fat: Math.round(clamp(food.fat, 0, 200, 10)),
-        confidence: normalizeConfidence(food.confidence, 72),
-      }))
-    : [];
-
-  if (foods.length === 0) {
-    return getDemoAnalysis();
-  }
-
-  const totals = foods.reduce(
-    (sum, food) => ({
-      calories: sum.calories + food.calories,
-      protein: sum.protein + food.protein,
-      carbs: sum.carbs + food.carbs,
-      fat: sum.fat + food.fat,
-    }),
-    { calories: 0, protein: 0, carbs: 0, fat: 0 }
+function productName(product: OpenFoodFactsProduct) {
+  return (
+    product.product_name_en?.trim() ||
+    product.product_name?.trim() ||
+    product.generic_name?.trim() ||
+    product.brands?.trim() ||
+    'Open Food Facts product'
   );
+}
+
+function normalizeOpenFoodFactsProduct(product: OpenFoodFactsProduct): MealAnalysis {
+  const nutriments = product.nutriments ?? {};
+  const food: FoodEstimate = {
+    name: productName(product),
+    servingSize: product.serving_size?.trim() || 'per 100g',
+    calories: roundMacro(readCalories(nutriments)),
+    protein: roundMacro(readNutriment(nutriments, 'proteins_serving', 'proteins_100g')),
+    carbs: roundMacro(readNutriment(nutriments, 'carbohydrates_serving', 'carbohydrates_100g')),
+    fat: roundMacro(readNutriment(nutriments, 'fat_serving', 'fat_100g')),
+    confidence: 96,
+  };
 
   return {
-    foods,
-    totals,
-    confidence: normalizeConfidence(input.confidence, 76),
+    foods: [food],
+    totals: {
+      calories: food.calories,
+      protein: food.protein,
+      carbs: food.carbs,
+      fat: food.fat,
+    },
+    confidence: food.confidence,
     accuracyNote:
-      typeof input.accuracyNote === 'string' && input.accuracyNote.trim()
-        ? input.accuracyNote.trim()
-        : 'Image-based nutrition is an estimate. Weigh ingredients for competition-level accuracy.',
-    provider,
+      'Nutrition data loaded from Open Food Facts for barcode 737628064502. Values use serving data when available, otherwise per-100g data.',
+    provider: 'open-food-facts',
   };
 }
 
-function parseAnalysis(content: string, provider: VisionProvider) {
-  return normalizeAnalysis(JSON.parse(cleanJsonResponse(content)), provider);
-}
-
-function uniqueValues(values: string[]) {
-  return [...new Set(values.filter(Boolean))];
-}
-
-function getGeminiModelCandidates() {
-  return uniqueValues([
-    process.env.GEMINI_VISION_MODEL || '',
-    process.env.AI_VISION_MODEL || '',
-    'gemini-2.5-flash-lite',
-    'gemini-2.5-flash',
-    'gemini-2.0-flash',
-    'gemini-2.0-flash-lite',
-  ]);
-}
-
-function isZAIConfigured() {
-  return Boolean(process.env.ZAI_API_KEY || process.env.ZAI_API_URL || process.env.ZAI_VISION_MODEL);
-}
-
-function getFallbackReason(configuredProviders: VisionProvider[], errors: string[]) {
-  const combined = errors.join(' ').toLowerCase();
-
-  if (combined.includes('quota') || combined.includes('billing')) {
-    return 'Gemini key is loaded, but Google says its quota is exhausted or billing/API access is disabled. Enable Gemini API quota or use another key.';
-  }
-
-  if (combined.includes('api key not valid') || combined.includes('invalid api key')) {
-    return 'Gemini rejected the API key. Create a fresh Google AI Studio key and update GEMINI_API_KEY.';
-  }
-
-  if (configuredProviders.length === 0) {
-    return 'No AI vision provider is configured. Add GEMINI_API_KEY, OPENAI_API_KEY, or OPENROUTER_API_KEY.';
-  }
-
-  if (errors.length > 0) {
-    return `AI vision failed: ${errors[0]}`;
-  }
-
-  return 'AI vision is unavailable right now, so PrimeForge used a demo estimate.';
-}
-
-function getDemoAnalysis(seed = 0): MealAnalysis {
-  const demos: Omit<MealAnalysis, 'provider'>[] = [
-    {
-      foods: [
-        { name: 'Grilled chicken breast', servingSize: '150g', calories: 248, protein: 46, carbs: 0, fat: 5, confidence: 72 },
-        { name: 'White rice', servingSize: '180g cooked', calories: 234, protein: 5, carbs: 51, fat: 1, confidence: 66 },
-        { name: 'Mixed vegetables', servingSize: '120g', calories: 55, protein: 3, carbs: 10, fat: 1, confidence: 61 },
-      ],
-      totals: { calories: 537, protein: 54, carbs: 61, fat: 7 },
-      confidence: 66,
-      accuracyNote:
-        'Demo estimate because no AI vision provider is configured. Add OPENAI_API_KEY, GEMINI_API_KEY, or OPENROUTER_API_KEY for real analysis.',
-    },
-    {
-      foods: [
-        { name: 'Egg omelet', servingSize: '3 eggs', calories: 235, protein: 19, carbs: 2, fat: 16, confidence: 69 },
-        { name: 'Whole wheat toast', servingSize: '2 slices', calories: 160, protein: 8, carbs: 28, fat: 2, confidence: 64 },
-        { name: 'Avocado', servingSize: '70g', calories: 112, protein: 1, carbs: 6, fat: 11, confidence: 58 },
-      ],
-      totals: { calories: 507, protein: 28, carbs: 36, fat: 29 },
-      confidence: 64,
-      accuracyNote:
-        'Demo estimate because no AI vision provider is configured. Add OPENAI_API_KEY, GEMINI_API_KEY, or OPENROUTER_API_KEY for real analysis.',
-    },
-    {
-      foods: [
-        { name: 'Greek yogurt bowl', servingSize: '250g', calories: 160, protein: 25, carbs: 9, fat: 1, confidence: 70 },
-        { name: 'Granola', servingSize: '45g', calories: 203, protein: 5, carbs: 33, fat: 7, confidence: 62 },
-        { name: 'Berries', servingSize: '100g', calories: 57, protein: 1, carbs: 14, fat: 0, confidence: 68 },
-      ],
-      totals: { calories: 420, protein: 31, carbs: 56, fat: 8 },
-      confidence: 65,
-      accuracyNote:
-        'Demo estimate because no AI vision provider is configured. Add OPENAI_API_KEY, GEMINI_API_KEY, or OPENROUTER_API_KEY for real analysis.',
-    },
-  ];
-
-  return { ...demos[Math.abs(seed) % demos.length], provider: 'demo-estimate' };
-}
-
-async function analyzeWithOpenAI(dataUrl: string) {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) return null;
-
-  const baseUrl = process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1';
-  const model = process.env.OPENAI_VISION_MODEL || process.env.AI_VISION_MODEL || 'gpt-4o-mini';
-  return analyzeWithOpenAICompatible({
-    url: `${baseUrl.replace(/\/$/, '')}/chat/completions`,
-    apiKey,
-    model,
-    provider: 'openai',
-    dataUrl,
-    extraHeaders: process.env.OPENAI_ORG_ID ? { 'OpenAI-Organization': process.env.OPENAI_ORG_ID } : undefined,
-  });
-}
-
-async function analyzeWithOpenRouter(dataUrl: string) {
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey) return null;
-
-  const model = process.env.OPENROUTER_VISION_MODEL || process.env.AI_VISION_MODEL || 'google/gemini-2.0-flash-001';
-  return analyzeWithOpenAICompatible({
-    url: 'https://openrouter.ai/api/v1/chat/completions',
-    apiKey,
-    model,
-    provider: 'openrouter',
-    dataUrl,
-    extraHeaders: {
-      'HTTP-Referer': process.env.NEXT_PUBLIC_SITE_URL || 'https://primeforge.fit',
-      'X-Title': 'PrimeForge.fit',
-    },
-  });
-}
-
-async function analyzeWithOpenAICompatible({
-  url,
-  apiKey,
-  model,
-  provider,
-  dataUrl,
-  extraHeaders,
-}: {
-  url: string;
-  apiKey: string;
-  model: string;
-  provider: 'openai' | 'openrouter';
-  dataUrl: string;
-  extraHeaders?: Record<string, string>;
-}) {
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-      ...extraHeaders,
-    },
-    body: JSON.stringify({
-      model,
-      messages: [
-        {
-          role: 'user',
-          content: [
-            { type: 'text', text: ANALYSIS_PROMPT },
-            { type: 'image_url', image_url: { url: dataUrl } },
-          ],
-        },
-      ],
-      response_format: { type: 'json_object' },
-      temperature: 0.1,
-      max_tokens: 900,
-    }),
+async function analyzeMealFromOpenFoodFacts() {
+  const response = await fetch(OPEN_FOOD_FACTS_URL, {
+    headers: { Accept: 'application/json' },
+    cache: 'no-store',
   });
 
-  const payload = (await response.json()) as OpenAICompatibleResponse;
-  if (!response.ok) throw new Error(payload.error?.message || `${provider} vision request failed`);
-
-  const content = payload.choices?.[0]?.message?.content;
-  if (!content) throw new Error(`${provider} vision response was empty`);
-  return parseAnalysis(content, provider);
-}
-
-async function analyzeWithGemini(buffer: Buffer, mimeType: string) {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) return null;
-
-  const errors: string[] = [];
-  for (const model of getGeminiModelCandidates()) {
-    try {
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [
-              {
-                role: 'user',
-                parts: [
-                  { text: ANALYSIS_PROMPT },
-                  {
-                    inlineData: {
-                      mimeType,
-                      data: buffer.toString('base64'),
-                    },
-                  },
-                ],
-              },
-            ],
-            generationConfig: {
-              temperature: 0.1,
-              responseMimeType: 'application/json',
-            },
-          }),
-        }
-      );
-
-      const payload = (await response.json()) as GeminiResponse;
-      if (!response.ok) {
-        errors.push(`${model}: ${payload.error?.message || 'Gemini vision request failed'}`);
-        continue;
-      }
-
-      const content = payload.candidates?.[0]?.content?.parts?.map((part) => part.text).join('\n');
-      if (!content) {
-        errors.push(`${model}: Gemini vision response was empty`);
-        continue;
-      }
-
-      return parseAnalysis(content, 'gemini');
-    } catch (error) {
-      errors.push(`${model}: ${error instanceof Error ? error.message : 'Gemini request failed'}`);
-    }
+  if (!response.ok) {
+    throw new Error(`Open Food Facts request failed with status ${response.status}`);
   }
 
-  throw new Error(errors.join(' | ') || 'Gemini vision request failed');
-}
-
-async function analyzeWithZAI(dataUrl: string) {
-  const zai = await getZAI();
-  const response = await zai.chat.completions.createVision({
-    model: process.env.ZAI_VISION_MODEL || process.env.AI_VISION_MODEL || 'glm-4v',
-    messages: [
-      {
-        role: 'user',
-        content: [
-          { type: 'text', text: ANALYSIS_PROMPT },
-          { type: 'image_url', image_url: { url: dataUrl } },
-        ],
-      },
-    ],
-    thinking: { type: 'disabled' },
-  });
-
-  const content = response.choices[0]?.message?.content;
-  if (!content) throw new Error('ZAI vision response was empty');
-  return parseAnalysis(content, 'zai-vision');
-}
-
-function createFallbackResult(seed: number, configuredProviders: VisionProvider[], errors: string[]): MealAnalysisResult {
-  const fallbackReason = getFallbackReason(configuredProviders, errors);
-  const analysis = {
-    ...getDemoAnalysis(seed),
-    accuracyNote: fallbackReason,
-  };
-
-  return {
-    analysis,
-    fallback: true,
-    fallbackReason,
-  };
-}
-
-async function analyzeMealImage(buffer: Buffer, mimeType: string): Promise<MealAnalysisResult> {
-  const dataUrl = `data:${mimeType};base64,${buffer.toString('base64')}`;
-  const attempts: ProviderAttempt[] = [
-    {
-      name: 'openai',
-      configured: Boolean(process.env.OPENAI_API_KEY),
-      analyze: () => analyzeWithOpenAI(dataUrl),
-    },
-    {
-      name: 'gemini',
-      configured: Boolean(process.env.GEMINI_API_KEY),
-      analyze: () => analyzeWithGemini(buffer, mimeType),
-    },
-    {
-      name: 'openrouter',
-      configured: Boolean(process.env.OPENROUTER_API_KEY),
-      analyze: () => analyzeWithOpenRouter(dataUrl),
-    },
-    {
-      name: 'zai-vision',
-      configured: isZAIConfigured(),
-      analyze: () => analyzeWithZAI(dataUrl),
-    },
-  ];
-
-  const configuredProviders = attempts.filter((attempt) => attempt.configured).map((attempt) => attempt.name);
-  const errors: string[] = [];
-  for (const attempt of attempts) {
-    if (!attempt.configured) continue;
-
-    try {
-      const analysis = await attempt.analyze();
-      if (analysis) return { analysis, fallback: false };
-    } catch (error) {
-      errors.push(`${attempt.name}: ${error instanceof Error ? error.message : 'Unknown provider error'}`);
-    }
+  const payload = (await response.json()) as OpenFoodFactsResponse;
+  if (payload.status === 0 || !payload.product) {
+    throw new Error(payload.status_verbose || 'Open Food Facts product was not found.');
   }
 
-  if (errors.length > 0) {
-    console.warn('[Meal Analysis] Using demo estimate:', errors.join(' | '));
-  }
-  return createFallbackResult(buffer.length, configuredProviders, errors);
+  return normalizeOpenFoodFactsProduct(payload.product);
 }
 
-export async function POST(request: Request) {
+export async function GET() {
   try {
-    const formData = await request.formData();
-    const file = formData.get('image');
-
-    if (!(file instanceof File)) {
-      return NextResponse.json({ success: false, error: 'Upload a meal image to analyze.' }, { status: 400 });
-    }
-
-    if (!SUPPORTED_IMAGE_TYPES.has(file.type)) {
-      return NextResponse.json({ success: false, error: 'Use a JPEG, PNG, or WebP image.' }, { status: 400 });
-    }
-
-    if (file.size > MAX_IMAGE_BYTES) {
-      return NextResponse.json({ success: false, error: 'Image is too large. Upload an image under 5MB.' }, { status: 413 });
-    }
-
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const result = await analyzeMealImage(buffer, file.type);
-
-    return NextResponse.json({
-      success: true,
-      fallback: result.fallback,
-      fallbackReason: result.fallbackReason,
-      analysis: result.analysis,
-    });
+    const analysis = await analyzeMealFromOpenFoodFacts();
+    return NextResponse.json({ success: true, fallback: false, analysis });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Could not analyze meal image';
-    if (message.includes('multipart/form-data') || message.includes('application/x-www-form-urlencoded')) {
-      return NextResponse.json({ success: false, error: 'Upload a meal image using the scanner form.' }, { status: 400 });
-    }
-
+    const message = error instanceof Error ? error.message : 'Could not analyze meal.';
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
+}
+
+export async function POST() {
+  return GET();
 }

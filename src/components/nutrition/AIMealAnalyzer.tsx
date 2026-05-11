@@ -48,7 +48,7 @@ type MealAnalysis = {
   };
   confidence: number;
   accuracyNote: string;
-  provider: 'openai' | 'gemini' | 'openrouter' | 'zai-vision' | 'demo-estimate';
+  provider: 'openai' | 'gemini' | 'openrouter' | 'zai-vision' | 'demo-estimate' | 'open-food-facts';
 };
 
 type SavedMeal = MealAnalysis & {
@@ -148,6 +148,7 @@ function providerLabel(provider: MealAnalysis['provider']) {
     openrouter: 'OpenRouter vision',
     'zai-vision': 'ZAI vision',
     'demo-estimate': 'Demo estimate',
+    'open-food-facts': 'Open Food Facts',
   };
 
   return labels[provider];
