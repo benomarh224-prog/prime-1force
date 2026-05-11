@@ -119,7 +119,7 @@ const defaultDays: ScheduleDay[] = dayNames.map((dayName, dayOfWeek) => ({
   dayOfWeek,
   dayName,
   splitTitle: dayOfWeek === 0 ? 'Rest Day' : 'Full Body',
-  exercises: dayOfWeek === 0 ? [] : ['Barbell Back Squat', 'Push-Ups', 'Plank Hold'],
+  exercises: dayOfWeek === 0 ? [] : ['Leg Extension Machine', 'Chest Press Machine', 'Seated Row Machine'],
   notes: dayOfWeek === 0 ? 'Walk, stretch, and recover.' : 'Keep 1-2 reps in reserve.',
   isRestDay: dayOfWeek === 0,
 }));
@@ -131,12 +131,12 @@ const programTemplates = {
   strength: [
     {
       splitTitle: 'Upper Strength',
-      exercises: ['bench-press', 'shoulder-press', 'pull-ups', 'bicep-curl'].map((id) => exerciseName(id, id)),
+      exercises: ['bench-press', 'shoulder-press-machine', 'seated-row-machine', 'bicep-curl'].map((id) => exerciseName(id, id)),
       notes: 'Work in the 3-6 rep range. Rest 2-3 minutes on heavy sets.',
     },
     {
       splitTitle: 'Lower Strength',
-      exercises: ['barbell-squat', 'deadlift', 'bodyweight-squat', 'plank'].map((id) => exerciseName(id, id)),
+      exercises: ['barbell-squat', 'deadlift', 'leg-extension-machine', 'seated-row-machine'].map((id) => exerciseName(id, id)),
       notes: 'Prioritize clean bracing, depth, and controlled warm-up sets.',
     },
     {
@@ -148,51 +148,51 @@ const programTemplates = {
   muscle: [
     {
       splitTitle: 'Push Hypertrophy',
-      exercises: ['bench-press', 'shoulder-press', 'push-ups', 'plank'].map((id) => exerciseName(id, id)),
+      exercises: ['bench-press', 'shoulder-press-machine', 'chest-press-machine', 'seated-row-machine'].map((id) => exerciseName(id, id)),
       notes: 'Use 8-12 reps with controlled tempo and a strong squeeze.',
     },
     {
       splitTitle: 'Pull Hypertrophy',
-      exercises: ['pull-ups', 'deadlift', 'bicep-curl', 'plank'].map((id) => exerciseName(id, id)),
+      exercises: ['pull-ups', 'deadlift', 'bicep-curl', 'seated-row-machine'].map((id) => exerciseName(id, id)),
       notes: 'Control the lowering phase and chase quality volume.',
     },
     {
       splitTitle: 'Leg Hypertrophy',
-      exercises: ['barbell-squat', 'bodyweight-squat', 'deadlift', 'burpees'].map((id) => exerciseName(id, id)),
+      exercises: ['barbell-squat', 'leg-extension-machine', 'deadlift', 'burpees'].map((id) => exerciseName(id, id)),
       notes: 'Keep rest near 60-90 seconds on accessory work.',
     },
   ],
   'fat-loss': [
     {
       splitTitle: 'HIIT Conditioning',
-      exercises: ['hiit-cardio', 'burpees', 'push-ups', 'plank'].map((id) => exerciseName(id, id)),
+      exercises: ['hiit-cardio', 'burpees', 'chest-press-machine', 'seated-row-machine'].map((id) => exerciseName(id, id)),
       notes: 'Alternate hard intervals with enough rest to keep output high.',
     },
     {
       splitTitle: 'Strength Circuit',
-      exercises: ['bodyweight-squat', 'push-ups', 'pull-ups', 'plank'].map((id) => exerciseName(id, id)),
+      exercises: ['leg-extension-machine', 'chest-press-machine', 'pull-ups', 'seated-row-machine'].map((id) => exerciseName(id, id)),
       notes: 'Move through the circuit smoothly. Rest 60 seconds between rounds.',
     },
     {
       splitTitle: 'Recovery Burn',
-      exercises: ['yoga-flow', 'hiit-cardio', 'plank', 'bodyweight-squat'].map((id) => exerciseName(id, id)),
+      exercises: ['shoulder-press-machine', 'hiit-cardio', 'seated-row-machine', 'leg-extension-machine'].map((id) => exerciseName(id, id)),
       notes: 'Keep intensity moderate and finish feeling better than you started.',
     },
   ],
   balanced: [
     {
       splitTitle: 'Full Body A',
-      exercises: ['barbell-squat', 'bench-press', 'pull-ups', 'plank'].map((id) => exerciseName(id, id)),
+      exercises: ['barbell-squat', 'chest-press-machine', 'pull-ups', 'seated-row-machine'].map((id) => exerciseName(id, id)),
       notes: 'Train the main patterns and leave some energy in the tank.',
     },
     {
       splitTitle: 'Full Body B',
-      exercises: ['deadlift', 'shoulder-press', 'bicep-curl', 'yoga-flow'].map((id) => exerciseName(id, id)),
+      exercises: ['deadlift', 'shoulder-press-machine', 'bicep-curl', 'leg-extension-machine'].map((id) => exerciseName(id, id)),
       notes: 'Balance strength work with mobility and steady effort.',
     },
     {
       splitTitle: 'Conditioning + Core',
-      exercises: ['hiit-cardio', 'burpees', 'push-ups', 'plank'].map((id) => exerciseName(id, id)),
+      exercises: ['hiit-cardio', 'burpees', 'chest-press-machine', 'seated-row-machine'].map((id) => exerciseName(id, id)),
       notes: 'Keep transitions short and form sharp.',
     },
   ],

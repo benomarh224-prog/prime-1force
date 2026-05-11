@@ -267,31 +267,30 @@ export const exercises: Exercise[] = [
     ]
   },
   {
-    id: 'yoga-flow',
-    name: 'Vinyasa Yoga Flow',
-    description: 'A flowing sequence of yoga poses that improves flexibility, balance, and mindfulness. Perfect for recovery days or as a warm-up/cool-down routine.',
-    category: 'home',
+    id: 'leg-extension-machine',
+    name: 'Leg Extension Machine',
+    description: 'A focused quad-building machine exercise. Sit tall, lock your thighs under the pad, and extend your knees with control to isolate the front of the legs.',
+    category: 'gym',
     difficulty: 'beginner',
-    muscleGroup: 'Full Body',
-    equipment: 'Yoga Mat',
-    duration: 20,
-    calories: 95,
-    image: '/images/workout-yoga-luxe.jpg',
+    muscleGroup: 'Legs',
+    equipment: 'Leg Extension Machine',
+    duration: 8,
+    calories: 55,
+    image: '/images/workout-squat-luxe.jpg',
     steps: [
-      'Start in Mountain Pose (Tadasana) - stand tall with feet together',
-      'Inhale and sweep arms overhead into Upward Salute',
-      'Exhale and fold forward into Standing Forward Bend',
-      'Inhale to a halfway lift with flat back',
-      'Exhale and step or jump back to Plank position',
-      'Lower to Chaturanga, then push up into Upward Dog',
-      'Push back into Downward Dog and hold for 5 breaths',
-      'Walk feet to hands and slowly roll up to standing'
+      'Adjust the back pad so your knees line up with the machine pivot',
+      'Place the ankle pad just above your ankles',
+      'Hold the side handles and keep your back against the pad',
+      'Extend your knees until your legs are almost straight',
+      'Squeeze your quads briefly at the top',
+      'Lower the pad slowly without letting the stack slam',
+      'Repeat for the desired number of repetitions'
     ],
     tips: [
-      'Move with your breath - each movement is paired with an inhale or exhale',
-      'Don\'t force yourself into poses that feel painful',
-      'Focus on alignment over depth in each posture',
-      'Practice regularly for best results - even 10 minutes daily helps'
+      'Use controlled reps instead of kicking the weight up',
+      'Keep your hips and back pinned to the seat',
+      'Avoid locking your knees aggressively at the top',
+      'Pause for 1 second at peak contraction for better quad engagement'
     ]
   },
   {
@@ -322,29 +321,29 @@ export const exercises: Exercise[] = [
     ]
   },
   {
-    id: 'plank',
-    name: 'Plank Hold',
-    description: 'The ultimate core exercise. A simple isometric hold that builds incredible core stability, shoulder strength, and mental toughness. No equipment needed.',
-    category: 'no-equipment',
+    id: 'shoulder-press-machine',
+    name: 'Shoulder Press Machine',
+    description: 'A stable machine press for building strong shoulders. The guided path helps you train the delts with less setup than free weights.',
+    category: 'gym',
     difficulty: 'beginner',
-    muscleGroup: 'Core',
-    equipment: 'None',
-    duration: 3,
-    calories: 20,
-    image: '/images/workout-pushup-luxe.jpg',
+    muscleGroup: 'Shoulders',
+    equipment: 'Shoulder Press Machine',
+    duration: 8,
+    calories: 60,
+    image: '/images/workout-gym-luxe.jpg',
     steps: [
-      'Start in a forearm plank position with elbows under shoulders',
-      'Extend legs behind you, balancing on toes',
-      'Create a straight line from head to heels',
-      'Engage your core by pulling your belly button toward your spine',
-      'Squeeze your glutes and quads for stability',
-      'Hold the position for the desired time'
+      'Adjust the seat so the handles start around shoulder height',
+      'Sit tall with your back against the pad and feet flat',
+      'Grip the handles with wrists stacked over elbows',
+      'Press upward until your arms are almost straight',
+      'Control the handles back to shoulder level',
+      'Keep tension on the shoulders through every rep'
     ],
     tips: [
-      'Start with 20-30 seconds and gradually increase',
-      'Don\'t let your hips drop or raise too high',
-      'Breathe normally throughout the hold',
-      'For variation, try side planks or shoulder taps'
+      'Do not shrug your shoulders into your ears',
+      'Keep ribs down instead of arching your lower back',
+      'Stop just short of elbow lockout',
+      'Use a weight that lets you control the lowering phase'
     ]
   },
   {
@@ -375,30 +374,57 @@ export const exercises: Exercise[] = [
     ]
   },
   {
-    id: 'bodyweight-squat',
-    name: 'Bodyweight Squat',
-    description: 'The foundation of lower body training. Master this movement pattern before adding weight. Builds leg strength, mobility, and functional fitness.',
-    category: 'home',
+    id: 'chest-press-machine',
+    name: 'Chest Press Machine',
+    description: 'A beginner-friendly machine press for building chest strength. The fixed handles keep the movement stable while targeting the chest, shoulders, and triceps.',
+    category: 'gym',
     difficulty: 'beginner',
-    muscleGroup: 'Legs',
-    equipment: 'None',
+    muscleGroup: 'Chest',
+    equipment: 'Chest Press Machine',
     duration: 8,
-    calories: 50,
-    image: '/images/workout-yoga-luxe.jpg',
+    calories: 65,
+    image: '/images/workout-strength-luxe.jpg',
     steps: [
-      'Stand with feet shoulder-width apart or slightly wider',
-      'Point toes slightly outward (15-30 degrees)',
-      'Extend arms in front of you for counterbalance',
-      'Push your hips back and bend knees to descend',
-      'Lower until thighs are parallel to the ground',
-      'Drive through your heels to return to standing',
-      'Squeeze glutes at the top'
+      'Adjust the seat so the handles are level with your mid-chest',
+      'Sit with your back flat against the pad and feet planted',
+      'Grip the handles and set your shoulder blades back',
+      'Press the handles forward until your arms are almost straight',
+      'Squeeze your chest at the end of the press',
+      'Return the handles slowly until you feel a chest stretch',
+      'Repeat without letting the weight stack slam'
     ],
     tips: [
-      'Keep your weight in your heels, not your toes',
-      'Knees should track in the same direction as your toes',
-      'Keep your chest up and back straight',
-      'Use a chair behind you for depth reference and safety'
+      'Keep your elbows slightly below shoulder height',
+      'Avoid rounding your shoulders forward',
+      'Do not lock your elbows hard at the top',
+      'Use full control on the way back'
+    ]
+  },
+  {
+    id: 'seated-row-machine',
+    name: 'Seated Row Machine',
+    description: 'A back machine exercise that builds the lats, rhomboids, and mid-back. Pull with your elbows and squeeze your shoulder blades instead of yanking with your arms.',
+    category: 'gym',
+    difficulty: 'beginner',
+    muscleGroup: 'Back',
+    equipment: 'Seated Row Machine',
+    duration: 8,
+    calories: 70,
+    image: '/images/workout-gym-luxe.jpg',
+    steps: [
+      'Adjust the seat and chest pad so your arms reach the handles comfortably',
+      'Sit tall with your chest supported and feet planted',
+      'Start with arms extended and shoulders relaxed',
+      'Pull the handles toward your ribs by driving elbows back',
+      'Squeeze your shoulder blades together briefly',
+      'Return the handles forward with control',
+      'Repeat without rocking your torso'
+    ],
+    tips: [
+      'Lead with your elbows rather than your hands',
+      'Keep your neck relaxed and chest tall',
+      'Avoid leaning back to move heavier weight',
+      'Let the shoulder blades stretch forward slightly before each pull'
     ]
   },
   {
@@ -697,7 +723,7 @@ export const features: Feature[] = [
 export const weeklySchedule = [
   { day: 'Mon', workout: 'Push Day', done: true, duration: 55, calories: 420 },
   { day: 'Tue', workout: 'Pull Day', done: true, duration: 50, calories: 380 },
-  { day: 'Wed', workout: 'Rest / Yoga', done: true, duration: 20, calories: 95 },
+  { day: 'Wed', workout: 'Rest / Mobility', done: true, duration: 20, calories: 95 },
   { day: 'Thu', workout: 'Leg Day', done: false, duration: 60, calories: 500 },
   { day: 'Fri', workout: 'Upper Body', done: false, duration: 55, calories: 430 },
   { day: 'Sat', workout: 'HIIT + Core', done: false, duration: 30, calories: 350 },
@@ -775,6 +801,29 @@ export const machineGuides: MachineGuide[] = [
     proTip: 'Vary your foot placement: higher = more glutes/hamstrings, lower = more quads, wider = more inner thigh.'
   },
   {
+    id: 'leg-extension-machine',
+    name: 'Leg Extension Machine',
+    category: 'Strength',
+    muscleGroup: 'Quads',
+    difficulty: 'beginner',
+    image: '/images/workout-squat-luxe.jpg',
+    setup: 'Sit with your back against the pad. Adjust the seat so your knees line up with the machine pivot and the ankle pad rests just above your ankles.',
+    steps: [
+      'Hold the side handles and keep your hips down',
+      'Extend your knees until your legs are almost straight',
+      'Pause briefly and squeeze your quads at the top',
+      'Lower the pad slowly until your knees are bent again',
+      'Keep the weight stack from slamming between reps'
+    ],
+    commonMistakes: [
+      'Kicking the weight up with momentum',
+      'Letting hips lift off the seat',
+      'Setting the ankle pad too high on the shins',
+      'Locking knees aggressively at the top'
+    ],
+    proTip: 'Use a 2-second lowering phase and a short squeeze at the top to make lighter weight feel much more effective.'
+  },
+  {
     id: 'cable-machine',
     name: 'Cable Crossover Machine',
     category: 'Strength',
@@ -847,6 +896,52 @@ export const machineGuides: MachineGuide[] = [
     proTip: 'Pause for 1-2 seconds at the bottom of each rep (when handles are closest to chest). This eliminates momentum and builds more strength.'
   },
   {
+    id: 'shoulder-press-machine',
+    name: 'Shoulder Press Machine',
+    category: 'Strength',
+    muscleGroup: 'Shoulders, Triceps',
+    difficulty: 'beginner',
+    image: '/images/workout-gym-luxe.jpg',
+    setup: 'Adjust the seat so the handles start near shoulder height. Sit tall with your back against the pad and your feet flat on the floor.',
+    steps: [
+      'Grip the handles with elbows slightly in front of your body',
+      'Brace your core and keep your ribs down',
+      'Press upward until your arms are almost straight',
+      'Lower the handles back to shoulder height with control',
+      'Keep tension on the shoulders throughout the set'
+    ],
+    commonMistakes: [
+      'Arching the lower back to move more weight',
+      'Shrugging shoulders toward the ears',
+      'Setting the seat too low',
+      'Bouncing out of the bottom position'
+    ],
+    proTip: 'Stop just short of lockout and keep your shoulder blades gently pinned to the pad for smoother reps.'
+  },
+  {
+    id: 'seated-row-machine',
+    name: 'Seated Row Machine',
+    category: 'Strength',
+    muscleGroup: 'Lats, Mid Back, Biceps',
+    difficulty: 'beginner',
+    image: '/images/workout-gym-luxe.jpg',
+    setup: 'Adjust the seat and chest pad so your chest is supported and your arms can fully extend without rounding your lower back.',
+    steps: [
+      'Grip the handles and sit tall against the pad',
+      'Start with arms long and shoulders relaxed',
+      'Pull the handles toward your ribs by driving elbows back',
+      'Squeeze shoulder blades together at the back of the pull',
+      'Return the handles forward slowly without losing posture'
+    ],
+    commonMistakes: [
+      'Leaning back to turn the row into a body swing',
+      'Pulling mostly with the biceps',
+      'Shrugging the shoulders up',
+      'Letting the weight stack slam forward'
+    ],
+    proTip: 'Think elbows to back pockets. That cue usually helps the lats and mid-back take over from the arms.'
+  },
+  {
     id: 'smith-machine',
     name: 'Smith Machine',
     category: 'Strength',
@@ -884,9 +979,9 @@ export const workoutPrograms: WorkoutProgram[] = [
     image: '/images/workout-gym-luxe.jpg',
     highlights: ['3 days per week', '45 min sessions', 'Full body each session', 'Progressive overload', 'Rest day between workouts'],
     schedule: [
-      { day: 'Monday', focus: 'Full Body A', exercises: ['Goblet Squat 3×10', 'Push-Ups 3×8-12', 'Dumbbell Row 3×10', 'Plank 3×30s', 'Lat Pulldown 3×10'] },
-      { day: 'Wednesday', focus: 'Full Body B', exercises: ['Leg Press 3×12', 'Dumbbell Shoulder Press 3×10', 'Dumbbell Bench Press 3×10', 'Cable Crunch 3×15', 'Face Pulls 3×15'] },
-      { day: 'Friday', focus: 'Full Body C', exercises: ['Bodyweight Squat 3×15', 'Incline Dumbbell Press 3×10', 'Seated Cable Row 3×12', 'Romanian Deadlift 3×10', 'Bicep Curl 2×12'] },
+      { day: 'Monday', focus: 'Full Body A', exercises: ['Leg Extension Machine 3×12', 'Push-Ups 3×8-12', 'Seated Row Machine 3×10', 'Chest Press Machine 3×10', 'Lat Pulldown 3×10'] },
+      { day: 'Wednesday', focus: 'Full Body B', exercises: ['Leg Press 3×12', 'Shoulder Press Machine 3×10', 'Chest Press Machine 3×10', 'Cable Crunch 3×15', 'Face Pulls 3×15'] },
+      { day: 'Friday', focus: 'Full Body C', exercises: ['Leg Extension Machine 3×15', 'Chest Press Machine 3×10', 'Seated Row Machine 3×12', 'Romanian Deadlift 3×10', 'Bicep Curl 2×12'] },
     ]
   },
   {
@@ -905,7 +1000,7 @@ export const workoutPrograms: WorkoutProgram[] = [
       { day: 'Wednesday', focus: 'Legs', exercises: ['Barbell Squat 4×8', 'Leg Press 3×12', 'Romanian Deadlift 3×10', 'Leg Curl 3×12', 'Calf Raises 4×15'] },
       { day: 'Thursday', focus: 'Push', exercises: ['OHP 4×8', 'DB Bench Press 3×10', 'Cable Flyes 3×15', 'Tricep Dips 3×12', 'Shrugs 3×15'] },
       { day: 'Friday', focus: 'Pull', exercises: ['Barbell Row 4×8', 'Lat Pulldown 3×10', 'Seated Cable Row 3×12', 'Hammer Curls 3×12', 'Hanging Leg Raise 3×15'] },
-      { day: 'Saturday', focus: 'Legs', exercises: ['Front Squat 4×8', 'Bulgarian Split Squat 3×10', 'Leg Extension 3×15', 'Hip Thrust 3×12', 'Plank 3×45s'] },
+      { day: 'Saturday', focus: 'Legs', exercises: ['Front Squat 4×8', 'Bulgarian Split Squat 3×10', 'Leg Extension Machine 3×15', 'Hip Thrust 3×12', 'Seated Row Machine 3×12'] },
     ]
   },
   {
@@ -956,7 +1051,7 @@ export const workoutPrograms: WorkoutProgram[] = [
       { day: 'Monday', focus: 'Upper Body A', exercises: ['Bench Press 4×8', 'Barbell Row 4×8', 'OHP 3×10', 'Lat Pulldown 3×10', 'Face Pulls 3×15'] },
       { day: 'Tuesday', focus: 'Lower Body A', exercises: ['Back Squat 4×8', 'Romanian Deadlift 3×10', 'Leg Press 3×12', 'Leg Curl 3×12', 'Calf Raises 4×15'] },
       { day: 'Thursday', focus: 'Upper Body B', exercises: ['Incline DB Press 4×10', 'Pull-Ups 4×8', 'Cable Flyes 3×12', 'Seated Cable Row 3×12', 'DB Curl 3×12'] },
-      { day: 'Friday', focus: 'Lower Body B', exercises: ['Front Squat 3×10', 'Hip Thrust 4×10', 'Bulgarian Split Squat 3×10', 'Leg Extension 3×15', 'Plank 3×45s'] },
+      { day: 'Friday', focus: 'Lower Body B', exercises: ['Front Squat 3×10', 'Hip Thrust 4×10', 'Bulgarian Split Squat 3×10', 'Leg Extension Machine 3×15', 'Seated Row Machine 3×12'] },
     ]
   },
   {
@@ -974,7 +1069,7 @@ export const workoutPrograms: WorkoutProgram[] = [
       { day: 'Tuesday', focus: 'Back & Biceps', exercises: ['Deadlift 4×8', 'Pull-Ups 4×10', 'Barbell Row 4×10', 'Cable Curl 3×12', 'Hammer Curl 3×12'] },
       { day: 'Wednesday', focus: 'Shoulders & Abs', exercises: ['OHP 4×10', 'Lateral Raises 4×15', 'Face Pulls 3×15', 'Hanging Leg Raise 4×15', 'Cable Crunch 3×20'] },
       { day: 'Thursday', focus: 'Legs', exercises: ['Squat 4×10', 'Leg Press 4×12', 'Leg Curl 4×12', 'Leg Extension 3×15', 'Calf Raises 5×15'] },
-      { day: 'Friday', focus: 'Full Body Pump', exercises: ['DB Bench 3×12', 'Cable Row 3×12', 'Lunges 3×12/leg', 'Lateral Raise 3×15', 'Plank 3×60s'] },
+      { day: 'Friday', focus: 'Full Body Pump', exercises: ['Chest Press Machine 3×12', 'Seated Row Machine 3×12', 'Lunges 3×12/leg', 'Shoulder Press Machine 3×12', 'Leg Extension Machine 3×15'] },
     ]
   }
 ];
