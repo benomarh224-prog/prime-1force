@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -1044,13 +1045,29 @@ export function WorkoutsPage() {
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ duration: 0.3, delay: i * 0.05 }}
               >
-                <Card className="group overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer border-border/50">
+                <Card className="group overflow-hidden border-border/50 transition-all duration-300 hover:-translate-y-1 hover:border-primary/25 hover:shadow-xl hover:shadow-black/25">
                   <div
-                    className="relative aspect-video bg-cover bg-center"
-                    style={{ backgroundImage: `url('${exercise.image}')` }}
+                    role="button"
+                    tabIndex={0}
+                    className="relative block aspect-[4/3] w-full overflow-hidden bg-[radial-gradient(circle_at_50%_20%,oklch(0.23_0.014_95),oklch(0.11_0.01_95)_62%)] p-3 text-left sm:aspect-[16/13]"
                     onClick={() => setExerciseId(exercise.id)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        setExerciseId(exercise.id);
+                      }
+                    }}
                   >
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                    <div className="absolute inset-x-3 top-3 bottom-14 overflow-hidden rounded-lg border border-white/10 bg-white shadow-inner shadow-black/10 dark:bg-white">
+                      <Image
+                        src={exercise.image}
+                        alt={exercise.name}
+                        fill
+                        sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                        className="object-contain p-3 transition-transform duration-500 group-hover:scale-[1.03]"
+                      />
+                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-transparent" />
                     <div className="absolute top-3 left-3 flex gap-2">
                       <Badge className={cn("text-xs border", difficultyColor[exercise.difficulty])}>
                         {exercise.difficulty}
@@ -1176,11 +1193,17 @@ export function WorkoutsPage() {
 
           {guideExercise && (
             <div className="space-y-5">
-              <div
-                className="relative aspect-video overflow-hidden rounded-xl bg-cover bg-center"
-                style={{ backgroundImage: `url('${guideExercise.image}')` }}
-              >
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+              <div className="relative aspect-video overflow-hidden rounded-xl border border-white/10 bg-[radial-gradient(circle_at_50%_20%,oklch(0.23_0.014_95),oklch(0.11_0.01_95)_62%)] p-4">
+                <div className="absolute inset-4 overflow-hidden rounded-lg bg-white shadow-inner dark:bg-white">
+                  <Image
+                    src={guideExercise.image}
+                    alt={guideExercise.name}
+                    fill
+                    sizes="(min-width: 768px) 640px, 100vw"
+                    className="object-contain p-3"
+                  />
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/90 text-primary-foreground shadow-lg">
                     <PlayCircle className="h-8 w-8" />

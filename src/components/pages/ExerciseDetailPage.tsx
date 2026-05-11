@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -208,16 +209,22 @@ export function ExerciseDetailPage() {
 
         {/* Hero Image */}
         <motion.div
-          className="relative rounded-2xl overflow-hidden mb-8"
+          className="relative mb-8 overflow-hidden rounded-2xl border border-white/10 bg-[radial-gradient(circle_at_50%_20%,oklch(0.23_0.014_95),oklch(0.11_0.01_95)_62%)] p-4 shadow-2xl shadow-black/25"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <div
-            className="aspect-video bg-cover bg-center"
-            style={{ backgroundImage: `url('${exercise.image}')` }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+          <div className="relative aspect-video overflow-hidden rounded-xl bg-white shadow-inner dark:bg-white">
+            <Image
+              src={exercise.image}
+              alt={exercise.name}
+              fill
+              priority
+              sizes="(min-width: 1024px) 896px, 100vw"
+              className="object-contain p-4"
+            />
+          </div>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
 
           {/* Play button overlay */}
           <div className="absolute inset-0 flex items-center justify-center">
