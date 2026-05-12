@@ -172,6 +172,7 @@ export const exercises: Exercise[] = [
     duration: 10,
     calories: 85,
     image: '/images/workout-bench-press.jpeg',
+    gif: 'https://static.exercisedb.dev/media/EIeI8Vf.gif',
     steps: [
       'Lie flat on a bench with your feet firmly on the ground',
       'Grip the barbell slightly wider than shoulder-width apart',
@@ -199,6 +200,7 @@ export const exercises: Exercise[] = [
     duration: 8,
     calories: 45,
     image: '/images/workout-machine-bicep-curl.jpeg',
+    gif: 'https://static.exercisedb.dev/media/b6hQYMb.gif',
     steps: [
       'Adjust the seat so your elbows line up with the machine pivot',
       'Place your upper arms firmly against the pad',
@@ -226,6 +228,7 @@ export const exercises: Exercise[] = [
     duration: 12,
     calories: 120,
     image: '/images/workout-barbell-squat.webp',
+    gif: 'https://static.exercisedb.dev/media/qXTaZnJ.gif',
     steps: [
       'Position the bar on your upper traps, gripping it just outside your shoulders',
       'Unrack the bar and step back with feet shoulder-width apart',
@@ -253,6 +256,7 @@ export const exercises: Exercise[] = [
     duration: 5,
     calories: 35,
     image: '/images/workout-pushup-luxe.jpg',
+    gif: 'https://static.exercisedb.dev/media/I4hDWkc.gif',
     steps: [
       'Start in a high plank position with hands shoulder-width apart',
       'Keep your body in a straight line from head to heels',
@@ -279,6 +283,7 @@ export const exercises: Exercise[] = [
     duration: 8,
     calories: 55,
     image: '/images/workout-leg-extension-machine.webp',
+    gif: 'https://static.exercisedb.dev/media/my33uHU.gif',
     steps: [
       'Adjust the back pad so your knees line up with the machine pivot',
       'Place the ankle pad just above your ankles',
@@ -306,6 +311,7 @@ export const exercises: Exercise[] = [
     duration: 10,
     calories: 110,
     image: '/images/workout-strength-luxe.jpg',
+    gif: 'https://static.exercisedb.dev/media/ila4NZS.gif',
     steps: [
       'Stand with feet hip-width apart, barbell over mid-foot',
       'Hinge at hips and grip the bar just outside your knees',
@@ -333,6 +339,7 @@ export const exercises: Exercise[] = [
     duration: 8,
     calories: 60,
     image: '/images/workout-shoulder-press-machine.jpeg',
+    gif: 'https://static.exercisedb.dev/media/67n3r98.gif',
     steps: [
       'Adjust the seat so the handles start around shoulder height',
       'Sit tall with your back against the pad and feet flat',
@@ -359,6 +366,7 @@ export const exercises: Exercise[] = [
     duration: 8,
     calories: 70,
     image: '/images/workout-lat-pulldown.jpeg',
+    gif: 'https://static.exercisedb.dev/media/LEprlgG.gif',
     steps: [
       'Adjust the thigh pad so your legs stay locked in place',
       'Grip the bar wider than shoulder-width with palms facing away',
@@ -386,6 +394,7 @@ export const exercises: Exercise[] = [
     duration: 8,
     calories: 65,
     image: '/images/workout-chest-press-machine.jpeg',
+    gif: 'https://static.exercisedb.dev/media/DOoWcnA.gif',
     steps: [
       'Adjust the seat so the handles are level with your mid-chest',
       'Sit with your back flat against the pad and feet planted',
@@ -413,6 +422,7 @@ export const exercises: Exercise[] = [
     duration: 8,
     calories: 45,
     image: '/images/workout-cable-triceps-pushdown.jpeg',
+    gif: 'https://static.exercisedb.dev/media/gAwDzB3.gif',
     steps: [
       'Set the pulley high and attach a straight bar or rope handle',
       'Stand close to the cable stack with feet planted',
@@ -440,6 +450,7 @@ export const exercises: Exercise[] = [
     duration: 8,
     calories: 70,
     image: '/images/workout-seated-row-machine.jpeg',
+    gif: 'https://static.exercisedb.dev/media/7I6LNUG.gif',
     steps: [
       'Adjust the seat and chest pad so your arms reach the handles comfortably',
       'Sit tall with your chest supported and feet planted',
@@ -467,6 +478,7 @@ export const exercises: Exercise[] = [
     duration: 8,
     calories: 75,
     image: '/images/workout-pull-ups.jpeg',
+    gif: 'https://static.exercisedb.dev/media/lBDjFxJ.gif',
     steps: [
       'Grip the pull-up bar slightly wider than shoulder-width',
       'Hang with arms fully extended (dead hang position)',
@@ -520,6 +532,7 @@ export const exercises: Exercise[] = [
     duration: 8,
     calories: 50,
     image: '/images/workout-lateral-raise-machine.jpg',
+    gif: 'https://static.exercisedb.dev/media/dRTfGZT.gif',
     steps: [
       'Adjust the seat so your shoulders line up with the machine pivot',
       'Place your upper arms or elbows against the pads',

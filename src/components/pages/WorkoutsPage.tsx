@@ -137,10 +137,13 @@ function defaultWeightForExercise(exercise?: Exercise) {
   return 20;
 }
 
-function getExerciseMedia(exercise: Exercise) {
+function getExerciseMedia(exercise: Exercise, playing = false) {
+  const animated = playing && Boolean(exercise.gif);
+
   return {
-    src: exercise.gif ?? exercise.image,
-    animated: Boolean(exercise.gif),
+    src: animated && exercise.gif ? exercise.gif : exercise.image,
+    animated,
+    playable: Boolean(exercise.gif),
   };
 }
 
@@ -182,6 +185,8 @@ export function WorkoutsPage() {
   const [activeProgramName, setActiveProgramName] = useState('');
   const [todayPlan, setTodayPlan] = useState<TodaySchedule | null>(null);
   const [guideExercise, setGuideExercise] = useState<Exercise | null>(null);
+  const [guideMediaPlaying, setGuideMediaPlaying] = useState(false);
+  const [playingMediaIds, setPlayingMediaIds] = useState<Record<string, boolean>>({});
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
   const todayDateKey = getDateKey();
   const [quickLog, setQuickLog] = useState({
@@ -270,6 +275,10 @@ export function WorkoutsPage() {
 
     return () => window.clearTimeout(timeout);
   }, [restRunning, restSeconds, sessionOpen]);
+
+  useEffect(() => {
+    setGuideMediaPlaying(false);
+  }, [guideExercise?.id]);
 
   const filtered = exercises.filter((ex) => {
     const matchSearch = ex.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -1053,7 +1062,7 @@ export function WorkoutsPage() {
                 transition={{ duration: 0.3, delay: i * 0.05 }}
               >
                 {(() => {
-                  const media = getExerciseMedia(exercise);
+                  const media = getExerciseMedia(exercise, Boolean(playingMediaIds[exercise.id]));
 
                   return (
                 <Card className="group overflow-hidden border-border/50 transition-all duration-300 hover:-translate-y-1 hover:border-primary/25 hover:shadow-xl hover:shadow-black/25">
@@ -1070,16 +1079,45 @@ export function WorkoutsPage() {
                     }}
                   >
                     <div className="absolute inset-x-3 top-3 bottom-14 overflow-hidden rounded-lg border border-white/10 bg-white shadow-inner shadow-black/10 dark:bg-white">
-                      <Image
-                        src={media.src}
-                        alt={exercise.name}
-                        fill
-                        unoptimized={media.animated}
-                        sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-                        className="object-contain p-3 transition-transform duration-500 group-hover:scale-[1.03]"
-                      />
+                      <AnimatePresence mode="wait">
+                        <motion.div
+                          key={media.src}
+                          className="absolute inset-0"
+                          initial={{ opacity: 0, scale: 0.985 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 1.015 }}
+                          transition={{ duration: 0.24, ease: 'easeOut' }}
+                        >
+                          <Image
+                            src={media.src}
+                            alt={exercise.name}
+                            fill
+                            unoptimized={media.animated}
+                            sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                            className="object-contain p-3 transition-transform duration-500 group-hover:scale-[1.03]"
+                          />
+                        </motion.div>
+                      </AnimatePresence>
                     </div>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-transparent" />
+                    {media.playable && (
+                      <motion.button
+                        type="button"
+                        whileHover={{ scale: 1.06 }}
+                        whileTap={{ scale: 0.96 }}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setPlayingMediaIds((current) => ({
+                            ...current,
+                            [exercise.id]: !current[exercise.id],
+                          }));
+                        }}
+                        aria-label={media.animated ? `Pause ${exercise.name} animation` : `Play ${exercise.name} animation`}
+                        className="absolute left-1/2 top-[42%] z-10 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/55 text-white shadow-2xl shadow-black/40 backdrop-blur-md transition-colors hover:bg-primary/95"
+                      >
+                        {media.animated ? <CirclePause className="h-6 w-6" /> : <PlayCircle className="h-7 w-7" />}
+                      </motion.button>
+                    )}
                     <div className="absolute top-3 left-3 flex gap-2">
                       <Badge className={cn("text-xs border", difficultyColor[exercise.difficulty])}>
                         {exercise.difficulty}
@@ -1206,27 +1244,69 @@ export function WorkoutsPage() {
           </DialogHeader>
 
           {guideExercise && (() => {
-            const media = getExerciseMedia(guideExercise);
+            const media = getExerciseMedia(guideExercise, guideMediaPlaying);
 
             return (
             <div className="space-y-5">
               <div className="relative aspect-video overflow-hidden rounded-xl border border-white/10 bg-[radial-gradient(circle_at_50%_20%,oklch(0.23_0.014_95),oklch(0.11_0.01_95)_62%)] p-4">
                 <div className="absolute inset-4 overflow-hidden rounded-lg bg-white shadow-inner dark:bg-white">
-                  <Image
-                    src={media.src}
-                    alt={guideExercise.name}
-                    fill
-                    unoptimized={media.animated}
-                    sizes="(min-width: 768px) 640px, 100vw"
-                    className="object-contain p-3"
-                  />
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={media.src}
+                      className="absolute inset-0"
+                      initial={{ opacity: 0, scale: 0.985 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 1.015 }}
+                      transition={{ duration: 0.28, ease: 'easeOut' }}
+                    >
+                      {media.animated ? (
+                        <div className="absolute inset-0 flex items-center justify-center p-4">
+                          <div className="relative h-[74%] w-[min(84%,30rem)] overflow-hidden rounded-2xl border border-black/10 bg-white shadow-2xl shadow-black/20">
+                            <Image
+                              src={media.src}
+                              alt={guideExercise.name}
+                              fill
+                              unoptimized
+                              sizes="(min-width: 768px) 480px, 84vw"
+                              className="object-contain p-3"
+                            />
+                          </div>
+                        </div>
+                      ) : (
+                        <Image
+                          src={media.src}
+                          alt={guideExercise.name}
+                          fill
+                          sizes="(min-width: 768px) 640px, 100vw"
+                          className="object-contain p-3"
+                        />
+                      )}
+                    </motion.div>
+                  </AnimatePresence>
                 </div>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
+                {media.playable && (
+                  <motion.button
+                    type="button"
+                    whileHover={{ scale: 1.06 }}
+                    whileTap={{ scale: 0.96 }}
+                    onClick={() => setGuideMediaPlaying((value) => !value)}
+                    aria-label={media.animated ? `Pause ${guideExercise.name} animation` : `Play ${guideExercise.name} animation`}
+                    className="absolute left-1/2 top-1/2 z-10 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/55 text-white shadow-2xl shadow-black/40 backdrop-blur-md transition-colors hover:bg-primary/95"
+                  >
+                    {media.animated ? <CirclePause className="h-7 w-7" /> : <PlayCircle className="h-8 w-8" />}
+                  </motion.button>
+                )}
                 <div className="absolute bottom-4 left-4 right-4">
                   <p className="font-black uppercase text-white drop-shadow">{guideExercise.name}</p>
                   <p className="text-sm text-white/75 drop-shadow">{guideExercise.muscleGroup} - {guideExercise.equipment}</p>
                 </div>
               </div>
+              {media.playable && (
+                <p className="-mt-2 text-xs text-muted-foreground">
+                  Exercise animation by ExerciseDB / AscendAPI.
+                </p>
+              )}
 
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="rounded-lg border bg-muted/25 p-4">

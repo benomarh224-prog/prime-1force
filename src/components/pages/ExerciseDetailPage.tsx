@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -21,7 +21,7 @@ import { useToast } from '@/hooks/use-toast';
 import {
   ArrowLeft, Clock, Flame, Heart, ChevronRight,
   Dumbbell, Target, Lightbulb, Trophy,
-  BarChart3, Calendar, ListChecks, Plus, Save, Trash2,
+  BarChart3, Calendar, CirclePause, ListChecks, PlayCircle, Plus, Save, Trash2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useEffect, useState } from 'react';
@@ -44,6 +44,7 @@ export function ExerciseDetailPage() {
   const [activeTab, setActiveTab] = useState<'instructions' | 'tips' | 'history'>('instructions');
   const [logDialogOpen, setLogDialogOpen] = useState(false);
   const [savingLog, setSavingLog] = useState(false);
+  const [mediaPlaying, setMediaPlaying] = useState(false);
   const [quickLog, setQuickLog] = useState({
     date: new Date().toISOString().split('T')[0],
     duration: 0,
@@ -52,6 +53,10 @@ export function ExerciseDetailPage() {
   });
 
   const exercise = exercises.find((e) => e.id === selectedExerciseId);
+
+  useEffect(() => {
+    setMediaPlaying(false);
+  }, [selectedExerciseId]);
 
   useEffect(() => {
     let mounted = true;
@@ -85,8 +90,9 @@ export function ExerciseDetailPage() {
   }
 
   const isFavorite = favorites.includes(exercise.id);
-  const mediaSrc = exercise.gif ?? exercise.image;
-  const isAnimatedMedia = Boolean(exercise.gif);
+  const hasAnimatedMedia = Boolean(exercise.gif);
+  const isAnimatedMedia = mediaPlaying && hasAnimatedMedia;
+  const mediaSrc = isAnimatedMedia && exercise.gif ? exercise.gif : exercise.image;
   const exerciseHistory = workoutLogs
     .flatMap((log) =>
       log.exercises
@@ -217,17 +223,55 @@ export function ExerciseDetailPage() {
           transition={{ duration: 0.5 }}
         >
           <div className="relative aspect-video overflow-hidden rounded-xl bg-white shadow-inner dark:bg-white">
-            <Image
-              src={mediaSrc}
-              alt={exercise.name}
-              fill
-              priority
-              unoptimized={isAnimatedMedia}
-              sizes="(min-width: 1024px) 896px, 100vw"
-              className="object-contain p-4"
-            />
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={mediaSrc}
+                className="absolute inset-0"
+                initial={{ opacity: 0, scale: 0.985 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 1.015 }}
+                transition={{ duration: 0.28, ease: 'easeOut' }}
+              >
+                {isAnimatedMedia ? (
+                  <div className="absolute inset-0 flex items-center justify-center p-4 sm:p-6">
+                    <div className="relative h-[74%] w-[min(84%,34rem)] overflow-hidden rounded-2xl border border-black/10 bg-white shadow-2xl shadow-black/20">
+                      <Image
+                        src={mediaSrc}
+                        alt={exercise.name}
+                        fill
+                        priority
+                        unoptimized
+                        sizes="(min-width: 1024px) 544px, 84vw"
+                        className="object-contain p-3 sm:p-4"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <Image
+                    src={mediaSrc}
+                    alt={exercise.name}
+                    fill
+                    priority
+                    sizes="(min-width: 1024px) 896px, 100vw"
+                    className="object-contain p-4"
+                  />
+                )}
+              </motion.div>
+            </AnimatePresence>
           </div>
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
+          {hasAnimatedMedia && (
+            <motion.button
+              type="button"
+              whileHover={{ scale: 1.06 }}
+              whileTap={{ scale: 0.96 }}
+              onClick={() => setMediaPlaying((value) => !value)}
+              aria-label={isAnimatedMedia ? `Pause ${exercise.name} animation` : `Play ${exercise.name} animation`}
+              className="absolute left-1/2 top-1/2 z-10 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/55 text-white shadow-2xl shadow-black/40 backdrop-blur-md transition-colors hover:bg-primary/95"
+            >
+              {isAnimatedMedia ? <CirclePause className="h-7 w-7" /> : <PlayCircle className="h-8 w-8" />}
+            </motion.button>
+          )}
 
           {/* Info overlay */}
           <div className="absolute bottom-0 left-0 right-0 p-6">
@@ -261,6 +305,11 @@ export function ExerciseDetailPage() {
             </div>
           </div>
         </motion.div>
+        {hasAnimatedMedia && (
+          <p className="-mt-5 mb-8 text-xs text-muted-foreground">
+            Exercise animation by ExerciseDB / AscendAPI.
+          </p>
+        )}
 
         {/* Stats Row */}
         <motion.div

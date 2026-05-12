@@ -3,6 +3,15 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   output: "standalone",
   reactStrictMode: true,
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "static.exercisedb.dev",
+        pathname: "/media/**",
+      },
+    ],
+  },
   turbopack: {
     root: process.cwd(),
   },
