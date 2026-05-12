@@ -85,6 +85,8 @@ export function ExerciseDetailPage() {
   }
 
   const isFavorite = favorites.includes(exercise.id);
+  const mediaSrc = exercise.gif ?? exercise.image;
+  const isAnimatedMedia = Boolean(exercise.gif);
   const exerciseHistory = workoutLogs
     .flatMap((log) =>
       log.exercises
@@ -216,10 +218,11 @@ export function ExerciseDetailPage() {
         >
           <div className="relative aspect-video overflow-hidden rounded-xl bg-white shadow-inner dark:bg-white">
             <Image
-              src={exercise.image}
+              src={mediaSrc}
               alt={exercise.name}
               fill
               priority
+              unoptimized={isAnimatedMedia}
               sizes="(min-width: 1024px) 896px, 100vw"
               className="object-contain p-4"
             />

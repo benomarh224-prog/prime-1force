@@ -137,6 +137,13 @@ function defaultWeightForExercise(exercise?: Exercise) {
   return 20;
 }
 
+function getExerciseMedia(exercise: Exercise) {
+  return {
+    src: exercise.gif ?? exercise.image,
+    animated: Boolean(exercise.gif),
+  };
+}
+
 export function WorkoutsPage() {
   const {
     setExerciseId,
@@ -1045,6 +1052,10 @@ export function WorkoutsPage() {
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ duration: 0.3, delay: i * 0.05 }}
               >
+                {(() => {
+                  const media = getExerciseMedia(exercise);
+
+                  return (
                 <Card className="group overflow-hidden border-border/50 transition-all duration-300 hover:-translate-y-1 hover:border-primary/25 hover:shadow-xl hover:shadow-black/25">
                   <div
                     role="button"
@@ -1060,9 +1071,10 @@ export function WorkoutsPage() {
                   >
                     <div className="absolute inset-x-3 top-3 bottom-14 overflow-hidden rounded-lg border border-white/10 bg-white shadow-inner shadow-black/10 dark:bg-white">
                       <Image
-                        src={exercise.image}
+                        src={media.src}
                         alt={exercise.name}
                         fill
+                        unoptimized={media.animated}
                         sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
                         className="object-contain p-3 transition-transform duration-500 group-hover:scale-[1.03]"
                       />
@@ -1163,6 +1175,8 @@ export function WorkoutsPage() {
                     </Button>
                   </CardContent>
                 </Card>
+                  );
+                })()}
               </motion.div>
             ))}
           </AnimatePresence>
@@ -1191,14 +1205,18 @@ export function WorkoutsPage() {
             </DialogTitle>
           </DialogHeader>
 
-          {guideExercise && (
+          {guideExercise && (() => {
+            const media = getExerciseMedia(guideExercise);
+
+            return (
             <div className="space-y-5">
               <div className="relative aspect-video overflow-hidden rounded-xl border border-white/10 bg-[radial-gradient(circle_at_50%_20%,oklch(0.23_0.014_95),oklch(0.11_0.01_95)_62%)] p-4">
                 <div className="absolute inset-4 overflow-hidden rounded-lg bg-white shadow-inner dark:bg-white">
                   <Image
-                    src={guideExercise.image}
+                    src={media.src}
                     alt={guideExercise.name}
                     fill
+                    unoptimized={media.animated}
                     sizes="(min-width: 768px) 640px, 100vw"
                     className="object-contain p-3"
                   />
@@ -1235,7 +1253,8 @@ export function WorkoutsPage() {
                 </div>
               </div>
             </div>
-          )}
+            );
+          })()}
         </DialogContent>
       </Dialog>
 
