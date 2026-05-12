@@ -348,30 +348,30 @@ export const exercises: Exercise[] = [
     ]
   },
   {
-    id: 'assisted-pull-up-machine',
-    name: 'Assisted Pull-Up Machine',
-    description: 'A machine-supported pull-up variation that builds back and biceps strength while helping you control the full range of motion.',
+    id: 'lat-pulldown',
+    name: 'Lat Pulldown Machine',
+    description: 'A controlled cable machine exercise for building the lats, upper back, and biceps. The thigh pad keeps you stable while you pull the bar toward your upper chest.',
     category: 'gym',
     difficulty: 'beginner',
     muscleGroup: 'Back',
-    equipment: 'Assisted Pull-Up Machine',
+    equipment: 'Lat Pulldown Machine',
     duration: 8,
     calories: 70,
-    image: '/images/workout-pull-ups.jpeg',
+    image: '/images/workout-lat-pulldown.jpeg',
     steps: [
-      'Set the assistance weight so you can complete clean reps',
-      'Grip the pull-up handles slightly wider than shoulder-width',
-      'Place knees or feet on the assistance platform',
-      'Start from a full hang with shoulders controlled',
-      'Pull your chest toward the handles by driving elbows down',
-      'Pause briefly near the top',
-      'Lower slowly back to the starting position'
+      'Adjust the thigh pad so your legs stay locked in place',
+      'Grip the bar wider than shoulder-width with palms facing away',
+      'Sit tall, lean back slightly, and keep your chest lifted',
+      'Pull the bar down toward your upper chest by driving elbows down',
+      'Squeeze your shoulder blades briefly at the bottom',
+      'Return the bar overhead with control',
+      'Repeat without letting the weight stack slam'
     ],
     tips: [
-      'Use less assistance only when every rep stays strict',
-      'Avoid kicking or bouncing off the platform',
-      'Keep ribs down and shoulders away from your ears',
-      'Think elbows to ribs instead of chin over bar'
+      'Pull to the front of your chest, never behind your neck',
+      'Avoid turning the movement into a row by leaning too far back',
+      'Use a smooth tempo instead of jerking the bar down',
+      'Think elbows toward hips to feel your lats work'
     ]
   },
   {
@@ -905,7 +905,7 @@ export const machineGuides: MachineGuide[] = [
     category: 'Strength',
     muscleGroup: 'Lats, Biceps, Upper Back',
     difficulty: 'beginner',
-    image: '/images/workout-shoulder-press-machine.jpeg',
+    image: '/images/workout-lat-pulldown.jpeg',
     setup: 'Adjust the thigh pad so it locks your legs in place. Stand up and grab the wide bar, then sit back down. Your arms should be fully extended overhead.',
     steps: [
       'Grip the bar wider than shoulder-width, palms facing away',
@@ -922,29 +922,6 @@ export const machineGuides: MachineGuide[] = [
       'Gripping too narrow (targets biceps more than lats)'
     ],
     proTip: 'Focus on driving your elbows to your hips rather than thinking about pulling the bar. This mental cue activates more lat muscle fibers.'
-  },
-  {
-    id: 'assisted-pull-up-machine',
-    name: 'Assisted Pull-Up Machine',
-    category: 'Strength',
-    muscleGroup: 'Lats, Biceps, Upper Back',
-    difficulty: 'beginner',
-    image: '/images/workout-pull-ups.jpeg',
-    setup: 'Select an assistance level that lets you move smoothly. Grip the handles, place knees or feet on the support, and start from a controlled hang.',
-    steps: [
-      'Brace your core and keep shoulders controlled',
-      'Pull by driving elbows down toward your ribs',
-      'Bring your chest toward the handles',
-      'Pause briefly near the top',
-      'Lower slowly back to a full hang'
-    ],
-    commonMistakes: [
-      'Using momentum from the assistance pad',
-      'Shrugging shoulders toward the ears',
-      'Cutting the bottom range short',
-      'Reducing assistance before form is stable'
-    ],
-    proTip: 'Progress by lowering assistance gradually, not by rushing reps. Smooth control builds the pull-up fastest.'
   },
   {
     id: 'chest-press-machine',

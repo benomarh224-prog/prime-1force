@@ -1204,11 +1204,6 @@ export function WorkoutsPage() {
                   />
                 </div>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/90 text-primary-foreground shadow-lg">
-                    <PlayCircle className="h-8 w-8" />
-                  </div>
-                </div>
                 <div className="absolute bottom-4 left-4 right-4">
                   <p className="font-black uppercase text-white drop-shadow">{guideExercise.name}</p>
                   <p className="text-sm text-white/75 drop-shadow">{guideExercise.muscleGroup} - {guideExercise.equipment}</p>

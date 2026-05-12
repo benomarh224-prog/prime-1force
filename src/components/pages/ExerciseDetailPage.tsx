@@ -20,7 +20,7 @@ import { exercises } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import {
   ArrowLeft, Clock, Flame, Heart, ChevronRight,
-  Dumbbell, Target, Lightbulb, Play, Trophy,
+  Dumbbell, Target, Lightbulb, Trophy,
   BarChart3, Calendar, ListChecks, Plus, Save, Trash2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -225,17 +225,6 @@ export function ExerciseDetailPage() {
             />
           </div>
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
-
-          {/* Play button overlay */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-              className="h-16 w-16 rounded-full bg-primary/90 backdrop-blur-sm flex items-center justify-center shadow-lg neon-glow"
-            >
-              <Play className="h-7 w-7 text-primary-foreground ml-1" />
-            </motion.button>
-          </div>
 
           {/* Info overlay */}
           <div className="absolute bottom-0 left-0 right-0 p-6">
