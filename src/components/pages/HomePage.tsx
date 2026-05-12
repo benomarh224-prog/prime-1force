@@ -7,6 +7,7 @@ import type { Variants } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { TodayDashboard } from '@/components/pages/TodayDashboard';
 import { useAppStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
 import { progressData } from '@/lib/data';
@@ -440,6 +441,7 @@ export function HomePage() {
 
       {/* ═══════════ DAILY MOTIVATION ═══════════ */}
       <QuoteSlider />
+      <TodayDashboard />
 
       {/* ═══════════ FEATURES SECTION ═══════════ */}
       <section className="py-16 sm:py-24">
