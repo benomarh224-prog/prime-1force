@@ -138,12 +138,21 @@ function defaultWeightForExercise(exercise?: Exercise) {
 }
 
 function getExerciseMedia(exercise: Exercise, playing = false) {
-  const animated = playing && Boolean(exercise.gif);
+  const kind = playing && exercise.video
+    ? 'video'
+    : playing && exercise.gif
+      ? 'gif'
+      : 'image';
 
   return {
-    src: animated && exercise.gif ? exercise.gif : exercise.image,
-    animated,
-    playable: Boolean(exercise.gif),
+    src: kind === 'video'
+      ? exercise.video ?? exercise.image
+      : kind === 'gif'
+        ? exercise.gif ?? exercise.image
+        : exercise.image,
+    kind,
+    animated: kind === 'gif',
+    playable: Boolean(exercise.video || exercise.gif),
   };
 }
 
@@ -1088,14 +1097,27 @@ export function WorkoutsPage() {
                           exit={{ opacity: 0, scale: 1.015 }}
                           transition={{ duration: 0.24, ease: 'easeOut' }}
                         >
-                          <Image
-                            src={media.src}
-                            alt={exercise.name}
-                            fill
-                            unoptimized={media.animated}
-                            sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-                            className="object-contain p-3 transition-transform duration-500 group-hover:scale-[1.03]"
-                          />
+                          {media.kind === 'video' ? (
+                            <video
+                              src={media.src}
+                              poster={exercise.image}
+                              autoPlay
+                              loop
+                              muted
+                              playsInline
+                              preload="metadata"
+                              className="h-full w-full object-contain p-3 transition-transform duration-500 group-hover:scale-[1.03]"
+                            />
+                          ) : (
+                            <Image
+                              src={media.src}
+                              alt={exercise.name}
+                              fill
+                              unoptimized={media.animated}
+                              sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                              className="object-contain p-3 transition-transform duration-500 group-hover:scale-[1.03]"
+                            />
+                          )}
                         </motion.div>
                       </AnimatePresence>
                     </div>
@@ -1112,10 +1134,10 @@ export function WorkoutsPage() {
                             [exercise.id]: !current[exercise.id],
                           }));
                         }}
-                        aria-label={media.animated ? `Pause ${exercise.name} animation` : `Play ${exercise.name} animation`}
+                        aria-label={media.kind !== 'image' ? `Pause ${exercise.name} demo` : `Play ${exercise.name} demo`}
                         className="absolute left-1/2 top-[42%] z-10 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/55 text-white shadow-2xl shadow-black/40 backdrop-blur-md transition-colors hover:bg-primary/95"
                       >
-                        {media.animated ? <CirclePause className="h-6 w-6" /> : <PlayCircle className="h-7 w-7" />}
+                        {media.kind !== 'image' ? <CirclePause className="h-6 w-6" /> : <PlayCircle className="h-7 w-7" />}
                       </motion.button>
                     )}
                     <div className="absolute top-3 left-3 flex gap-2">
@@ -1259,7 +1281,22 @@ export function WorkoutsPage() {
                       exit={{ opacity: 0, scale: 1.015 }}
                       transition={{ duration: 0.28, ease: 'easeOut' }}
                     >
-                      {media.animated ? (
+                      {media.kind === 'video' ? (
+                        <div className="absolute inset-0 flex items-center justify-center p-4">
+                          <div className="relative h-[82%] w-[min(90%,36rem)] overflow-hidden rounded-2xl border border-black/10 bg-black shadow-2xl shadow-black/25">
+                            <video
+                              src={media.src}
+                              poster={guideExercise.image}
+                              autoPlay
+                              loop
+                              muted
+                              playsInline
+                              preload="metadata"
+                              className="h-full w-full object-contain"
+                            />
+                          </div>
+                        </div>
+                      ) : media.animated ? (
                         <div className="absolute inset-0 flex items-center justify-center p-4">
                           <div className="relative h-[74%] w-[min(84%,30rem)] overflow-hidden rounded-2xl border border-black/10 bg-white shadow-2xl shadow-black/20">
                             <Image
@@ -1291,10 +1328,10 @@ export function WorkoutsPage() {
                     whileHover={{ scale: 1.06 }}
                     whileTap={{ scale: 0.96 }}
                     onClick={() => setGuideMediaPlaying((value) => !value)}
-                    aria-label={media.animated ? `Pause ${guideExercise.name} animation` : `Play ${guideExercise.name} animation`}
+                    aria-label={media.kind !== 'image' ? `Pause ${guideExercise.name} demo` : `Play ${guideExercise.name} demo`}
                     className="absolute left-1/2 top-1/2 z-10 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/55 text-white shadow-2xl shadow-black/40 backdrop-blur-md transition-colors hover:bg-primary/95"
                   >
-                    {media.animated ? <CirclePause className="h-7 w-7" /> : <PlayCircle className="h-8 w-8" />}
+                    {media.kind !== 'image' ? <CirclePause className="h-7 w-7" /> : <PlayCircle className="h-8 w-8" />}
                   </motion.button>
                 )}
                 <div className="absolute bottom-4 left-4 right-4">
@@ -1304,7 +1341,7 @@ export function WorkoutsPage() {
               </div>
               {media.playable && (
                 <p className="-mt-2 text-xs text-muted-foreground">
-                  Exercise animation by ExerciseDB / AscendAPI.
+                  Exercise media by ExerciseDB / AscendAPI.
                 </p>
               )}
 

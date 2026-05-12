@@ -90,9 +90,18 @@ export function ExerciseDetailPage() {
   }
 
   const isFavorite = favorites.includes(exercise.id);
-  const hasAnimatedMedia = Boolean(exercise.gif);
-  const isAnimatedMedia = mediaPlaying && hasAnimatedMedia;
-  const mediaSrc = isAnimatedMedia && exercise.gif ? exercise.gif : exercise.image;
+  const hasPlayableMedia = Boolean(exercise.video || exercise.gif);
+  const mediaKind = mediaPlaying && exercise.video
+    ? 'video'
+    : mediaPlaying && exercise.gif
+      ? 'gif'
+      : 'image';
+  const mediaSrc = mediaKind === 'video'
+    ? exercise.video
+    : mediaKind === 'gif'
+      ? exercise.gif
+      : exercise.image;
+  const resolvedMediaSrc = mediaSrc ?? exercise.image;
   const exerciseHistory = workoutLogs
     .flatMap((log) =>
       log.exercises
@@ -225,18 +234,33 @@ export function ExerciseDetailPage() {
           <div className="relative aspect-video overflow-hidden rounded-xl bg-white shadow-inner dark:bg-white">
             <AnimatePresence mode="wait">
               <motion.div
-                key={mediaSrc}
+                key={resolvedMediaSrc}
                 className="absolute inset-0"
                 initial={{ opacity: 0, scale: 0.985 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 1.015 }}
                 transition={{ duration: 0.28, ease: 'easeOut' }}
               >
-                {isAnimatedMedia ? (
+                {mediaKind === 'video' ? (
+                  <div className="absolute inset-0 flex items-center justify-center p-4 sm:p-6">
+                    <div className="relative h-[82%] w-[min(90%,42rem)] overflow-hidden rounded-2xl border border-black/10 bg-black shadow-2xl shadow-black/25">
+                      <video
+                        src={resolvedMediaSrc}
+                        poster={exercise.image}
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        preload="metadata"
+                        className="h-full w-full object-contain"
+                      />
+                    </div>
+                  </div>
+                ) : mediaKind === 'gif' ? (
                   <div className="absolute inset-0 flex items-center justify-center p-4 sm:p-6">
                     <div className="relative h-[74%] w-[min(84%,34rem)] overflow-hidden rounded-2xl border border-black/10 bg-white shadow-2xl shadow-black/20">
                       <Image
-                        src={mediaSrc}
+                        src={resolvedMediaSrc}
                         alt={exercise.name}
                         fill
                         priority
@@ -248,7 +272,7 @@ export function ExerciseDetailPage() {
                   </div>
                 ) : (
                   <Image
-                    src={mediaSrc}
+                    src={resolvedMediaSrc}
                     alt={exercise.name}
                     fill
                     priority
@@ -260,16 +284,16 @@ export function ExerciseDetailPage() {
             </AnimatePresence>
           </div>
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
-          {hasAnimatedMedia && (
+          {hasPlayableMedia && (
             <motion.button
               type="button"
               whileHover={{ scale: 1.06 }}
               whileTap={{ scale: 0.96 }}
               onClick={() => setMediaPlaying((value) => !value)}
-              aria-label={isAnimatedMedia ? `Pause ${exercise.name} animation` : `Play ${exercise.name} animation`}
+              aria-label={mediaPlaying ? `Pause ${exercise.name} demo` : `Play ${exercise.name} demo`}
               className="absolute left-1/2 top-1/2 z-10 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/55 text-white shadow-2xl shadow-black/40 backdrop-blur-md transition-colors hover:bg-primary/95"
             >
-              {isAnimatedMedia ? <CirclePause className="h-7 w-7" /> : <PlayCircle className="h-8 w-8" />}
+              {mediaPlaying ? <CirclePause className="h-7 w-7" /> : <PlayCircle className="h-8 w-8" />}
             </motion.button>
           )}
 
@@ -305,9 +329,9 @@ export function ExerciseDetailPage() {
             </div>
           </div>
         </motion.div>
-        {hasAnimatedMedia && (
+        {hasPlayableMedia && (
           <p className="-mt-5 mb-8 text-xs text-muted-foreground">
-            Exercise animation by ExerciseDB / AscendAPI.
+            Exercise media by ExerciseDB / AscendAPI.
           </p>
         )}
 

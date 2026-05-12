@@ -9,6 +9,7 @@ export interface Exercise {
   duration: number;
   calories: number;
   image: string;
+  video?: string;
   gif?: string;
   steps: string[];
   tips: string[];
