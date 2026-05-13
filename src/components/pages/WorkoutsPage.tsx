@@ -1122,7 +1122,7 @@ export function WorkoutsPage() {
                       </AnimatePresence>
                     </div>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-transparent" />
-                    {media.playable && (
+                    {media.playable && media.kind === 'image' && (
                       <motion.button
                         type="button"
                         whileHover={{ scale: 1.06 }}
@@ -1131,13 +1131,13 @@ export function WorkoutsPage() {
                           event.stopPropagation();
                           setPlayingMediaIds((current) => ({
                             ...current,
-                            [exercise.id]: !current[exercise.id],
+                            [exercise.id]: true,
                           }));
                         }}
-                        aria-label={media.kind !== 'image' ? `Pause ${exercise.name} demo` : `Play ${exercise.name} demo`}
+                        aria-label={`Play ${exercise.name} demo`}
                         className="absolute left-1/2 top-[42%] z-10 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/55 text-white shadow-2xl shadow-black/40 backdrop-blur-md transition-colors hover:bg-primary/95"
                       >
-                        {media.kind !== 'image' ? <CirclePause className="h-6 w-6" /> : <PlayCircle className="h-7 w-7" />}
+                        <PlayCircle className="h-7 w-7" />
                       </motion.button>
                     )}
                     <div className="absolute top-3 left-3 flex gap-2">
@@ -1210,10 +1210,10 @@ export function WorkoutsPage() {
                         variant="outline"
                         size="sm"
                         onClick={() => startSession('exercise', exercise)}
-                        className="w-full rounded-lg gap-1.5"
+                        className="w-full rounded-lg gap-1.5 px-2 text-xs sm:text-sm"
                       >
                         <PlayCircle className="h-3.5 w-3.5" />
-                        Start
+                        Start This Exercise
                       </Button>
                       <Button
                         size="sm"
@@ -1322,16 +1322,16 @@ export function WorkoutsPage() {
                   </AnimatePresence>
                 </div>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
-                {media.playable && (
+                {media.playable && media.kind === 'image' && (
                   <motion.button
                     type="button"
                     whileHover={{ scale: 1.06 }}
                     whileTap={{ scale: 0.96 }}
-                    onClick={() => setGuideMediaPlaying((value) => !value)}
-                    aria-label={media.kind !== 'image' ? `Pause ${guideExercise.name} demo` : `Play ${guideExercise.name} demo`}
+                    onClick={() => setGuideMediaPlaying(true)}
+                    aria-label={`Play ${guideExercise.name} demo`}
                     className="absolute left-1/2 top-1/2 z-10 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/55 text-white shadow-2xl shadow-black/40 backdrop-blur-md transition-colors hover:bg-primary/95"
                   >
-                    {media.kind !== 'image' ? <CirclePause className="h-7 w-7" /> : <PlayCircle className="h-8 w-8" />}
+                    <PlayCircle className="h-8 w-8" />
                   </motion.button>
                 )}
                 <div className="absolute bottom-4 left-4 right-4">

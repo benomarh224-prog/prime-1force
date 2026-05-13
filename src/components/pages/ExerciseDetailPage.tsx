@@ -21,7 +21,7 @@ import { useToast } from '@/hooks/use-toast';
 import {
   ArrowLeft, Clock, Flame, Heart, ChevronRight,
   Dumbbell, Target, Lightbulb, Trophy,
-  BarChart3, Calendar, CirclePause, ListChecks, PlayCircle, Plus, Save, Trash2,
+  BarChart3, Calendar, ListChecks, PlayCircle, Plus, Save, Trash2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useEffect, useState } from 'react';
@@ -284,16 +284,16 @@ export function ExerciseDetailPage() {
             </AnimatePresence>
           </div>
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
-          {hasPlayableMedia && (
+          {hasPlayableMedia && !mediaPlaying && (
             <motion.button
               type="button"
               whileHover={{ scale: 1.06 }}
               whileTap={{ scale: 0.96 }}
-              onClick={() => setMediaPlaying((value) => !value)}
-              aria-label={mediaPlaying ? `Pause ${exercise.name} demo` : `Play ${exercise.name} demo`}
+              onClick={() => setMediaPlaying(true)}
+              aria-label={`Play ${exercise.name} demo`}
               className="absolute left-1/2 top-1/2 z-10 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/55 text-white shadow-2xl shadow-black/40 backdrop-blur-md transition-colors hover:bg-primary/95"
             >
-              {mediaPlaying ? <CirclePause className="h-7 w-7" /> : <PlayCircle className="h-8 w-8" />}
+              <PlayCircle className="h-8 w-8" />
             </motion.button>
           )}
 
