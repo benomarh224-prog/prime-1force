@@ -1188,7 +1188,15 @@ export function WorkoutsPage() {
                         {exercise.muscleGroup}
                       </Badge>
                     </div>
-                    <div className="mt-4 grid grid-cols-1 gap-2 min-[390px]:grid-cols-2">
+                    <Button
+                      size="sm"
+                      onClick={() => startSession('exercise', exercise)}
+                      className="mt-4 h-10 w-full rounded-lg gap-1.5 font-bold"
+                    >
+                      <PlayCircle className="h-4 w-4" />
+                      Start This Exercise
+                    </Button>
+                    <div className="mt-2 grid grid-cols-1 gap-2 min-[390px]:grid-cols-3">
                       <Button
                         variant="outline"
                         size="sm"
@@ -1205,15 +1213,6 @@ export function WorkoutsPage() {
                       >
                         <PlayCircle className="h-3.5 w-3.5" />
                         Guide
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => startSession('exercise', exercise)}
-                        className="w-full rounded-lg gap-1.5 px-2 text-xs sm:text-sm"
-                      >
-                        <PlayCircle className="h-3.5 w-3.5" />
-                        Start This Exercise
                       </Button>
                       <Button
                         size="sm"
