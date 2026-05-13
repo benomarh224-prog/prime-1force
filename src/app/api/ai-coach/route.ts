@@ -1,22 +1,26 @@
 import { NextResponse } from 'next/server';
-import ZAI from 'z-ai-web-dev-sdk';
 import { aiCoachRequestSchema } from '@/lib/validations';
 import { sanitizeInput } from '@/proxy';
 
-let zaiInstance: Awaited<ReturnType<typeof ZAI.create>> | null = null;
+type CoachMessage = { role: 'user' | 'assistant'; content: string };
 
-async function getZAI() {
-  if (!zaiInstance) {
-    zaiInstance = await ZAI.create();
-  }
-  return zaiInstance;
-}
+const GEMINI_API_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
+const AI_COACH_MODEL = process.env.AI_COACH_MODEL || 'gemini-3.1-pro-preview';
+const AI_COACH_FALLBACK_MODEL = process.env.AI_COACH_FALLBACK_MODEL || 'gemini-2.5-pro';
+const AI_COACH_FAST_FALLBACK_MODEL =
+  process.env.AI_COACH_FAST_FALLBACK_MODEL || process.env.GEMINI_VISION_MODEL || 'gemini-2.5-flash-lite';
+const AI_COACH_SYSTEM_PROMPT = [
+  'You are Prime Forge AI Coach, an expert strength, hypertrophy, conditioning, and nutrition coach.',
+  'Give specific, practical fitness guidance with sets, reps, rest times, progression, and recovery details when useful.',
+  'Personalize advice from the conversation, ask for missing constraints when needed, and keep answers clear and actionable.',
+  'Do not diagnose injuries or medical conditions. For sharp, worsening, radiating, or unexplained pain, recommend pausing hard training and consulting a qualified professional.',
+].join(' ');
 
-function getLatestUserMessage(messages: { role: string; content: string }[]) {
+function getLatestUserMessage(messages: CoachMessage[]) {
   return [...messages].reverse().find((message) => message.role === 'user')?.content || '';
 }
 
-function getLocalCoachResponse(messages: { role: string; content: string }[]) {
+function getLocalCoachResponse(messages: CoachMessage[]) {
   const latest = getLatestUserMessage(messages).toLowerCase();
 
   if (latest.includes('review') || latest.includes('progress') || latest.includes('improve')) {
@@ -132,6 +136,94 @@ function getLocalCoachResponse(messages: { role: string; content: string }[]) {
   ].join('\n');
 }
 
+function toGeminiContents(messages: CoachMessage[]) {
+  return messages.map((message) => ({
+    role: message.role === 'assistant' ? 'model' : 'user',
+    parts: [{ text: message.content }],
+  }));
+}
+
+function extractGeminiText(payload: unknown) {
+  if (!payload || typeof payload !== 'object') return undefined;
+
+  const candidates = (payload as { candidates?: unknown }).candidates;
+  if (!Array.isArray(candidates)) return undefined;
+
+  return candidates
+    .flatMap((candidate) => {
+      const parts = (candidate as { content?: { parts?: unknown } }).content?.parts;
+      return Array.isArray(parts) ? parts : [];
+    })
+    .map((part) => (part as { text?: unknown }).text)
+    .filter((text): text is string => typeof text === 'string' && text.trim().length > 0)
+    .join('\n')
+    .trim();
+}
+
+async function generateGeminiCoachResponse(messages: CoachMessage[], model: string) {
+  const apiKey = process.env.GEMINI_API_KEY;
+
+  if (!apiKey) {
+    throw new Error('GEMINI_API_KEY is not configured.');
+  }
+
+  const response = await fetch(`${GEMINI_API_BASE_URL}/${model}:generateContent`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-goog-api-key': apiKey,
+    },
+    body: JSON.stringify({
+      system_instruction: {
+        parts: [{ text: AI_COACH_SYSTEM_PROMPT }],
+      },
+      contents: toGeminiContents(messages),
+      generationConfig: {
+        maxOutputTokens: 1600,
+      },
+    }),
+    cache: 'no-store',
+  });
+
+  const payload = (await response.json().catch(() => null)) as unknown;
+
+  if (!response.ok) {
+    const errorMessage =
+      payload && typeof payload === 'object'
+        ? (payload as { error?: { message?: string } }).error?.message
+        : undefined;
+    throw new Error(errorMessage || `Gemini request failed with status ${response.status}`);
+  }
+
+  const text = extractGeminiText(payload);
+  if (!text) {
+    throw new Error('Gemini response did not include text.');
+  }
+
+  return text;
+}
+
+async function getAiCoachResponse(messages: CoachMessage[]) {
+  const models = Array.from(
+    new Set([AI_COACH_MODEL, AI_COACH_FALLBACK_MODEL, AI_COACH_FAST_FALLBACK_MODEL].filter(Boolean))
+  );
+  let lastError: unknown;
+
+  for (const model of models) {
+    try {
+      return await generateGeminiCoachResponse(messages, model);
+    } catch (error) {
+      lastError = error;
+      console.warn(
+        `[AI Coach] Gemini model ${model} failed:`,
+        error instanceof Error ? error.message : 'Unknown error'
+      );
+    }
+  }
+
+  throw lastError instanceof Error ? lastError : new Error('Gemini request failed.');
+}
+
 export async function POST(request: Request) {
   try {
     // Parse and validate input
@@ -155,17 +247,7 @@ export async function POST(request: Request) {
     let response: string | undefined;
 
     try {
-      const zai = await getZAI();
-
-      const completion = await zai.chat.completions.create({
-        messages: messages.map((m) => ({
-          role: m.role as 'user' | 'assistant',
-          content: m.content,
-        })),
-        thinking: { type: 'disabled' },
-      });
-
-      response = completion.choices[0]?.message?.content;
+      response = await getAiCoachResponse(messages);
     } catch (error) {
       console.warn('[AI Coach] Falling back to local coach response:', error instanceof Error ? error.message : 'Unknown error');
       response = getLocalCoachResponse(messages);

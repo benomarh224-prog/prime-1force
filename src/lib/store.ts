@@ -80,7 +80,13 @@ export const useAppStore = create<AppState>()(
       userLevel: 'intermediate',
       weeklyGoal: 5,
       workoutLogs: [],
-      navigate: (page) => set({ currentPage: page }),
+      navigate: (page) => {
+        if (typeof window !== 'undefined') {
+          const nextUrl = page === 'home' ? window.location.pathname : `${window.location.pathname}#${page}`;
+          window.history.replaceState(null, '', nextUrl);
+        }
+        set({ currentPage: page });
+      },
       setExerciseId: (id) => set({ selectedExerciseId: id, currentPage: 'exercise-detail' }),
       toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
       setSidebarOpen: (open) => set({ sidebarOpen: open }),

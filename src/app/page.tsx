@@ -1,7 +1,8 @@
 'use client';
 
+import { useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useAppStore } from '@/lib/store';
+import { PageName, useAppStore } from '@/lib/store';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav';
@@ -20,8 +21,26 @@ const pageVariants = {
   exit: { opacity: 0, y: -12 },
 };
 
+const hashPages: PageName[] = ['home', 'workouts', 'exercise-detail', 'schedule', 'ai-coach', 'dashboard', 'nutrition', 'contact'];
+
+function getPageFromHash(): PageName | null {
+  const hash = window.location.hash.replace('#', '') as PageName;
+  return hashPages.includes(hash) ? hash : null;
+}
+
 export default function MainApp() {
-  const { currentPage } = useAppStore();
+  const { currentPage, navigate } = useAppStore();
+
+  useEffect(() => {
+    const applyHashRoute = () => {
+      const hashPage = getPageFromHash();
+      if (hashPage) navigate(hashPage);
+    };
+
+    applyHashRoute();
+    window.addEventListener('hashchange', applyHashRoute);
+    return () => window.removeEventListener('hashchange', applyHashRoute);
+  }, [navigate]);
 
   const renderPage = () => {
     switch (currentPage) {
