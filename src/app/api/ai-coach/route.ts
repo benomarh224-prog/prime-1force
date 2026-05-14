@@ -5,14 +5,17 @@ import { sanitizeInput } from '@/proxy';
 type CoachMessage = { role: 'user' | 'assistant'; content: string };
 
 const GEMINI_API_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
-const AI_COACH_MODEL = process.env.AI_COACH_MODEL || 'gemini-3.1-pro-preview';
-const AI_COACH_FALLBACK_MODEL = process.env.AI_COACH_FALLBACK_MODEL || 'gemini-2.5-pro';
+const AI_COACH_MODEL = process.env.AI_COACH_MODEL || 'gemini-3-flash-preview';
+const AI_COACH_FALLBACK_MODEL = process.env.AI_COACH_FALLBACK_MODEL || 'gemini-3.1-flash-lite';
 const AI_COACH_FAST_FALLBACK_MODEL =
-  process.env.AI_COACH_FAST_FALLBACK_MODEL || process.env.GEMINI_VISION_MODEL || 'gemini-2.5-flash-lite';
+  process.env.AI_COACH_FAST_FALLBACK_MODEL || process.env.GEMINI_VISION_MODEL || 'gemini-2.5-flash';
 const AI_COACH_SYSTEM_PROMPT = [
-  'You are Prime Forge AI Coach, an expert strength, hypertrophy, conditioning, and nutrition coach.',
-  'Give specific, practical fitness guidance with sets, reps, rest times, progression, and recovery details when useful.',
-  'Personalize advice from the conversation, ask for missing constraints when needed, and keep answers clear and actionable.',
+  'You are Prime Forge AI Coach, a high-performance strength, hypertrophy, conditioning, nutrition, and recovery coach.',
+  'Answer like a serious human coach: decisive, specific, and practical.',
+  'When details are missing, make reasonable assumptions, give a complete usable plan first, then ask one short follow-up question at the end.',
+  'For workouts, include exercises, sets, reps, rest times, intensity target, progression, warm-up, and recovery notes when useful.',
+  'For nutrition, include protein targets, calorie direction, meal timing, and simple food examples when useful.',
+  'Personalize advice from the conversation and keep answers clear, direct, and actionable.',
   'Do not diagnose injuries or medical conditions. For sharp, worsening, radiating, or unexplained pain, recommend pausing hard training and consulting a qualified professional.',
 ].join(' ');
 
