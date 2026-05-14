@@ -39,7 +39,7 @@ type QuickSet = {
 };
 
 export function ExerciseDetailPage() {
-  const { selectedExerciseId, navigate, favorites, toggleFavorite, workoutLogs, setWorkoutLogs, upsertWorkoutLog, addWorkoutLog } = useAppStore();
+  const { selectedExerciseId, navigate, requestStartExercise, favorites, toggleFavorite, workoutLogs, setWorkoutLogs, upsertWorkoutLog, addWorkoutLog } = useAppStore();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<'instructions' | 'tips' | 'history'>('instructions');
   const [logDialogOpen, setLogDialogOpen] = useState(false);
@@ -132,6 +132,11 @@ export function ExerciseDetailPage() {
       sets: [{ reps: defaultReps, weight: exercise.category === 'no-equipment' ? 0 : 20 }],
     });
     setLogDialogOpen(true);
+  };
+
+  const startExercise = () => {
+    requestStartExercise(exercise.id);
+    navigate('workouts');
   };
 
   const updateSet = (index: number, field: keyof QuickSet, value: number) => {
@@ -361,12 +366,16 @@ export function ExerciseDetailPage() {
         </motion.div>
 
         <motion.div
-          className="mb-8"
+          className="mb-8 grid gap-3 sm:grid-cols-2"
           initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.18 }}
         >
-          <Button onClick={openLogDialog} className="h-12 w-full rounded-xl gap-2 font-semibold neon-glow">
+          <Button onClick={startExercise} className="h-12 w-full rounded-xl gap-2 font-semibold neon-glow">
+            <PlayCircle className="h-4 w-4" />
+            Start This Exercise
+          </Button>
+          <Button onClick={openLogDialog} variant="outline" className="h-12 w-full rounded-xl gap-2 font-semibold">
             <Plus className="h-4 w-4" />
             Log This Exercise
           </Button>
@@ -545,8 +554,15 @@ export function ExerciseDetailPage() {
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-3 mt-8">
           <Button
-            onClick={() => navigate('ai-coach')}
+            onClick={startExercise}
             className="flex-1 h-12 rounded-xl gap-2 neon-glow font-semibold"
+          >
+            <PlayCircle className="h-4 w-4" />
+            Start This Exercise
+          </Button>
+          <Button
+            onClick={() => navigate('ai-coach')}
+            className="flex-1 h-12 rounded-xl gap-2 font-semibold"
           >
             Ask AI Coach About This Exercise
           </Button>

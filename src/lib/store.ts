@@ -31,6 +31,7 @@ export interface WorkoutLog {
 interface AppState {
   currentPage: PageName;
   selectedExerciseId: string | null;
+  pendingStartExerciseId: string | null;
   sidebarOpen: boolean;
   favorites: string[];
   // User profile
@@ -46,6 +47,8 @@ interface AppState {
   // Actions
   navigate: (page: PageName) => void;
   setExerciseId: (id: string) => void;
+  requestStartExercise: (id: string) => void;
+  clearPendingStartExercise: () => void;
   toggleSidebar: () => void;
   setSidebarOpen: (open: boolean) => void;
   toggleFavorite: (exerciseId: string) => void;
@@ -70,6 +73,7 @@ export const useAppStore = create<AppState>()(
     (set) => ({
       currentPage: 'home',
       selectedExerciseId: null,
+      pendingStartExerciseId: null,
       sidebarOpen: false,
       favorites: [],
       userName: '',
@@ -88,6 +92,8 @@ export const useAppStore = create<AppState>()(
         set({ currentPage: page });
       },
       setExerciseId: (id) => set({ selectedExerciseId: id, currentPage: 'exercise-detail' }),
+      requestStartExercise: (id) => set({ pendingStartExerciseId: id }),
+      clearPendingStartExercise: () => set({ pendingStartExerciseId: null }),
       toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
       setSidebarOpen: (open) => set({ sidebarOpen: open }),
       toggleFavorite: (exerciseId) => set((s) => ({

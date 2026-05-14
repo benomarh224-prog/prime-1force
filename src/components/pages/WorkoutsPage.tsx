@@ -159,6 +159,8 @@ function getExerciseMedia(exercise: Exercise, playing = false) {
 export function WorkoutsPage() {
   const {
     setExerciseId,
+    pendingStartExerciseId,
+    clearPendingStartExercise,
     favorites,
     toggleFavorite,
     navigate,
@@ -409,6 +411,16 @@ export function WorkoutsPage() {
     setSessionStartedAt(Date.now());
     setSessionOpen(true);
   };
+
+  useEffect(() => {
+    if (!pendingStartExerciseId) return;
+
+    const exerciseToStart = exercises.find((exercise) => exercise.id === pendingStartExerciseId);
+    clearPendingStartExercise();
+    if (exerciseToStart) {
+      startSession('exercise', exerciseToStart);
+    }
+  }, [clearPendingStartExercise, pendingStartExerciseId]);
 
   const updateSessionSet = (exerciseIndex: number, setIndex: number, field: keyof QuickSet, value: number) => {
     setSessionExercises((current) =>
