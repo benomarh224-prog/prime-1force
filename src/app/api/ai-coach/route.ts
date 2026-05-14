@@ -4,11 +4,15 @@ import { sanitizeInput } from '@/proxy';
 
 type CoachMessage = { role: 'user' | 'assistant'; content: string };
 
-const GEMINI_API_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
-const AI_COACH_MODEL = process.env.AI_COACH_MODEL || 'gemini-3-flash-preview';
-const AI_COACH_FALLBACK_MODEL = process.env.AI_COACH_FALLBACK_MODEL || 'gemini-3.1-flash-lite';
-const AI_COACH_FAST_FALLBACK_MODEL =
-  process.env.AI_COACH_FAST_FALLBACK_MODEL || process.env.GEMINI_VISION_MODEL || 'gemini-2.5-flash';
+type GlmMessage = {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+};
+
+const GLM_API_BASE_URL = process.env.GLM_API_BASE_URL || 'https://integrate.api.nvidia.com/v1';
+const AI_COACH_MODEL = process.env.AI_COACH_MODEL || 'z-ai/glm-5.1';
+const AI_COACH_TIMEOUT_MS = Number(process.env.AI_COACH_TIMEOUT_MS || 30000);
+const AI_COACH_MAX_TOKENS = Number(process.env.AI_COACH_MAX_TOKENS || 900);
 const AI_COACH_SYSTEM_PROMPT = [
   'You are Prime Forge AI Coach, a high-performance strength, hypertrophy, conditioning, nutrition, and recovery coach.',
   'Answer like a real human coach: warm, conversational, concise when the user is just chatting, and decisive when they ask for fitness help.',
@@ -83,6 +87,33 @@ function getLocalCoachResponse(messages: CoachMessage[]) {
       '**Day 7 - Rest:** sleep, steps, hydration.',
       '',
       '**Progression:** add reps first, then weight. Keep 1-2 reps in reserve on most sets.'
+    ].join('\n');
+  }
+
+  if (latest.includes('chest')) {
+    return [
+      '**Machine chest workout**',
+      '',
+      'Use this when you want a strong, simple chest day with clean progression. Keep every set controlled and stop 1-2 reps before form breaks.',
+      '',
+      '**Warm-up**',
+      '- 5 minutes easy cardio',
+      '- Machine chest press: 2 light ramp sets x 12-15 reps',
+      '- Pec deck: 1 light set x 15 reps',
+      '',
+      '**Workout**',
+      '- Machine chest press: 4 x 6-10, 2 min rest, RPE 8-9',
+      '- Incline chest press machine: 3 x 8-12, 90 sec rest',
+      '- Pec deck fly: 3 x 12-15, 75 sec rest, 1 sec squeeze',
+      '- Cable crossover: 2 x 15-20, 60 sec rest',
+      '- Assisted dips or push-ups: 2 sets close to failure',
+      '',
+      '**Progression**',
+      '- When you hit the top of the rep range on every set, add a small amount of weight next time',
+      '- Keep shoulders down and back, elbows slightly tucked, and control the lowering phase',
+      '',
+      '**Next 24 hours**',
+      'Eat a protein-rich meal, hydrate well, and write down the weights you used so we can beat them next session.'
     ].join('\n');
   }
 
@@ -167,54 +198,62 @@ function getLocalCoachResponse(messages: CoachMessage[]) {
   ].join('\n');
 }
 
-function toGeminiContents(messages: CoachMessage[]) {
-  return messages.map((message) => ({
-    role: message.role === 'assistant' ? 'model' : 'user',
-    parts: [{ text: message.content }],
-  }));
-}
+function toGlmMessages(messages: CoachMessage[]): GlmMessage[] {
+  const systemParts = [AI_COACH_SYSTEM_PROMPT];
+  const conversation = [...messages];
 
-function extractGeminiText(payload: unknown) {
-  if (!payload || typeof payload !== 'object') return undefined;
-
-  const candidates = (payload as { candidates?: unknown }).candidates;
-  if (!Array.isArray(candidates)) return undefined;
-
-  return candidates
-    .flatMap((candidate) => {
-      const parts = (candidate as { content?: { parts?: unknown } }).content?.parts;
-      return Array.isArray(parts) ? parts : [];
-    })
-    .map((part) => (part as { text?: unknown }).text)
-    .filter((text): text is string => typeof text === 'string' && text.trim().length > 0)
-    .join('\n')
-    .trim();
-}
-
-async function generateGeminiCoachResponse(messages: CoachMessage[], model: string) {
-  const apiKey = process.env.GEMINI_API_KEY;
-
-  if (!apiKey) {
-    throw new Error('GEMINI_API_KEY is not configured.');
+  if (conversation[0]?.role === 'assistant') {
+    systemParts.push(conversation.shift()?.content || '');
   }
 
-  const response = await fetch(`${GEMINI_API_BASE_URL}/${model}:generateContent`, {
+  return [
+    { role: 'system', content: systemParts.filter(Boolean).join('\n\n') },
+    ...conversation.map((message) => ({
+      role: message.role,
+      content: message.content,
+    })),
+  ];
+}
+
+function extractGlmText(payload: unknown) {
+  if (!payload || typeof payload !== 'object') return undefined;
+
+  const choices = (payload as { choices?: unknown }).choices;
+  if (!Array.isArray(choices)) return undefined;
+
+  const content = (choices[0] as { message?: { content?: unknown } } | undefined)?.message?.content;
+  return typeof content === 'string' && content.trim().length > 0 ? content.trim() : undefined;
+}
+
+async function getAiCoachResponse(messages: CoachMessage[]) {
+  const apiKey = process.env.GLM_API_KEY || process.env.NVIDIA_API_KEY;
+
+  if (!apiKey) {
+    throw new Error('GLM_API_KEY is not configured.');
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), AI_COACH_TIMEOUT_MS);
+
+  const response = await fetch(`${GLM_API_BASE_URL}/chat/completions`, {
     method: 'POST',
     headers: {
+      Authorization: `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
-      'x-goog-api-key': apiKey,
     },
     body: JSON.stringify({
-      system_instruction: {
-        parts: [{ text: AI_COACH_SYSTEM_PROMPT }],
-      },
-      contents: toGeminiContents(messages),
-      generationConfig: {
-        maxOutputTokens: 1600,
+      model: AI_COACH_MODEL,
+      messages: toGlmMessages(messages),
+      max_tokens: AI_COACH_MAX_TOKENS,
+      temperature: 0.65,
+      top_p: 0.9,
+      chat_template_kwargs: {
+        enable_thinking: false,
       },
     }),
     cache: 'no-store',
-  });
+    signal: controller.signal,
+  }).finally(() => clearTimeout(timeout));
 
   const payload = (await response.json().catch(() => null)) as unknown;
 
@@ -223,36 +262,15 @@ async function generateGeminiCoachResponse(messages: CoachMessage[], model: stri
       payload && typeof payload === 'object'
         ? (payload as { error?: { message?: string } }).error?.message
         : undefined;
-    throw new Error(errorMessage || `Gemini request failed with status ${response.status}`);
+    throw new Error(errorMessage || `GLM request failed with status ${response.status}`);
   }
 
-  const text = extractGeminiText(payload);
+  const text = extractGlmText(payload);
   if (!text) {
-    throw new Error('Gemini response did not include text.');
+    throw new Error('GLM response did not include text.');
   }
 
   return text;
-}
-
-async function getAiCoachResponse(messages: CoachMessage[]) {
-  const models = Array.from(
-    new Set([AI_COACH_MODEL, AI_COACH_FALLBACK_MODEL, AI_COACH_FAST_FALLBACK_MODEL].filter(Boolean))
-  );
-  let lastError: unknown;
-
-  for (const model of models) {
-    try {
-      return await generateGeminiCoachResponse(messages, model);
-    } catch (error) {
-      lastError = error;
-      console.warn(
-        `[AI Coach] Gemini model ${model} failed:`,
-        error instanceof Error ? error.message : 'Unknown error'
-      );
-    }
-  }
-
-  throw lastError instanceof Error ? lastError : new Error('Gemini request failed.');
 }
 
 export async function POST(request: Request) {
