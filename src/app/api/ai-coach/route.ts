@@ -11,9 +11,12 @@ const AI_COACH_FAST_FALLBACK_MODEL =
   process.env.AI_COACH_FAST_FALLBACK_MODEL || process.env.GEMINI_VISION_MODEL || 'gemini-2.5-flash';
 const AI_COACH_SYSTEM_PROMPT = [
   'You are Prime Forge AI Coach, a high-performance strength, hypertrophy, conditioning, nutrition, and recovery coach.',
-  'Answer like a serious human coach: decisive, specific, and practical.',
+  'Answer like a real human coach: warm, conversational, concise when the user is just chatting, and decisive when they ask for fitness help.',
+  'If the user says hi, hello, how are you, or similar small talk, reply naturally with a friendly greeting and ask how you can help today.',
   'When details are missing, make reasonable assumptions, give a complete usable plan first, then ask one short follow-up question at the end.',
   'For workouts, include exercises, sets, reps, rest times, intensity target, progression, warm-up, and recovery notes when useful.',
+  'Format answers beautifully for a chat bubble: short intro, clear markdown headings, compact bullet lists, and no markdown tables unless absolutely necessary.',
+  'If you need to show exercises, use bullets like "- Chest press: 3 x 8-10, 90s rest, RPE 8" instead of a table.',
   'For nutrition, include protein targets, calorie direction, meal timing, and simple food examples when useful.',
   'Personalize advice from the conversation and keep answers clear, direct, and actionable.',
   'Do not diagnose injuries or medical conditions. For sharp, worsening, radiating, or unexplained pain, recommend pausing hard training and consulting a qualified professional.',
@@ -23,8 +26,33 @@ function getLatestUserMessage(messages: CoachMessage[]) {
   return [...messages].reverse().find((message) => message.role === 'user')?.content || '';
 }
 
+function normalizeMessage(message: string) {
+  return message
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function isGreetingMessage(message: string) {
+  const normalized = normalizeMessage(message);
+  const greetingPatterns = [
+    /^(hi|hey|hello|yo|sup)$/,
+    /^(hi|hey|hello|yo|sup)\s+(coach|there|bro|man|friend)$/,
+    /^(how are you|how r u|how ar u|how are u|how you doing|how is it going|whats up|what s up)$/,
+    /^(hi|hey|hello).*(how are you|how r u|how ar u|how are u)$/,
+  ];
+
+  return greetingPatterns.some((pattern) => pattern.test(normalized));
+}
+
 function getLocalCoachResponse(messages: CoachMessage[]) {
-  const latest = getLatestUserMessage(messages).toLowerCase();
+  const latestMessage = getLatestUserMessage(messages);
+  const latest = latestMessage.toLowerCase();
+
+  if (isGreetingMessage(latestMessage)) {
+    return 'Hi, how can I help you today?';
+  }
 
   if (latest.includes('review') || latest.includes('progress') || latest.includes('improve')) {
     return [

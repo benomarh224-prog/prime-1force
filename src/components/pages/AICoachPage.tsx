@@ -463,10 +463,30 @@ Guidelines:
                     >
                       <ReactMarkdown
                         components={{
-                          p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
-                          strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
-                          ul: ({ children }) => <ul className="my-2 list-disc space-y-1 pl-4">{children}</ul>,
-                          ol: ({ children }) => <ol className="my-2 list-decimal space-y-1 pl-4">{children}</ol>,
+                          h1: ({ children }) => <h2 className="mb-3 text-base font-black leading-snug">{children}</h2>,
+                          h2: ({ children }) => <h3 className="mb-2 mt-4 text-sm font-black leading-snug first:mt-0">{children}</h3>,
+                          h3: ({ children }) => <h4 className="mb-2 mt-4 text-sm font-black leading-snug first:mt-0">{children}</h4>,
+                          p: ({ children }) => <p className="mb-3 last:mb-0">{children}</p>,
+                          strong: ({ children }) => <strong className="font-black">{children}</strong>,
+                          ul: ({ children }) => <ul className="my-3 space-y-2 pl-0">{children}</ul>,
+                          ol: ({ children }) => <ol className="my-3 list-decimal space-y-2 pl-5">{children}</ol>,
+                          li: ({ children }) => (
+                            <li className="relative list-none pl-4 before:absolute before:left-0 before:top-[0.7em] before:h-1.5 before:w-1.5 before:-translate-y-1/2 before:rounded-full before:bg-primary">
+                              {children}
+                            </li>
+                          ),
+                          hr: () => <div className="my-4 h-px bg-border/70" />,
+                          table: ({ children }) => (
+                            <div className="my-4 overflow-x-auto rounded-xl border border-border/70 bg-background/40">
+                              <table className="min-w-full text-left text-xs">{children}</table>
+                            </div>
+                          ),
+                          thead: ({ children }) => <thead className="bg-primary/10 text-primary">{children}</thead>,
+                          th: ({ children }) => <th className="whitespace-nowrap px-3 py-2 font-black">{children}</th>,
+                          td: ({ children }) => <td className="border-t border-border/60 px-3 py-2 align-top">{children}</td>,
+                          code: ({ children }) => (
+                            <code className="rounded bg-background/60 px-1.5 py-0.5 text-[0.92em]">{children}</code>
+                          ),
                         }}
                       >
                         {msg.content}
