@@ -124,6 +124,7 @@ function statCard({
 export function TodayDashboard() {
   const {
     navigate,
+    requestStartTodayWorkout,
     workoutLogs,
     setWorkoutLogs,
     userName,
@@ -225,6 +226,13 @@ export function TodayDashboard() {
     : todayPlan?.completed || todayLogged
       ? { label: 'View Progress', page: 'dashboard' }
       : { label: 'Start Today', page: 'workouts' };
+  const handlePrimaryAction = () => {
+    if (primaryAction.page === 'workouts') {
+      requestStartTodayWorkout();
+    }
+
+    navigate(primaryAction.page);
+  };
 
   return (
     <section className="relative overflow-hidden border-y border-primary/10 bg-muted/20 py-16 sm:py-20">
@@ -260,7 +268,7 @@ export function TodayDashboard() {
                 Save My Progress
               </Button>
             )}
-            <Button onClick={() => navigate(primaryAction.page)} className="h-11 rounded-lg font-bold neon-glow">
+            <Button onClick={handlePrimaryAction} className="h-11 rounded-lg font-bold neon-glow">
               {primaryAction.label}
               <ArrowRight className="h-4 w-4" />
             </Button>
@@ -308,7 +316,7 @@ export function TodayDashboard() {
                   </p>
 
                   <div className="flex flex-col gap-2 sm:flex-row">
-                    <Button onClick={() => navigate(primaryAction.page)} className="rounded-lg font-bold">
+                    <Button onClick={handlePrimaryAction} className="rounded-lg font-bold">
                       <Dumbbell className="h-4 w-4" />
                       {primaryAction.label}
                     </Button>

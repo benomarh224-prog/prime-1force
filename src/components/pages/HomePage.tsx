@@ -330,8 +330,12 @@ function QuoteSlider() {
 /* ──────────────── MAIN COMPONENT ──────────────── */
 
 export function HomePage() {
-  const { navigate } = useAppStore();
+  const { navigate, requestStartTodayWorkout } = useAppStore();
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
+  const startToday = () => {
+    requestStartTodayWorkout();
+    navigate('workouts');
+  };
 
   return (
     <div className="overflow-hidden">
@@ -388,7 +392,7 @@ export function HomePage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.65, delay: 0.34 }}
             >
-              <Button size="lg" onClick={() => navigate('workouts')} className="h-14 min-w-52 rounded-lg px-10 text-sm font-black uppercase">
+              <Button size="lg" onClick={startToday} className="h-14 min-w-52 rounded-lg px-10 text-sm font-black uppercase">
                 Start Now
               </Button>
               <button
@@ -440,8 +444,8 @@ export function HomePage() {
       </section>
 
       {/* ═══════════ DAILY MOTIVATION ═══════════ */}
-      <QuoteSlider />
       <TodayDashboard />
+      <QuoteSlider />
 
       {/* ═══════════ FEATURES SECTION ═══════════ */}
       <section className="py-16 sm:py-24">
@@ -469,7 +473,7 @@ export function HomePage() {
           </div>
           {/* Inline CTA */}
           <motion.div className="text-center mt-12" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.3 }}>
-            <Button size="lg" onClick={() => navigate('workouts')} className="neon-glow gap-2 font-semibold">
+            <Button size="lg" onClick={startToday} className="neon-glow gap-2 font-semibold">
               Start Now <ArrowRight className="h-4 w-4" />
             </Button>
           </motion.div>
@@ -656,7 +660,7 @@ export function HomePage() {
             ))}
           </motion.div>
           <motion.div className="text-center mt-12" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}>
-            <Button size="lg" onClick={() => navigate('workouts')} className="gap-2 font-semibold">
+            <Button size="lg" onClick={startToday} className="gap-2 font-semibold">
               Start Your Transformation <ArrowRight className="h-4 w-4" />
             </Button>
           </motion.div>
@@ -705,7 +709,7 @@ export function HomePage() {
               Your journey starts today — no credit card required.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button size="lg" onClick={() => navigate('workouts')} className="h-14 px-10 text-base rounded-xl neon-glow gap-2 font-semibold">
+              <Button size="lg" onClick={startToday} className="h-14 px-10 text-base rounded-xl neon-glow gap-2 font-semibold">
                 Start Training Now <ArrowRight className="h-4 w-4" />
               </Button>
               <Button size="lg" variant="outline" onClick={() => navigate('ai-coach')} className="h-14 px-10 text-base rounded-xl gap-2 font-semibold glass border-white/20 text-foreground hover:bg-white/10">

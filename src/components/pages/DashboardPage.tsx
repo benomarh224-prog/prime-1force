@@ -277,18 +277,6 @@ export function DashboardPage() {
       ),
     0
   );
-  const today = new Date();
-  const calendarMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-  const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
-  const monthStartOffset = calendarMonth.getDay();
-  const calendarDays = [
-    ...Array.from({ length: monthStartOffset }, (_, i) => ({ key: `blank-${i}`, day: 0, dateKey: '' })),
-    ...Array.from({ length: daysInMonth }, (_, i) => {
-      const date = new Date(today.getFullYear(), today.getMonth(), i + 1);
-      return { key: toDateKey(date), day: i + 1, dateKey: toDateKey(date) };
-    }),
-  ];
-
   const macroData = [
     { name: 'Protein', value: dailyCalorieData.reduce((s, d) => s + d.protein, 0) / 7, fill: 'oklch(0.72 0.19 155)' },
     { name: 'Carbs', value: dailyCalorieData.reduce((s, d) => s + d.carbs, 0) / 7, fill: 'oklch(0.75 0.12 60)' },
@@ -378,6 +366,69 @@ export function DashboardPage() {
       target: 10000,
     },
   ];
+
+  const forgeScoreFactors = [
+    {
+      label: 'Consistency',
+      value: Math.min(Math.round(weeklyProgress), 100),
+      detail: `${totalWorkouts}/${store.weeklyGoal} workouts`,
+    },
+    {
+      label: 'Streak',
+      value: Math.min(Math.round((currentStreak / 7) * 100), 100),
+      detail: `${currentStreak} day${currentStreak === 1 ? '' : 's'}`,
+    },
+    {
+      label: 'Strength',
+      value: Math.min(Math.round((totalVolume / 10000) * 100), 100),
+      detail: `${Math.round(totalVolume).toLocaleString()}kg moved`,
+    },
+    {
+      label: 'Records',
+      value: Math.min(Math.round((personalRecords.length / 4) * 100), 100),
+      detail: `${personalRecords.length} PR${personalRecords.length === 1 ? '' : 's'}`,
+    },
+  ];
+  const forgeScore = Math.round(
+    forgeScoreFactors[0].value * 0.35 +
+    forgeScoreFactors[1].value * 0.25 +
+    forgeScoreFactors[2].value * 0.25 +
+    forgeScoreFactors[3].value * 0.15
+  );
+  const forgeRank =
+    forgeScore >= 85 ? 'Elite momentum' :
+      forgeScore >= 65 ? 'Strong rhythm' :
+        forgeScore >= 40 ? 'Building base' :
+          'Fresh start';
+  const nextForgeMove =
+    totalWorkouts < store.weeklyGoal
+      ? `Complete ${store.weeklyGoal - totalWorkouts} more workout${store.weeklyGoal - totalWorkouts === 1 ? '' : 's'} this week.`
+      : currentStreak < 7
+        ? 'Keep the streak alive for a 7-day badge.'
+        : totalVolume < 10000
+          ? `Move ${(10000 - Math.round(totalVolume)).toLocaleString()}kg more to enter Volume Club.`
+          : 'Chase a new personal record this week.';
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+  sevenDaysAgo.setHours(0, 0, 0, 0);
+  const recentLoggedExercises = store.workoutLogs
+    .filter((log) => getWorkoutDate(log.date) >= sevenDaysAgo)
+    .flatMap((log) => log.exercises);
+  const trainedMuscles = Array.from(new Set(
+    recentLoggedExercises
+      .map((entry) => exercises.find((exercise) => exercise.id === entry.exerciseId || exercise.name === entry.exerciseName)?.muscleGroup)
+      .filter(Boolean) as string[]
+  )).sort();
+  const focusGaps = ['Chest', 'Back', 'Legs', 'Shoulders', 'Biceps', 'Triceps']
+    .filter((muscle) => !trainedMuscles.includes(muscle))
+    .slice(0, 3);
+  const weeklyReview = completedLogs.length === 0
+    ? 'Start with one logged workout. The score unlocks once your first completed session is saved.'
+    : totalWorkouts >= store.weeklyGoal
+      ? 'You hit the weekly training target. Keep intensity controlled and look for one quality PR attempt.'
+      : totalWorkouts > 0
+        ? 'You have momentum. Add one focused session and keep the week from becoming random.'
+        : 'This week is still empty. Pick a short session and make the first mark on the board.';
 
   const displayName = store.userName || 'Set Your Name';
   const avatar = getAvatarOption(store.userAvatar || 'emerald');
@@ -683,74 +734,89 @@ export function DashboardPage() {
           ))}
         </div>
 
-        {/* Calendar + Achievements */}
-        <div className="grid lg:grid-cols-3 gap-6 mb-8">
-          <motion.div
-            className="lg:col-span-2"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-          >
-            <Card className="border-border/50">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between gap-3">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-primary" />
-                    Workout Calendar
-                  </CardTitle>
-                  <Badge variant="outline" className="text-xs">
-                    {calendarMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-                  </Badge>
+        {/* Forge Score */}
+        <motion.div
+          className="mb-8 grid gap-6 lg:grid-cols-[1.05fr_0.95fr]"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.08 }}
+        >
+          <Card className="overflow-hidden border-primary/25 bg-primary/10">
+            <CardContent className="grid gap-6 p-5 sm:p-6 md:grid-cols-[210px_1fr] md:items-center">
+              <div className="relative mx-auto flex h-44 w-44 items-center justify-center rounded-full border border-primary/25 bg-background/70 shadow-2xl shadow-primary/10">
+                <div
+                  className="absolute inset-3 rounded-full"
+                  style={{
+                    background: `conic-gradient(oklch(0.72 0.19 155) ${forgeScore * 3.6}deg, oklch(1 0 0 / 10%) 0deg)`,
+                  }}
+                />
+                <div className="relative flex h-32 w-32 flex-col items-center justify-center rounded-full bg-background">
+                  <p className="text-5xl font-black tabular-nums">{forgeScore}</p>
+                  <p className="text-[10px] font-black uppercase tracking-wide text-primary">Forge Score</p>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-7 gap-2 mb-2">
-                  {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-                    <div key={day} className="text-center text-[11px] font-medium text-muted-foreground">
-                      {day}
+              </div>
+
+              <div className="min-w-0">
+                <Badge className="mb-3 rounded-md border-primary/25 bg-background/80 text-primary">
+                  {forgeRank}
+                </Badge>
+                <h2 className="text-2xl font-black uppercase tracking-tight sm:text-3xl">
+                  Your training signal
+                </h2>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                  A single score blending consistency, streak, strength volume, and personal records.
+                </p>
+                <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                  {forgeScoreFactors.map((factor) => (
+                    <div key={factor.label} className="rounded-lg border border-border/50 bg-background/60 p-3">
+                      <div className="mb-2 flex items-center justify-between gap-2 text-sm">
+                        <span className="font-bold">{factor.label}</span>
+                        <span className="font-black text-primary">{factor.value}%</span>
+                      </div>
+                      <Progress value={factor.value} className="h-1.5" />
+                      <p className="mt-2 text-xs text-muted-foreground">{factor.detail}</p>
                     </div>
                   ))}
                 </div>
-                <div className="grid grid-cols-7 gap-2">
-                  {calendarDays.map((day) => {
-                    const completed = day.dateKey ? completedDateKeys.has(day.dateKey) : false;
-                    const logsForDay = day.dateKey
-                      ? store.workoutLogs.filter((log) => log.date === day.dateKey).length
-                      : 0;
-                    const isToday = day.dateKey === toDateKey(new Date());
+              </div>
+            </CardContent>
+          </Card>
 
-                    return (
-                      <div
-                        key={day.key}
-                        className={cn(
-                          'aspect-square rounded-lg border text-xs flex flex-col items-center justify-center gap-1 transition-colors',
-                          day.day === 0 && 'border-transparent',
-                          day.day > 0 && 'border-border/50 bg-muted/20',
-                          completed && 'border-primary/40 bg-primary/15 text-primary',
-                          isToday && 'ring-1 ring-primary/50'
-                        )}
-                      >
-                        {day.day > 0 && (
-                          <>
-                            <span className="font-semibold">{day.day}</span>
-                            {logsForDay > 0 && (
-                              <span className={cn('h-1.5 w-1.5 rounded-full', completed ? 'bg-primary' : 'bg-muted-foreground/50')} />
-                            )}
-                          </>
-                        )}
-                      </div>
-                    );
-                  })}
+          <Card className="border-border/50">
+            <CardContent className="space-y-5 p-5 sm:p-6">
+              <div>
+                <p className="text-xs font-black uppercase tracking-wide text-muted-foreground">Coach review</p>
+                <h3 className="mt-2 text-xl font-black">This week&apos;s read</h3>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">{weeklyReview}</p>
+              </div>
+              <div className="rounded-lg border border-primary/20 bg-primary/10 p-4">
+                <p className="text-xs font-black uppercase tracking-wide text-primary">Next best move</p>
+                <p className="mt-2 text-sm font-semibold">{nextForgeMove}</p>
+              </div>
+              <div>
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <p className="text-xs font-black uppercase tracking-wide text-muted-foreground">Muscle coverage</p>
+                  <Badge variant="outline" className="rounded-md">{trainedMuscles.length} hit</Badge>
                 </div>
-                <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-primary" /> Completed</span>
-                  <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-muted-foreground/50" /> Logged</span>
-                  <span>{completedLogs.length} completed workout{completedLogs.length === 1 ? '' : 's'} total</span>
+                <div className="flex flex-wrap gap-2">
+                  {(trainedMuscles.length ? trainedMuscles : ['No muscles logged yet']).map((muscle) => (
+                    <span key={muscle} className="rounded-md border border-border/60 bg-muted/35 px-2.5 py-1 text-xs font-semibold">
+                      {muscle}
+                    </span>
+                  ))}
                 </div>
-              </CardContent>
-            </Card>
-          </motion.div>
+                {focusGaps.length > 0 && (
+                  <p className="mt-3 text-xs leading-5 text-muted-foreground">
+                    Balance cue: add {focusGaps.join(', ')} before the week ends.
+                  </p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
 
+        {/* Achievements */}
+        <div className="mb-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

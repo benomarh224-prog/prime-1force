@@ -14,12 +14,42 @@ export const weekDays = [
 
 export const defaultSchedule = [
   { dayOfWeek: 0, splitTitle: 'Rest Day', exercises: [], isRestDay: true },
-  { dayOfWeek: 1, splitTitle: 'Push', exercises: ['Chest', 'Shoulders', 'Triceps'], isRestDay: false },
-  { dayOfWeek: 2, splitTitle: 'Pull', exercises: ['Back', 'Biceps', 'Rear Delts'], isRestDay: false },
-  { dayOfWeek: 3, splitTitle: 'Legs', exercises: ['Quads', 'Hamstrings', 'Glutes', 'Calves'], isRestDay: false },
-  { dayOfWeek: 4, splitTitle: 'Push', exercises: ['Chest', 'Shoulders', 'Triceps'], isRestDay: false },
-  { dayOfWeek: 5, splitTitle: 'Pull', exercises: ['Back', 'Biceps', 'Core'], isRestDay: false },
-  { dayOfWeek: 6, splitTitle: 'Legs + Conditioning', exercises: ['Legs', 'Abs', 'Cardio'], isRestDay: false },
+  {
+    dayOfWeek: 1,
+    splitTitle: 'Push Strength',
+    exercises: ['Barbell Bench Press', 'Chest Press Machine', 'Shoulder Press Machine', 'Cable Triceps Pushdown'],
+    isRestDay: false,
+  },
+  {
+    dayOfWeek: 2,
+    splitTitle: 'Pull Strength',
+    exercises: ['Lat Pulldown Machine', 'Seated Row Machine', 'Pull-Ups', 'Machine Bicep Curl'],
+    isRestDay: false,
+  },
+  {
+    dayOfWeek: 3,
+    splitTitle: 'Lower Body',
+    exercises: ['Barbell Back Squat', 'Leg Press Machine', 'Leg Extension Machine', 'Conventional Deadlift'],
+    isRestDay: false,
+  },
+  {
+    dayOfWeek: 4,
+    splitTitle: 'Push Volume',
+    exercises: ['Push-Ups', 'Chest Press Machine', 'Shoulder Press Machine', 'Cable Triceps Pushdown'],
+    isRestDay: false,
+  },
+  {
+    dayOfWeek: 5,
+    splitTitle: 'Pull Volume',
+    exercises: ['Lat Pulldown Machine', 'Seated Row Machine', 'Machine Bicep Curl', 'Pull-Ups'],
+    isRestDay: false,
+  },
+  {
+    dayOfWeek: 6,
+    splitTitle: 'Legs + Conditioning',
+    exercises: ['Barbell Back Squat', 'Leg Extension Machine', 'Push-Ups', 'Conventional Deadlift'],
+    isRestDay: false,
+  },
 ];
 
 export function parseExercises(value: string | null | undefined): string[] {

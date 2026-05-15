@@ -32,6 +32,7 @@ interface AppState {
   currentPage: PageName;
   selectedExerciseId: string | null;
   pendingStartExerciseId: string | null;
+  pendingStartTodayWorkout: boolean;
   sidebarOpen: boolean;
   favorites: string[];
   // User profile
@@ -48,7 +49,9 @@ interface AppState {
   navigate: (page: PageName) => void;
   setExerciseId: (id: string) => void;
   requestStartExercise: (id: string) => void;
+  requestStartTodayWorkout: () => void;
   clearPendingStartExercise: () => void;
+  clearPendingStartTodayWorkout: () => void;
   toggleSidebar: () => void;
   setSidebarOpen: (open: boolean) => void;
   toggleFavorite: (exerciseId: string) => void;
@@ -74,6 +77,7 @@ export const useAppStore = create<AppState>()(
       currentPage: 'home',
       selectedExerciseId: null,
       pendingStartExerciseId: null,
+      pendingStartTodayWorkout: false,
       sidebarOpen: false,
       favorites: [],
       userName: '',
@@ -93,7 +97,9 @@ export const useAppStore = create<AppState>()(
       },
       setExerciseId: (id) => set({ selectedExerciseId: id, currentPage: 'exercise-detail' }),
       requestStartExercise: (id) => set({ pendingStartExerciseId: id }),
+      requestStartTodayWorkout: () => set({ pendingStartTodayWorkout: true }),
       clearPendingStartExercise: () => set({ pendingStartExerciseId: null }),
+      clearPendingStartTodayWorkout: () => set({ pendingStartTodayWorkout: false }),
       toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
       setSidebarOpen: (open) => set({ sidebarOpen: open }),
       toggleFavorite: (exerciseId) => set((s) => ({

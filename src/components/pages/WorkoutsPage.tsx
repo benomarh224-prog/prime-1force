@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Progress } from '@/components/ui/progress';
 import {
   Select,
   SelectContent,
@@ -31,7 +32,7 @@ import {
   Flame, Heart, X, Plus, Save, Trash2, ListChecks,
   Calendar, BarChart3, Trophy, NotebookPen, PlayCircle,
   ArrowDownAZ, Filter, Star, CheckCircle2, CalendarCheck2,
-  CirclePause, Loader2, RefreshCw,
+  CirclePause, Loader2, RefreshCw, Target,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Exercise } from '@/lib/data';
@@ -105,6 +106,23 @@ const difficultyColor: Record<string, string> = {
   advanced: 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20',
 };
 
+const plannedFocusMap: Record<string, string[]> = {
+  chest: ['Barbell Bench Press', 'Chest Press Machine'],
+  shoulders: ['Shoulder Press Machine'],
+  triceps: ['Cable Triceps Pushdown'],
+  back: ['Lat Pulldown Machine', 'Seated Row Machine'],
+  biceps: ['Machine Bicep Curl'],
+  'rear delts': ['Seated Row Machine'],
+  core: ['Push-Ups'],
+  abs: ['Push-Ups'],
+  quads: ['Barbell Back Squat', 'Leg Extension Machine'],
+  hamstrings: ['Conventional Deadlift'],
+  glutes: ['Barbell Back Squat'],
+  calves: ['Leg Extension Machine'],
+  legs: ['Barbell Back Squat', 'Leg Extension Machine'],
+  cardio: ['Push-Ups'],
+};
+
 function getDateKey(date = new Date()) {
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
@@ -160,7 +178,9 @@ export function WorkoutsPage() {
   const {
     setExerciseId,
     pendingStartExerciseId,
+    pendingStartTodayWorkout,
     clearPendingStartExercise,
+    clearPendingStartTodayWorkout,
     favorites,
     toggleFavorite,
     navigate,
@@ -365,6 +385,33 @@ export function WorkoutsPage() {
     (sum, exercise) => sum + exercise.sets.reduce((setSum, set) => setSum + set.reps * set.weight, 0),
     0
   );
+  const completedSessionVolume = sessionExercises.reduce(
+    (sum, exercise) => sum + exercise.sets
+      .filter((set) => set.done)
+      .reduce((setSum, set) => setSum + set.reps * set.weight, 0),
+    0
+  );
+  const activeSessionExerciseIndex = sessionExercises.findIndex((exercise) => !exercise.done);
+  const activeSessionExercise = activeSessionExerciseIndex >= 0
+    ? sessionExercises[activeSessionExerciseIndex]
+    : sessionExercises[sessionExercises.length - 1] || null;
+  const nextSessionExercise = activeSessionExerciseIndex >= 0
+    ? sessionExercises.slice(activeSessionExerciseIndex + 1).find((exercise) => !exercise.done) || null
+    : null;
+  const remainingSetCount = Math.max(sessionSetCount - sessionDoneSetCount, 0);
+  const estimatedRemainingMinutes = Math.max(
+    remainingSetCount * 2 + sessionExercises.filter((exercise) => !exercise.done).length * 3,
+    sessionOpen && sessionExercises.length > 0 && sessionProgress < 100 ? 3 : 0
+  );
+  const sessionSignal = sessionProgress >= 100
+    ? 'Complete'
+    : restRunning
+      ? 'Recover'
+      : sessionProgress >= 65
+        ? 'Finish strong'
+        : sessionDoneSetCount > 0
+          ? 'Build rhythm'
+          : 'First set';
 
   function getLoggedCount(exerciseId: string) {
     return workoutLogs.filter((log) => log.exercises.some((ex) => ex.exerciseId === exerciseId)).length;
@@ -374,6 +421,22 @@ export function WorkoutsPage() {
     const normalized = name.toLowerCase().trim();
     return exercises.find((exercise) => exercise.name.toLowerCase() === normalized)
       || exercises.find((exercise) => exercise.name.toLowerCase().includes(normalized) || normalized.includes(exercise.name.toLowerCase()));
+  };
+
+  const getSessionSwaps = (exercise?: Exercise) => {
+    if (!exercise) return [];
+
+    const sameMuscle = exercises.filter((candidate) =>
+      candidate.id !== exercise.id &&
+      candidate.muscleGroup === exercise.muscleGroup
+    );
+    const sameCategory = exercises.filter((candidate) =>
+      candidate.id !== exercise.id &&
+      candidate.category === exercise.category &&
+      !sameMuscle.some((swap) => swap.id === candidate.id)
+    );
+
+    return [...sameMuscle, ...sameCategory].slice(0, 3);
   };
 
   const makeSessionExercise = (name: string, fallbackIndex = 0): SessionExercise => {
@@ -390,13 +453,36 @@ export function WorkoutsPage() {
     };
   };
 
+  const swapSessionExercise = (exerciseIndex: number, nextExercise: Exercise) => {
+    setSessionExercises((current) =>
+      current.map((exercise, currentExerciseIndex) => {
+        if (currentExerciseIndex !== exerciseIndex) return exercise;
+
+        const reps = defaultRepsForExercise(nextExercise);
+        const weight = defaultWeightForExercise(nextExercise);
+        const setCount = Math.max(exercise.sets.length, 1);
+
+        return {
+          exerciseId: nextExercise.id,
+          exerciseName: nextExercise.name,
+          sourceExercise: nextExercise,
+          sets: Array.from({ length: setCount }, () => ({ reps, weight, done: false })),
+          done: false,
+        };
+      })
+    );
+  };
+
+  const expandPlannedExercises = (plannedExercises: string[]) =>
+    plannedExercises.flatMap((name) => plannedFocusMap[name.toLowerCase().trim()] || [name]);
+
   const startSession = (mode: 'today' | 'exercise', exercise?: Exercise) => {
     if (mode === 'today') {
       if (!todayPlan || todayPlan.isRestDay || todayPlan.exercises.length === 0) return;
 
       setSessionName(todayPlan.splitTitle);
       setSessionNotes(todayPlan.notes || '');
-      setSessionExercises(todayPlan.exercises.map((name, index) => makeSessionExercise(name, index)));
+      setSessionExercises(expandPlannedExercises(todayPlan.exercises).map((name, index) => makeSessionExercise(name, index)));
       setSessionShouldCompleteToday(true);
     } else if (exercise) {
       setSessionName(exercise.name);
@@ -421,6 +507,23 @@ export function WorkoutsPage() {
       startSession('exercise', exerciseToStart);
     }
   }, [clearPendingStartExercise, pendingStartExerciseId]);
+
+  useEffect(() => {
+    if (!pendingStartTodayWorkout || scheduleLoading) return;
+
+    clearPendingStartTodayWorkout();
+    if (todayPlan && !todayPlan.isRestDay && todayPlan.exercises.length > 0) {
+      startSession('today');
+      return;
+    }
+
+    toast({
+      title: todayPlan?.isRestDay ? 'Today is a rest day' : 'No workout planned yet',
+      description: todayPlan?.isRestDay
+        ? todayPlan.notes || 'Use Schedule to plan the next training day.'
+        : 'Build a weekly plan in Schedule, or start any exercise from the library below.',
+    });
+  }, [clearPendingStartTodayWorkout, pendingStartTodayWorkout, scheduleLoading, todayPlan, toast]);
 
   const updateSessionSet = (exerciseIndex: number, setIndex: number, field: keyof QuickSet, value: number) => {
     setSessionExercises((current) =>
@@ -1424,10 +1527,18 @@ export function WorkoutsPage() {
                 </div>
               </div>
             </div>
+            <div className="mt-4 grid gap-2 sm:grid-cols-[1fr_auto] sm:items-center">
+              <Progress value={sessionProgress} className="h-2" />
+              <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                <Badge variant="secondary" className="rounded-md">{sessionSignal}</Badge>
+                <span>{remainingSetCount} set{remainingSetCount === 1 ? '' : 's'} left</span>
+                <span>{estimatedRemainingMinutes} min est.</span>
+              </div>
+            </div>
           </div>
 
           <div className="space-y-5 p-4 sm:p-5">
-            <div className="grid gap-3 lg:grid-cols-[1fr_18rem]">
+            <div className="grid gap-3 xl:grid-cols-[1fr_18rem_18rem]">
               <div className="rounded-lg border bg-muted/20 p-4">
                 <div className="mb-3 flex items-center justify-between gap-3">
                   <div>
@@ -1461,6 +1572,29 @@ export function WorkoutsPage() {
                 </div>
               </div>
 
+              <div className="rounded-lg border border-primary/25 bg-primary/10 p-4">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-black uppercase tracking-wide text-primary">Live lift</p>
+                    <p className="mt-1 line-clamp-1 text-lg font-black">
+                      {activeSessionExercise?.exerciseName || 'Ready'}
+                    </p>
+                  </div>
+                  <Target className="h-5 w-5 shrink-0 text-primary" />
+                </div>
+                <div className="space-y-2 text-sm text-muted-foreground">
+                  <p>
+                    {activeSessionExercise
+                      ? `${activeSessionExercise.sets.filter((set) => set.done).length}/${activeSessionExercise.sets.length} sets complete`
+                      : 'Add an exercise to begin.'}
+                  </p>
+                  <p className="line-clamp-1">
+                    Next: {nextSessionExercise?.exerciseName || (sessionProgress >= 100 ? 'Finish and save' : 'Final push')}
+                  </p>
+                  <p>{Math.round(completedSessionVolume).toLocaleString()}kg completed volume</p>
+                </div>
+              </div>
+
               <div className="rounded-lg border bg-muted/20 p-4">
                 <p className="text-xs font-black uppercase tracking-wide text-muted-foreground">Finish flow</p>
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">
@@ -1478,7 +1612,14 @@ export function WorkoutsPage() {
             </div>
 
             <div className="space-y-3">
-              {sessionExercises.map((exercise, exerciseIndex) => (
+              {sessionExercises.map((exercise, exerciseIndex) => {
+                const exerciseDoneSets = exercise.sets.filter((set) => set.done).length;
+                const exerciseProgress = exercise.sets.length > 0
+                  ? Math.round((exerciseDoneSets / exercise.sets.length) * 100)
+                  : 0;
+                const exerciseSwaps = getSessionSwaps(exercise.sourceExercise);
+
+                return (
                 <div key={`${exercise.exerciseId}-${exerciseIndex}`} className="rounded-lg border bg-card p-4">
                   <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <button
@@ -1495,7 +1636,7 @@ export function WorkoutsPage() {
                       <span className="min-w-0">
                         <span className="block truncate font-black uppercase">{exercise.exerciseName}</span>
                         <span className="mt-1 block text-xs text-muted-foreground">
-                          {exercise.sets.filter((set) => set.done).length}/{exercise.sets.length} sets complete
+                          {exerciseDoneSets}/{exercise.sets.length} sets complete
                           {exercise.sourceExercise ? ` - ${exercise.sourceExercise.muscleGroup}` : ''}
                         </span>
                       </span>
@@ -1509,6 +1650,26 @@ export function WorkoutsPage() {
                       <Plus className="h-4 w-4" />
                       Add Set
                     </Button>
+                  </div>
+
+                  <div className="mb-4 grid gap-3 lg:grid-cols-[1fr_auto] lg:items-center">
+                    <Progress value={exerciseProgress} className="h-1.5" />
+                    {exerciseSwaps.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {exerciseSwaps.map((swap) => (
+                          <Button
+                            key={swap.id}
+                            variant="outline"
+                            size="sm"
+                            className="h-8 rounded-lg text-xs"
+                            onClick={() => swapSessionExercise(exerciseIndex, swap)}
+                          >
+                            <RefreshCw className="h-3.5 w-3.5" />
+                            {swap.name}
+                          </Button>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -1576,7 +1737,8 @@ export function WorkoutsPage() {
                     ))}
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
 
             <div className="space-y-2">

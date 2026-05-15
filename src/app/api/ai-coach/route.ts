@@ -4,13 +4,15 @@ import { sanitizeInput } from '@/proxy';
 
 type CoachMessage = { role: 'user' | 'assistant'; content: string };
 
-type GlmMessage = {
-  role: 'system' | 'user' | 'assistant';
-  content: string;
+type GeminiContent = {
+  role: 'user' | 'model';
+  parts: { text: string }[];
 };
 
-const GLM_API_BASE_URL = process.env.GLM_API_BASE_URL || 'https://integrate.api.nvidia.com/v1';
-const AI_COACH_MODEL = process.env.AI_COACH_MODEL || 'z-ai/glm-5.1';
+const GEMINI_API_BASE_URL = process.env.GEMINI_API_BASE_URL || 'https://generativelanguage.googleapis.com/v1beta';
+const configuredGeminiModel = process.env.GEMINI_MODEL ||
+  (process.env.AI_COACH_MODEL?.startsWith('gemini') ? process.env.AI_COACH_MODEL : undefined);
+const AI_COACH_MODEL = configuredGeminiModel || 'gemini-1.5-flash';
 const AI_COACH_TIMEOUT_MS = Number(process.env.AI_COACH_TIMEOUT_MS || 30000);
 const AI_COACH_MAX_TOKENS = Number(process.env.AI_COACH_MAX_TOKENS || 900);
 const AI_COACH_SYSTEM_PROMPT = [
@@ -198,7 +200,7 @@ function getLocalCoachResponse(messages: CoachMessage[]) {
   ].join('\n');
 }
 
-function toGlmMessages(messages: CoachMessage[]): GlmMessage[] {
+function toGeminiContents(messages: CoachMessage[]) {
   const systemParts = [AI_COACH_SYSTEM_PROMPT];
   const conversation = [...messages];
 
@@ -206,49 +208,60 @@ function toGlmMessages(messages: CoachMessage[]): GlmMessage[] {
     systemParts.push(conversation.shift()?.content || '');
   }
 
-  return [
-    { role: 'system', content: systemParts.filter(Boolean).join('\n\n') },
-    ...conversation.map((message) => ({
-      role: message.role,
-      content: message.content,
+  return {
+    systemInstruction: systemParts.filter(Boolean).join('\n\n'),
+    contents: conversation.map((message): GeminiContent => ({
+      role: message.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: message.content }],
     })),
-  ];
+  };
 }
 
-function extractGlmText(payload: unknown) {
+function extractGeminiText(payload: unknown) {
   if (!payload || typeof payload !== 'object') return undefined;
 
-  const choices = (payload as { choices?: unknown }).choices;
-  if (!Array.isArray(choices)) return undefined;
+  const candidates = (payload as { candidates?: unknown }).candidates;
+  if (!Array.isArray(candidates)) return undefined;
 
-  const content = (choices[0] as { message?: { content?: unknown } } | undefined)?.message?.content;
-  return typeof content === 'string' && content.trim().length > 0 ? content.trim() : undefined;
+  const parts = (candidates[0] as { content?: { parts?: unknown } } | undefined)?.content?.parts;
+  if (!Array.isArray(parts)) return undefined;
+
+  const text = parts
+    .map((part) => (part as { text?: unknown }).text)
+    .filter((part): part is string => typeof part === 'string')
+    .join('\n')
+    .trim();
+
+  return text.length > 0 ? text : undefined;
 }
 
 async function getAiCoachResponse(messages: CoachMessage[]) {
-  const apiKey = process.env.GLM_API_KEY || process.env.NVIDIA_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY ||
+    process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
+    process.env.GOOGLE_API_KEY;
 
   if (!apiKey) {
-    throw new Error('GLM_API_KEY is not configured.');
+    throw new Error('GEMINI_API_KEY is not configured.');
   }
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), AI_COACH_TIMEOUT_MS);
+  const geminiPayload = toGeminiContents(messages);
 
-  const response = await fetch(`${GLM_API_BASE_URL}/chat/completions`, {
+  const response = await fetch(`${GEMINI_API_BASE_URL}/models/${AI_COACH_MODEL}:generateContent?key=${encodeURIComponent(apiKey)}`, {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: AI_COACH_MODEL,
-      messages: toGlmMessages(messages),
-      max_tokens: AI_COACH_MAX_TOKENS,
-      temperature: 0.65,
-      top_p: 0.9,
-      chat_template_kwargs: {
-        enable_thinking: false,
+      systemInstruction: {
+        parts: [{ text: geminiPayload.systemInstruction }],
+      },
+      contents: geminiPayload.contents,
+      generationConfig: {
+        maxOutputTokens: AI_COACH_MAX_TOKENS,
+        temperature: 0.65,
+        topP: 0.9,
       },
     }),
     cache: 'no-store',
@@ -262,12 +275,12 @@ async function getAiCoachResponse(messages: CoachMessage[]) {
       payload && typeof payload === 'object'
         ? (payload as { error?: { message?: string } }).error?.message
         : undefined;
-    throw new Error(errorMessage || `GLM request failed with status ${response.status}`);
+    throw new Error(errorMessage || `Gemini request failed with status ${response.status}`);
   }
 
-  const text = extractGlmText(payload);
+  const text = extractGeminiText(payload);
   if (!text) {
-    throw new Error('GLM response did not include text.');
+    throw new Error('Gemini response did not include text.');
   }
 
   return text;
