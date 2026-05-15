@@ -81,9 +81,11 @@ export function Header() {
         animate={{ y: 0 }}
         transition={{ duration: 0.5, ease: 'easeOut' }}
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          scrolled
+          heroTop
+            ? 'bg-transparent'
+            : scrolled
             ? 'glass shadow-[0_16px_42px_oklch(0_0_0_/_0.24)]'
-            : 'bg-transparent'
+            : 'glass'
         }`}
       >
         <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-10">

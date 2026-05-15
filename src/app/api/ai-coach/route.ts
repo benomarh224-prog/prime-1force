@@ -52,6 +52,64 @@ function isGreetingMessage(message: string) {
   return greetingPatterns.some((pattern) => pattern.test(normalized));
 }
 
+function isNutritionRequest(message: string) {
+  const normalized = normalizeMessage(message);
+  const nutritionTerms = [
+    'meal',
+    'eat',
+    'food',
+    'nutrition',
+    'protein',
+    'calorie',
+    'calories',
+    'macro',
+    'macros',
+    'breakfast',
+    'lunch',
+    'dinner',
+    'snack',
+    'pre workout',
+    'post workout',
+    'diet',
+  ];
+
+  return nutritionTerms.some((term) => normalized.includes(term));
+}
+
+function getLunchResponse(message: string) {
+  const wantsWeightLoss = /\b(cut|fat loss|lose weight|weight loss|lean|diet)\b/.test(message);
+  const wantsMuscle = /\b(bulk|gain|muscle|hypertrophy|strength)\b/.test(message);
+
+  const goalNote = wantsWeightLoss
+    ? 'Keep the portion controlled and prioritize lean protein plus vegetables.'
+    : wantsMuscle
+      ? 'Use the larger carb portion so the meal supports training performance and recovery.'
+      : 'This is balanced for energy, fullness, and recovery.';
+
+  return [
+    '**Best simple lunch**',
+    '',
+    'Go with a **chicken rice power bowl**. It is easy to make, high in protein, and works for most fitness goals.',
+    '',
+    '**Plate**',
+    '- Grilled chicken breast or turkey: 150-200g',
+    '- Rice, potatoes, quinoa, or whole-grain bread: 1 fist-sized portion',
+    '- Big salad or vegetables: 2 fists',
+    '- Olive oil, avocado, or nuts: 1 thumb-sized portion',
+    '- Optional: Greek yogurt or fruit if you need more calories',
+    '',
+    '**Target macros**',
+    '- Protein: 35-50g',
+    '- Carbs: 45-75g',
+    '- Fat: 10-20g',
+    '- Calories: about 500-750 depending on portions',
+    '',
+    `**Coach note:** ${goalNote}`,
+    '',
+    '**Next 24 hours:** eat this once, then tell me your goal and body weight so I can tune the portion size.'
+  ].join('\n');
+}
+
 function getLocalCoachResponse(messages: CoachMessage[]) {
   const latestMessage = getLatestUserMessage(messages);
   const latest = latestMessage.toLowerCase();
@@ -119,7 +177,11 @@ function getLocalCoachResponse(messages: CoachMessage[]) {
     ].join('\n');
   }
 
-  if (latest.includes('meal') || latest.includes('eat') || latest.includes('nutrition') || latest.includes('protein')) {
+  if (latest.includes('lunch')) {
+    return getLunchResponse(latest);
+  }
+
+  if (isNutritionRequest(latestMessage)) {
     return [
       '**Nutrition game plan**',
       '',
