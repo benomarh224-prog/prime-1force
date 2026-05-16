@@ -444,8 +444,8 @@ export function HomePage() {
       </section>
 
       {/* ═══════════ DAILY MOTIVATION ═══════════ */}
-      <TodayDashboard />
       <QuoteSlider />
+      <TodayDashboard />
 
       {/* ═══════════ FEATURES SECTION ═══════════ */}
       <section className="py-16 sm:py-24">
