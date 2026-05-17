@@ -14,7 +14,7 @@ import { progressData } from '@/lib/data';
 import {
   Bot, Dumbbell, BarChart3, Apple, ArrowRight, Zap, Target,
   Flame, TrendingUp, Shield, Heart,
-  Activity, ChevronDown, Play, Award,
+  Activity, CalendarCheck2, CheckCircle2, ChevronDown, Clock, Play, Award,
 } from 'lucide-react';
 
 /* ──────────────── animation helpers ──────────────── */
@@ -78,11 +78,11 @@ const featureCards = [
 const faqItems = [
   {
     q: 'How does the AI Coach work?',
-    a: 'Our AI Coach uses advanced machine learning to analyze your fitness profile, goals, and progress. It provides personalized workout suggestions, form corrections, nutrition advice, and motivational support — available 24/7.',
+    a: 'Our AI Coach uses advanced machine learning to analyze your fitness profile, goals, and progress. It provides personalized workout suggestions, form corrections, nutrition advice, and motivational support - available 24/7.',
   },
   {
     q: 'Do I need gym equipment?',
-    a: 'No! Prime Forge offers workouts for every setting — gym, home, or outdoor. Each exercise is tagged with equipment requirements so you can filter based on what you have available.',
+    a: 'No! Prime Forge offers workouts for every setting - gym, home, or outdoor. Each exercise is tagged with equipment requirements so you can filter based on what you have available.',
   },
   {
     q: 'Can I track my nutrition?',
@@ -127,6 +127,18 @@ const beforeAfter = [
     after: { weight: '68kg', bodyFat: '21%', run: '5km' },
     gradient: 'from-amber-500 to-orange-600',
   },
+];
+
+const heroPlan = [
+  { icon: <Dumbbell className="h-4 w-4" />, label: 'Upper Strength', meta: '46 min' },
+  { icon: <Target className="h-4 w-4" />, label: 'Protein Focus', meta: '145g goal' },
+  { icon: <Bot className="h-4 w-4" />, label: 'Coach Check-in', meta: 'Form cues' },
+];
+
+const heroMetrics = [
+  { value: '5x', label: 'weekly plan' },
+  { value: '82%', label: 'goal pace' },
+  { value: '12d', label: 'streak' },
 ];
 
 /* ──────────────── FAQ Accordion Item ──────────────── */
@@ -356,7 +368,7 @@ export function HomePage() {
           <div className="absolute inset-x-0 bottom-0 h-52 bg-gradient-to-t from-background via-background/50 to-transparent" />
         </div>
 
-        <div className="relative z-10 mx-auto flex min-h-[92svh] w-full max-w-[1400px] items-center px-4 pb-24 pt-24 sm:px-10 sm:pb-28 sm:pt-28 lg:px-16">
+        <div className="relative z-10 mx-auto flex min-h-[92svh] w-full max-w-[1400px] items-center justify-between gap-12 px-4 pb-24 pt-24 sm:px-10 sm:pb-28 sm:pt-28 lg:px-16">
           <div className="hero-copy-frame min-w-0">
             <motion.div
               className="mb-7 flex items-center gap-4 text-xs font-semibold uppercase tracking-wide text-primary sm:mb-9 sm:gap-7 sm:text-sm"
@@ -433,6 +445,61 @@ export function HomePage() {
               ))}
             </motion.div>
           </div>
+
+          <motion.div
+            className="hidden w-[25rem] shrink-0 xl:block"
+            initial={false}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.3 }}
+          >
+            <div className="relative overflow-hidden rounded-lg border border-white/15 bg-black/45 p-5 shadow-2xl shadow-black/40 backdrop-blur-md">
+              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary to-transparent" />
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs font-black uppercase tracking-wide text-primary">Today&apos;s Plan</p>
+                  <h2 className="mt-2 text-2xl font-black uppercase tracking-tight">Train with intent</h2>
+                </div>
+                <Badge className="rounded-md bg-primary text-primary-foreground">Live</Badge>
+              </div>
+
+              <div className="mt-5 space-y-3">
+                {heroPlan.map((item) => (
+                  <div key={item.label} className="flex items-center gap-3 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-3">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary/15 text-primary">
+                      {item.icon}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-bold">{item.label}</span>
+                      <span className="mt-0.5 block text-xs text-white/55">{item.meta}</span>
+                    </span>
+                    <CheckCircle2 className="h-4 w-4 shrink-0 text-primary" />
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-5 grid grid-cols-3 divide-x divide-white/10 rounded-lg border border-white/10 bg-white/[0.04]">
+                {heroMetrics.map((metric) => (
+                  <div key={metric.label} className="px-3 py-4 text-center">
+                    <p className="text-2xl font-black text-primary">{metric.value}</p>
+                    <p className="mt-1 text-[10px] font-bold uppercase tracking-wide text-white/50">{metric.label}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-5 grid grid-cols-2 gap-3">
+                <div className="rounded-lg border border-white/10 bg-white/[0.04] p-3">
+                  <Clock className="mb-3 h-4 w-4 text-primary" />
+                  <p className="text-xs font-bold uppercase tracking-wide text-white/55">Next block</p>
+                  <p className="mt-1 text-sm font-black">Pull + Core</p>
+                </div>
+                <div className="rounded-lg border border-white/10 bg-white/[0.04] p-3">
+                  <CalendarCheck2 className="mb-3 h-4 w-4 text-primary" />
+                  <p className="text-xs font-bold uppercase tracking-wide text-white/55">Recovery</p>
+                  <p className="mt-1 text-sm font-black">Mobility 12m</p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
         </div>
 
         {/* Scroll indicator */}
@@ -453,7 +520,7 @@ export function HomePage() {
           <motion.div className="text-center mb-16" initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-80px' }} variants={fadeUp} custom={0}>
             <Badge variant="secondary" className="mb-4"><Zap className="h-3 w-3 mr-1" />Features</Badge>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">Everything You Need to <span className="gradient-text">Crush Your Goals</span></h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">A complete fitness ecosystem built for results. From AI coaching to nutrition tracking — all in one premium platform.</p>
+            <p className="text-muted-foreground max-w-2xl mx-auto">A complete fitness ecosystem built for results. From AI coaching to nutrition tracking - all in one premium platform.</p>
           </motion.div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {featureCards.map((feature, i) => (
@@ -487,7 +554,7 @@ export function HomePage() {
             <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, margin: '-80px' }} transition={{ duration: 0.7 }}>
               <Badge variant="secondary" className="mb-4"><BarChart3 className="h-3 w-3 mr-1" />Dashboard</Badge>
               <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-6">Track Progress Like <span className="gradient-text">Never Before</span></h2>
-              <p className="text-muted-foreground leading-relaxed mb-8">Get a bird&apos;s-eye view of your entire fitness journey. Monitor workouts, calories, streaks, and personal records — all in one beautifully designed dashboard.</p>
+              <p className="text-muted-foreground leading-relaxed mb-8">Get a bird&apos;s-eye view of your entire fitness journey. Monitor workouts, calories, streaks, and personal records - all in one beautifully designed dashboard.</p>
               <div className="space-y-5">
                 {[
                   { icon: <TrendingUp className="h-5 w-5 text-primary" />, title: 'Advanced Analytics', desc: 'Weekly and monthly charts for weight, calories, and workout volume' },
@@ -578,7 +645,7 @@ export function HomePage() {
                   </div>
                   <div className="space-y-2.5">
                     {[
-                      { name: 'Morning Run', stat: '5.2 km · 32 min', icon: <Flame className="h-3.5 w-3.5 text-orange-400" /> },
+                      { name: 'Morning Run', stat: '5.2 km - 32 min', icon: <Flame className="h-3.5 w-3.5 text-orange-400" /> },
                       { name: 'Protein Intake', stat: '145g / 160g', icon: <Target className="h-3.5 w-3.5 text-emerald-400" /> },
                       { name: 'Water', stat: '2.1L / 3L', icon: <Activity className="h-3.5 w-3.5 text-sky-400" /> },
                     ].map((a) => (
@@ -652,7 +719,7 @@ export function HomePage() {
                       <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                         <div className={cn('h-full rounded-full bg-gradient-to-r', t.gradient)} style={{ width: '100%' }} />
                       </div>
-                      <p className="text-[10px] text-muted-foreground text-center mt-2">Goal achieved ✓</p>
+                      <p className="text-[10px] text-muted-foreground text-center mt-2">Goal achieved</p>
                     </div>
                   </CardContent>
                 </Card>
@@ -706,7 +773,7 @@ export function HomePage() {
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight mb-6">Ready to <span className="gradient-text">Transform</span>?</h2>
             <p className="text-lg text-muted-foreground max-w-xl mx-auto mb-10 leading-relaxed">
               Join thousands of athletes who are already seeing real results with Prime Forge.
-              Your journey starts today — no credit card required.
+              Your journey starts today - no credit card required.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button size="lg" onClick={startToday} className="h-14 px-10 text-base rounded-xl neon-glow gap-2 font-semibold">
