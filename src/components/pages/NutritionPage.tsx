@@ -43,7 +43,7 @@ const categoryMeta = {
 };
 
 const macroColors = {
-  protein: 'oklch(0.72 0.19 155)',
+  protein: 'oklch(0.62 0.24 27)',
   carbs: 'oklch(0.75 0.12 60)',
   fat: 'oklch(0.60 0.15 250)',
 };

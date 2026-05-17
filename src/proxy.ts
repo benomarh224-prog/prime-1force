@@ -227,6 +227,6 @@ export function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     // Match all paths except static files
-    '/((?!_next/static|_next/image|favicon.ico|logo.svg|images/).*)',
+    '/((?!_next/static|_next/image|favicon.ico|logo.svg|logo.PNG|logo-wordmark.png|images/).*)',
   ],
 };

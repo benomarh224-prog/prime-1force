@@ -14,11 +14,12 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="md:col-span-1">
-            <button onClick={() => navigate('home')} className="flex items-center gap-2 mb-4">
-              <Image src="/logo.svg" alt="Prime Forge" width={36} height={36} className="rounded-lg" />
-              <span className="text-xl font-black uppercase tracking-tight">
-                Prime<span className="text-primary"> Forge</span>
-              </span>
+            <button
+              onClick={() => navigate('home')}
+              className="mb-4 block"
+              aria-label="Prime Forge home"
+            >
+              <Image src="/logo-wordmark.png" alt="Prime Forge" width={208} height={32} className="h-8 w-auto" />
             </button>
             <p className="text-sm text-muted-foreground leading-relaxed">
               AI-powered fitness platform that adapts to your goals. Train smarter, not harder.

@@ -93,13 +93,11 @@ export function Header() {
           {/* Logo */}
           <button
             onClick={() => navigate('home')}
-            className={`flex min-w-0 items-center gap-3 group ${heroTop ? 'text-white' : ''}`}
+            className="group flex min-w-0 items-center"
+            aria-label="Prime Forge home"
           >
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-transform group-hover:scale-105">
-              <Image src="/logo.svg" alt="Prime Forge" width={36} height={36} className="rounded-lg" />
-            </span>
-            <span className={`truncate text-lg sm:text-xl font-black uppercase tracking-tight ${heroTop ? 'text-white' : ''}`}>
-              Prime<span className={heroTop ? 'text-white' : 'text-primary'}> Forge</span>
+            <span className="block shrink-0 transition-transform group-hover:scale-[1.02]">
+              <Image src="/logo-wordmark.png" alt="Prime Forge" width={182} height={28} className="h-7 w-auto sm:h-8" priority />
             </span>
           </button>
 
@@ -189,9 +187,8 @@ export function Header() {
                 <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
                 <div className="flex min-h-full flex-col">
                   <div className="flex shrink-0 items-center justify-between border-b p-4">
-                    <span className="flex items-center gap-3 text-lg font-black uppercase tracking-tight">
-                      <Image src="/logo.svg" alt="Prime Forge" width={36} height={36} className="rounded-lg" />
-                      Prime<span className="text-primary"> Forge</span>
+                    <span className="block">
+                      <Image src="/logo-wordmark.png" alt="Prime Forge" width={182} height={28} className="h-8 w-auto" />
                     </span>
                   </div>
                   <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto p-2">

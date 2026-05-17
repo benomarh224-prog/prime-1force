@@ -602,8 +602,8 @@ export function HomePage() {
                       {[20, 40, 60, 80].map(y => <line key={y} x1="0" y1={y} x2="300" y2={y} stroke="currentColor" className="text-border/30" strokeWidth="0.5" />)}
                       <defs>
                         <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="oklch(0.72 0.19 155)" stopOpacity="0.3" />
-                          <stop offset="100%" stopColor="oklch(0.72 0.19 155)" stopOpacity="0" />
+                          <stop offset="0%" stopColor="oklch(0.62 0.24 27)" stopOpacity="0.3" />
+                          <stop offset="100%" stopColor="oklch(0.62 0.24 27)" stopOpacity="0" />
                         </linearGradient>
                       </defs>
                       <motion.path
@@ -620,13 +620,13 @@ export function HomePage() {
                           const y = 100 - ((p.weight - 77) / 6) * 100;
                           return `${i === 0 ? 'M' : 'L'}${x},${Math.max(5, Math.min(95, y))}`;
                         }).join(' ')}
-                        fill="none" stroke="oklch(0.72 0.19 155)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                        fill="none" stroke="oklch(0.62 0.24 27)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
                         initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} viewport={{ once: true }} transition={{ duration: 1.5, ease: 'easeOut' }}
                       />
                       {progressData.map((p, i) => {
                         const x = (i / (progressData.length - 1)) * 300;
                         const y = 100 - ((p.weight - 77) / 6) * 100;
-                        return <motion.circle key={i} cx={x} cy={Math.max(5, Math.min(95, y))} r="3" fill="oklch(0.72 0.19 155)" initial={{ scale: 0 }} whileInView={{ scale: 1 }} viewport={{ once: true }} transition={{ delay: 1 + i * 0.08, duration: 0.3 }} />;
+                        return <motion.circle key={i} cx={x} cy={Math.max(5, Math.min(95, y))} r="3" fill="oklch(0.62 0.24 27)" initial={{ scale: 0 }} whileInView={{ scale: 1 }} viewport={{ once: true }} transition={{ delay: 1 + i * 0.08, duration: 0.3 }} />;
                       })}
                     </svg>
                     <div className="absolute left-0 top-0 text-[9px] text-muted-foreground">82kg</div>

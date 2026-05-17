@@ -236,7 +236,7 @@ export function TodayDashboard() {
 
   return (
     <section className="relative overflow-hidden border-y border-primary/10 bg-muted/20 py-16 sm:py-20">
-      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_18%_0%,oklch(0.78_0.125_72_/_0.13),transparent_34%),radial-gradient(circle_at_82%_20%,oklch(0.70_0.13_155_/_0.1),transparent_30%)]" />
+      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_18%_0%,oklch(0.62_0.24_27_/_0.16),transparent_34%),radial-gradient(circle_at_82%_20%,oklch(0.36_0.18_27_/_0.16),transparent_30%)]" />
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 18 }}

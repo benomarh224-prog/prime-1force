@@ -544,7 +544,7 @@ export function AIMealAnalyzer({ dailyTargets }: AIMealAnalyzerProps) {
                         fontSize: 12,
                       }}
                     />
-                    <Bar dataKey="grams" fill="oklch(0.72 0.19 155)" radius={[8, 8, 0, 0]} />
+                    <Bar dataKey="grams" fill="oklch(0.62 0.24 27)" radius={[8, 8, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>

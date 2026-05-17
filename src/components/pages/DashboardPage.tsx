@@ -278,7 +278,7 @@ export function DashboardPage() {
     0
   );
   const macroData = [
-    { name: 'Protein', value: dailyCalorieData.reduce((s, d) => s + d.protein, 0) / 7, fill: 'oklch(0.72 0.19 155)' },
+    { name: 'Protein', value: dailyCalorieData.reduce((s, d) => s + d.protein, 0) / 7, fill: 'oklch(0.62 0.24 27)' },
     { name: 'Carbs', value: dailyCalorieData.reduce((s, d) => s + d.carbs, 0) / 7, fill: 'oklch(0.75 0.12 60)' },
     { name: 'Fat', value: dailyCalorieData.reduce((s, d) => s + d.fat, 0) / 7, fill: 'oklch(0.60 0.15 250)' },
   ];
@@ -747,7 +747,7 @@ export function DashboardPage() {
                 <div
                   className="absolute inset-3 rounded-full"
                   style={{
-                    background: `conic-gradient(oklch(0.72 0.19 155) ${forgeScore * 3.6}deg, oklch(1 0 0 / 10%) 0deg)`,
+                    background: `conic-gradient(oklch(0.62 0.24 27) ${forgeScore * 3.6}deg, oklch(1 0 0 / 10%) 0deg)`,
                   }}
                 />
                 <div className="relative flex h-32 w-32 flex-col items-center justify-center rounded-full bg-background">
@@ -950,8 +950,8 @@ export function DashboardPage() {
                       <AreaChart data={progressData}>
                         <defs>
                           <linearGradient id="weightGrad" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="oklch(0.72 0.19 155)" stopOpacity={0.3} />
-                            <stop offset="95%" stopColor="oklch(0.72 0.19 155)" stopOpacity={0} />
+                            <stop offset="5%" stopColor="oklch(0.62 0.24 27)" stopOpacity={0.3} />
+                            <stop offset="95%" stopColor="oklch(0.62 0.24 27)" stopOpacity={0} />
                           </linearGradient>
                         </defs>
                         <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.5 0 0 / 10%)" />
@@ -965,7 +965,7 @@ export function DashboardPage() {
                             fontSize: 12,
                           }}
                         />
-                        <Area type="monotone" dataKey="weight" stroke="oklch(0.72 0.19 155)" fill="url(#weightGrad)" strokeWidth={2} />
+                        <Area type="monotone" dataKey="weight" stroke="oklch(0.62 0.24 27)" fill="url(#weightGrad)" strokeWidth={2} />
                       </AreaChart>
                     </ResponsiveContainer>
                   </div>
@@ -1001,7 +1001,7 @@ export function DashboardPage() {
                             fontSize: 12,
                           }}
                         />
-                        <Bar dataKey="consumed" fill="oklch(0.72 0.19 155)" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="consumed" fill="oklch(0.62 0.24 27)" radius={[4, 4, 0, 0]} />
                         <Bar dataKey="burned" fill="oklch(0.75 0.12 60)" radius={[4, 4, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
