@@ -8,10 +8,10 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://primeforge.21-0-10
 
 export const metadata: Metadata = {
   title: {
-    default: "Prime Forge - AI-Powered Fitness Platform",
+    default: "Prime Forge - Learn Strength, Train Smarter",
     template: "%s | Prime Forge",
   },
-  description: "Transform your body with personalized AI coaching, 500+ exercises, smart tracking, and custom meal plans. Your complete fitness companion.",
+  description: "Learn how to train, eat, recover, and track progress with clear workouts, AI coaching, and strength-focused guidance.",
   keywords: ["fitness", "workout", "AI coach", "gym", "nutrition", "training", "health", "exercise", "meal plans", "progress tracking", "prime forge"],
   authors: [{ name: "Prime Forge Team", url: SITE_URL }],
   creator: "Prime Forge",
@@ -25,8 +25,8 @@ export const metadata: Metadata = {
     apple: "/apple-touch-icon.png",
   },
   openGraph: {
-    title: "Prime Forge - AI-Powered Fitness Platform",
-    description: "Transform your body with personalized AI coaching, 500+ exercises, smart tracking, and custom meal plans.",
+    title: "Prime Forge - Learn Strength, Train Smarter",
+    description: "Learn how to train, eat, recover, and track progress with clear workouts, AI coaching, and strength-focused guidance.",
     type: "website",
     locale: "en_US",
     url: SITE_URL,
@@ -34,8 +34,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Prime Forge - AI-Powered Fitness Platform",
-    description: "Transform your body with personalized AI coaching, 500+ exercises, smart tracking, and custom meal plans.",
+    title: "Prime Forge - Learn Strength, Train Smarter",
+    description: "Learn how to train, eat, recover, and track progress with clear workouts, AI coaching, and strength-focused guidance.",
     creator: "@primeforge",
   },
   robots: {
