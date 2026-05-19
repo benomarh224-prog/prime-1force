@@ -82,20 +82,29 @@ const programCards = [
   {
     title: 'Beginner Strength',
     level: 'Start here',
-    image: '/images/workout-strength-luxe.jpg',
+    image: '/images/workout-barbell-squat.webp',
     stats: '3 days/week - full body',
+    goal: 'Form first',
+    progress: '68%',
+    accent: 'from-primary to-amber-400',
   },
   {
     title: 'Muscle Builder',
     level: 'Hypertrophy',
-    image: '/images/prog-hypertrophy.png',
+    image: '/images/workout-bench-press.jpeg',
     stats: '4 days/week - upper/lower',
+    goal: 'Volume work',
+    progress: '82%',
+    accent: 'from-sky-400 to-primary',
   },
   {
     title: 'Home Discipline',
     level: 'No equipment',
-    image: '/images/workout-home.png',
+    image: '/images/workout-pushup-luxe.jpg',
     stats: '30 min - bodyweight',
+    goal: 'Daily habit',
+    progress: '54%',
+    accent: 'from-emerald-300 to-primary',
   },
 ];
 
@@ -394,29 +403,71 @@ export function HomePage() {
                 viewport={{ once: true, margin: '-60px' }}
                 variants={fadeUp}
                 custom={index}
-                className="group overflow-hidden rounded-lg border border-white/10 bg-card shadow-[0_16px_38px_oklch(0_0_0_/_0.20)]"
+                whileHover={{ y: -10 }}
+                transition={{ type: 'spring', stiffness: 260, damping: 22 }}
+                className="group relative overflow-hidden rounded-lg border border-white/10 bg-card shadow-[0_16px_38px_oklch(0_0_0_/_0.20)]"
               >
+                <motion.div
+                  className={cn(
+                    'pointer-events-none absolute inset-x-0 top-0 z-20 h-1 bg-gradient-to-r opacity-80',
+                    program.accent
+                  )}
+                  initial={{ scaleX: 0, transformOrigin: 'left' }}
+                  whileInView={{ scaleX: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.25 + index * 0.12, duration: 0.7, ease: 'easeOut' }}
+                />
                 <div className="relative aspect-[4/3] overflow-hidden">
                   <Image
                     src={program.image}
                     alt={program.title}
                     fill
                     sizes="(min-width: 768px) 33vw, 100vw"
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    className="object-cover transition duration-700 group-hover:scale-110 group-hover:brightness-110"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/[0.82] via-transparent to-transparent" />
-                  <Badge className="absolute left-4 top-4 border-white/15 bg-black/45 text-white">{program.level}</Badge>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/[0.86] via-black/[0.18] to-transparent" />
+                  <motion.div
+                    className="absolute -inset-y-8 -left-24 w-16 rotate-12 bg-white/20 blur-md"
+                    initial={{ x: -120 }}
+                    whileHover={{ x: 560 }}
+                    transition={{ duration: 0.9, ease: 'easeOut' }}
+                  />
+                  <Badge className="absolute left-4 top-4 border-white/15 bg-black/45 text-white backdrop-blur-sm">{program.level}</Badge>
+                  <motion.div
+                    className="absolute bottom-4 right-4 rounded-lg border border-white/15 bg-black/50 px-3 py-2 text-right text-white backdrop-blur-md"
+                    animate={{ y: [0, -5, 0] }}
+                    transition={{ duration: 3, repeat: Infinity, delay: index * 0.35, ease: 'easeInOut' }}
+                  >
+                    <p className="text-[10px] font-bold uppercase text-white/55">Goal</p>
+                    <p className="text-xs font-black">{program.goal}</p>
+                  </motion.div>
                 </div>
                 <div className="p-5">
-                  <h3 className="text-xl font-black">{program.title}</h3>
-                  <p className="mt-2 text-sm text-muted-foreground">{program.stats}</p>
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <h3 className="text-xl font-black">{program.title}</h3>
+                      <p className="mt-2 text-sm text-muted-foreground">{program.stats}</p>
+                    </div>
+                    <div className="rounded-lg bg-primary/[0.10] px-2.5 py-1 text-xs font-black text-primary">
+                      {program.progress}
+                    </div>
+                  </div>
+                  <div className="mt-5 h-1.5 overflow-hidden rounded-full bg-white/10">
+                    <motion.div
+                      className={cn('h-full rounded-full bg-gradient-to-r', program.accent)}
+                      initial={{ width: 0 }}
+                      whileInView={{ width: program.progress }}
+                      viewport={{ once: true }}
+                      transition={{ delay: 0.3 + index * 0.12, duration: 0.9, ease: 'easeOut' }}
+                    />
+                  </div>
                   <button
                     type="button"
                     onClick={() => navigate('workouts')}
                     className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-primary transition-colors hover:text-primary/80"
                   >
                     Start this path
-                    <ArrowRight className="h-4 w-4" />
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                   </button>
                 </div>
               </motion.article>

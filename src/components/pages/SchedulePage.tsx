@@ -3,14 +3,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
-  Activity,
-  Bell,
+  BarChart3,
   CalendarCheck2,
   CalendarDays,
   CalendarPlus,
   CheckCircle2,
-  ChevronLeft,
-  ChevronRight,
   Clock,
   Dumbbell,
   Flame,
@@ -22,6 +19,8 @@ import {
   Target,
   Trash2,
 } from 'lucide-react';
+
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -36,6 +35,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { exercises } from '@/lib/data';
@@ -297,11 +297,10 @@ export function SchedulePage() {
   const [selectedProgramId, setSelectedProgramId] = useState('');
   const [days, setDays] = useState<ScheduleDay[]>(defaultDays);
   const [history, setHistory] = useState<Completion[]>([]);
-  const [selectedDateKey, setSelectedDateKey] = useState(() => getDateKey());
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [syncingWorkoutId, setSyncingWorkoutId] = useState<string | null>(null);
-  const [remindersEnabled, setRemindersEnabled] = useState(false);
+  const [showWorkoutLog, setShowWorkoutLog] = useState(false);
   const [form, setForm] = useState<WorkoutForm>(() => emptyForm());
   const [builder, setBuilder] = useState<BuilderDraft>({
     name: 'Generated Strength Program',
@@ -312,13 +311,11 @@ export function SchedulePage() {
   });
 
   const todayIndex = new Date().getDay();
-  const today = days.find((day) => day.dayOfWeek === todayIndex) ?? days[0];
   const todayDateKey = getDateKey();
-  const selectedDate = parseDateKey(selectedDateKey);
-  const selectedDay = days.find((day) => day.dayOfWeek === selectedDate.getDay()) ?? days[0];
-  const selectedCompletion = history.find((item) => completionDateKey(item) === selectedDateKey);
-  const selectedCompleted = Boolean(selectedCompletion);
-  const selectedWeekStart = getWeekStart(selectedDateKey);
+  const today = days.find((day) => day.dayOfWeek === todayIndex) ?? days[0];
+  const todayCompletion = history.find((item) => completionDateKey(item) === todayDateKey);
+  const todayCompleted = Boolean(todayCompletion);
+  const selectedWeekStart = getWeekStart(todayDateKey);
   const completionDates = useMemo(() => new Set(history.map(completionDateKey)), [history]);
   const weekPlan = useMemo(
     () =>
@@ -574,33 +571,6 @@ export function SchedulePage() {
     });
   };
 
-  const enableReminders = async () => {
-    if (typeof window === 'undefined' || !('Notification' in window)) {
-      toast({
-        title: 'Reminders unavailable',
-        description: 'This browser does not support workout notifications.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    const permission = await Notification.requestPermission();
-    if (permission !== 'granted') {
-      toast({
-        title: 'Notifications blocked',
-        description: 'Allow notifications in your browser to receive workout reminders.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setRemindersEnabled(true);
-    new Notification('Prime Forge reminders enabled', {
-      body: `Today is ${today.splitTitle}. Your plan is ready when you are.`,
-    });
-    toast({ title: 'Reminders enabled', description: 'Prime Forge can now show browser workout reminders.' });
-  };
-
   const downloadCalendar = () => {
     const monday = new Date();
     monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7));
@@ -641,8 +611,8 @@ export function SchedulePage() {
     toast({ title: 'Calendar exported', description: 'Import the .ics file into your calendar app.' });
   };
 
-  const toggleSelectedCompletion = () => {
-    setCompletionForDate(selectedDateKey, selectedDay, !selectedCompleted);
+  const toggleTodayCompletion = () => {
+    setCompletionForDate(todayDateKey, today, !todayCompleted);
   };
 
   const logWorkout = async () => {
@@ -682,6 +652,7 @@ export function SchedulePage() {
         await setCompletionForDate(form.date, scheduledDay, true, { silent: true });
       }
       setForm(emptyForm());
+      setShowWorkoutLog(false);
       toast({ title: 'Workout logged', description: `${name} was saved to your workout history.` });
     } catch (error) {
       toast({
@@ -722,611 +693,535 @@ export function SchedulePage() {
         <motion.div
           initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-6 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between"
+          className="mb-8 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between"
         >
           <div className="max-w-3xl">
             <Badge className="mb-4 rounded-md border-primary/25 bg-primary/10 px-3 py-1 text-[11px] uppercase tracking-wide text-primary">
-              Real Program Builder
+              Training Planner
             </Badge>
             <h1 className="text-4xl font-black uppercase leading-none sm:text-5xl lg:text-6xl">
-              Training Planner
+              Plan The Week. Hit Today.
             </h1>
             <p className="mt-4 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-              Generate a plan, edit every training day, save it to the database, and log completed work.
+              Build your program, focus on today&apos;s session, and keep your workout history easy to scan.
             </p>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row">
-            <Button onClick={() => loadSchedule(selectedProgramId)} variant="outline" className="h-12 rounded-lg font-bold" disabled={loading}>
+            <Button onClick={() => loadSchedule(selectedProgramId)} variant="outline" className="h-11 rounded-lg font-bold" disabled={loading}>
               <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
               Refresh
             </Button>
-            <Button onClick={enableReminders} variant={remindersEnabled ? 'secondary' : 'outline'} className="h-12 rounded-lg font-bold">
-              <Bell className="h-4 w-4" />
-              {remindersEnabled ? 'Reminders On' : 'Enable Reminders'}
-            </Button>
-            <Button onClick={downloadCalendar} variant="outline" className="h-12 rounded-lg font-bold">
+            <Button onClick={downloadCalendar} variant="outline" className="h-11 rounded-lg font-bold">
               <CalendarPlus className="h-4 w-4" />
               Export
             </Button>
           </div>
         </motion.div>
 
-        <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {[
-            { label: 'Selected Week', value: `${stats.weeklyCompletions}/${stats.trainingDays}`, icon: CheckCircle2 },
-            { label: 'Training Streak', value: `${stats.streak} day${stats.streak === 1 ? '' : 's'}`, icon: CalendarCheck2 },
-            { label: 'Total Volume', value: `${Math.round(stats.totalVolume).toLocaleString()} kg`, icon: Activity },
-            { label: 'Minutes Logged', value: `${stats.totalMinutes} min`, icon: Clock },
-          ].map((stat) => (
-            <div key={stat.label} className="rounded-lg border bg-card p-4 shadow-sm">
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{stat.label}</p>
-                <stat.icon className="h-4 w-4 text-primary" />
+        <div className="mb-8 grid gap-4 md:grid-cols-2">
+          <Card className="py-0">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs font-black uppercase tracking-wide text-muted-foreground">Weekly Progress</p>
+                  <p className="mt-2 text-3xl font-black">{stats.weeklyCompletions}/{stats.trainingDays}</p>
+                </div>
+                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <CheckCircle2 className="h-5 w-5" />
+                </div>
               </div>
-              <p className="mt-3 truncate text-2xl font-black">{stat.value}</p>
-            </div>
-          ))}
+              <Progress value={stats.weeklyProgress} className="mt-4 h-2" />
+            </CardContent>
+          </Card>
+          <Card className="py-0">
+            <CardContent className="flex items-center justify-between gap-4 p-5">
+              <div>
+                <p className="text-xs font-black uppercase tracking-wide text-muted-foreground">Streak</p>
+                <p className="mt-2 text-3xl font-black">{stats.streak} day{stats.streak === 1 ? '' : 's'}</p>
+              </div>
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <Flame className="h-5 w-5" />
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
-        <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base uppercase tracking-wide">
-                  <Sparkles className="h-4 w-4 text-primary" />
-                  Program Builder
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Saved program</Label>
-                  <Select
-                    value={selectedProgramId}
-                    onValueChange={(value) => {
-                      setSelectedProgramId(value);
-                      loadSchedule(value);
-                    }}
-                  >
-                    <SelectTrigger className="h-11 rounded-lg">
-                      <SelectValue placeholder="Select a program" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {programs.map((program) => (
-                        <SelectItem key={program.id} value={program.id}>
-                          {program.name}{program.isActive ? ' - active' : ''}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+        <Tabs defaultValue="planner" className="gap-6">
+          <TabsList className="grid h-auto w-full grid-cols-3 rounded-lg border border-white/10 bg-card/70 p-1 sm:w-fit">
+            {[
+              { value: 'planner', label: 'Planner', icon: CalendarDays },
+              { value: 'today', label: 'Today', icon: Dumbbell },
+              { value: 'history', label: 'History', icon: BarChart3 },
+            ].map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <TabsTrigger
+                  key={tab.value}
+                  value={tab.value}
+                  className="h-11 rounded-md px-3 font-black uppercase text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                >
+                  <Icon className="h-4 w-4" />
+                  <span className="hidden sm:inline">{tab.label}</span>
+                </TabsTrigger>
+              );
+            })}
+          </TabsList>
 
-                <div className="space-y-2">
-                  <Label>Program name</Label>
-                  <Input
-                    value={builder.name}
-                    onChange={(event) => setBuilder({ ...builder, name: event.target.value })}
-                    placeholder="Program name"
-                    className="h-11 rounded-lg"
-                  />
-                </div>
-
-                <div className="grid gap-3 sm:grid-cols-2">
+          <TabsContent value="planner" className="mt-0">
+            <div className="grid gap-6 xl:grid-cols-[0.82fr_1.18fr]">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base uppercase tracking-wide">
+                    <Sparkles className="h-4 w-4 text-primary" />
+                    Program Builder
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-5">
                   <div className="space-y-2">
-                    <Label>Goal</Label>
-                    <Select value={builder.goal} onValueChange={(value: BuilderDraft['goal']) => setBuilder({ ...builder, goal: value })}>
+                    <Label>Saved program</Label>
+                    <Select
+                      value={selectedProgramId}
+                      onValueChange={(value) => {
+                        setSelectedProgramId(value);
+                        loadSchedule(value);
+                      }}
+                    >
                       <SelectTrigger className="h-11 rounded-lg">
-                        <SelectValue />
+                        <SelectValue placeholder="Select a program" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="strength">Strength</SelectItem>
-                        <SelectItem value="muscle">Muscle gain</SelectItem>
-                        <SelectItem value="fat-loss">Fat loss</SelectItem>
-                        <SelectItem value="balanced">Balanced fitness</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Level</Label>
-                    <Select value={builder.level} onValueChange={(value: BuilderDraft['level']) => setBuilder({ ...builder, level: value })}>
-                      <SelectTrigger className="h-11 rounded-lg">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="beginner">Beginner</SelectItem>
-                        <SelectItem value="intermediate">Intermediate</SelectItem>
-                        <SelectItem value="advanced">Advanced</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Days per week</Label>
-                    <Select value={builder.daysPerWeek} onValueChange={(value) => setBuilder({ ...builder, daysPerWeek: value })}>
-                      <SelectTrigger className="h-11 rounded-lg">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {['2', '3', '4', '5', '6'].map((value) => (
-                          <SelectItem key={value} value={value}>{value} days</SelectItem>
+                        {programs.map((program) => (
+                          <SelectItem key={program.id} value={program.id}>
+                            {program.name}{program.isActive ? ' - active' : ''}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
+
                   <div className="space-y-2">
-                    <Label>Equipment</Label>
-                    <Select value={builder.equipment} onValueChange={(value: BuilderDraft['equipment']) => setBuilder({ ...builder, equipment: value })}>
-                      <SelectTrigger className="h-11 rounded-lg">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="gym">Gym</SelectItem>
-                        <SelectItem value="home">Home</SelectItem>
-                        <SelectItem value="no-equipment">No equipment</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="grid gap-2 sm:grid-cols-2">
-                  <Button onClick={generateProgram} variant="outline" className="h-12 rounded-lg font-bold">
-                    <Sparkles className="h-4 w-4" />
-                    Generate Week
-                  </Button>
-                  <Button onClick={saveAsNewProgram} className="h-12 rounded-lg font-bold" disabled={saving}>
-                    {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-                    Save New
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base uppercase tracking-wide">
-                  <CalendarCheck2 className="h-4 w-4 text-primary" />
-                  Week Tracker
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center justify-between gap-3">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="rounded-lg"
-                    onClick={() => {
-                      const nextDate = addDays(selectedWeekStart, -7);
-                      setSelectedDateKey(nextDate);
-                      setForm((current) => ({ ...current, date: nextDate }));
-                    }}
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                    Previous
-                  </Button>
-                  <p className="text-center text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                    {formatDate(selectedWeekStart)} - {formatDate(addDays(selectedWeekStart, 6))}
-                  </p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="rounded-lg"
-                    onClick={() => {
-                      const nextDate = addDays(selectedWeekStart, 7);
-                      setSelectedDateKey(nextDate);
-                      setForm((current) => ({ ...current, date: nextDate }));
-                    }}
-                  >
-                    Next
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
-
-                <div className="space-y-2">
-                  {weekPlan.map(({ dateKey, day, completed }) => {
-                    const isSelected = dateKey === selectedDateKey;
-                    const isPastDue = dateKey < todayDateKey && !completed && !day?.isRestDay;
-                    const status = day?.isRestDay ? 'Rest' : completed ? 'Done' : isPastDue ? 'Missed' : 'Planned';
-
-                    return (
-                      <div
-                        key={dateKey}
-                        className={cn(
-                          'grid gap-3 rounded-lg border bg-muted/20 p-3 sm:grid-cols-[1fr_auto]',
-                          isSelected && 'border-primary/60 bg-primary/10'
-                        )}
-                      >
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSelectedDateKey(dateKey);
-                            setForm((current) => ({ ...current, date: dateKey }));
-                          }}
-                          className="min-w-0 text-left"
-                        >
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="text-sm font-black uppercase">{day?.dayName || formatDate(dateKey)}</span>
-                            <Badge
-                              variant={completed ? 'default' : isPastDue ? 'destructive' : 'secondary'}
-                              className="rounded-md text-[10px] uppercase"
-                            >
-                              {status}
-                            </Badge>
-                          </div>
-                          <p className="mt-1 truncate text-sm font-bold">{day?.splitTitle || 'Workout'}</p>
-                          <p className="mt-1 text-xs text-muted-foreground">{formatDate(dateKey)}</p>
-                        </button>
-
-                        {!day?.isRestDay && (
-                          <Button
-                            variant={completed ? 'secondary' : 'outline'}
-                            size="sm"
-                            className="rounded-lg font-bold"
-                            disabled={saving || !selectedProgramId}
-                            onClick={() => setCompletionForDate(dateKey, day, !completed)}
-                          >
-                            <CheckCircle2 className="h-4 w-4" />
-                            {completed ? 'Reopen' : 'Done'}
-                          </Button>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base uppercase tracking-wide">
-                  <Flame className="h-4 w-4 text-primary" />
-                  Workout Tracker
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-5">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    className="h-11 w-11 rounded-lg"
-                    onClick={() => {
-                      const nextDate = addDays(selectedDateKey, -1);
-                      setSelectedDateKey(nextDate);
-                      setForm((current) => ({ ...current, date: nextDate }));
-                    }}
-                    aria-label="Previous day"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <Input
-                    type="date"
-                    value={selectedDateKey}
-                    onChange={(event) => {
-                      const nextDate = event.target.value || todayDateKey;
-                      setSelectedDateKey(nextDate);
-                      setForm((current) => ({ ...current, date: nextDate }));
-                    }}
-                    className="h-11 rounded-lg font-bold"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    className="h-11 w-11 rounded-lg"
-                    onClick={() => {
-                      const nextDate = addDays(selectedDateKey, 1);
-                      setSelectedDateKey(nextDate);
-                      setForm((current) => ({ ...current, date: nextDate }));
-                    }}
-                    aria-label="Next day"
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    className="h-11 rounded-lg font-bold sm:ml-auto"
-                    onClick={() => {
-                      setSelectedDateKey(todayDateKey);
-                      setForm((current) => ({ ...current, date: todayDateKey }));
-                    }}
-                  >
-                    Today
-                  </Button>
-                </div>
-
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="min-w-0">
-                    <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                      {formatDate(selectedDateKey)}
-                      {selectedDateKey === todayDateKey ? ' - Today' : selectedDateKey > todayDateKey ? ' - Upcoming' : ' - Past'}
-                    </p>
-                    <h2 className="mt-2 break-words text-3xl font-black uppercase">{selectedDay?.splitTitle || 'Training'}</h2>
-                    <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                      {selectedDay?.isRestDay ? 'Recovery day' : selectedDay?.exercises.join(', ') || 'No exercises yet'}
-                    </p>
-                  </div>
-                  <Button
-                    onClick={toggleSelectedCompletion}
-                    variant={selectedCompleted ? 'secondary' : 'default'}
-                    className="h-12 shrink-0 rounded-lg font-bold"
-                    disabled={saving || !selectedProgramId}
-                  >
-                    <CheckCircle2 className="h-4 w-4" />
-                    {selectedCompleted ? 'Reopen' : 'Mark Done'}
-                  </Button>
-                </div>
-                {!selectedDay?.isRestDay && selectedDay?.exercises.length > 0 && (
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    {selectedDay.exercises.map((exercise) => (
-                      <div key={exercise} className="flex items-center gap-2 rounded-lg border bg-muted/20 px-3 py-2 text-sm">
-                        <CheckCircle2 className={cn('h-4 w-4', selectedCompleted ? 'text-primary' : 'text-muted-foreground')} />
-                        <span className="min-w-0 truncate">{exercise}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                <div className="space-y-2">
-                  <div className="flex justify-between text-xs font-bold uppercase text-muted-foreground">
-                    <span>Selected week progress</span>
-                    <span>{Math.round(stats.weeklyProgress)}%</span>
-                  </div>
-                  <Progress value={stats.weeklyProgress} className="h-2" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base uppercase tracking-wide">
-                  <Dumbbell className="h-4 w-4 text-primary" />
-                  Quick Workout Log
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label>Workout</Label>
-                    <Input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder={today?.splitTitle || 'Workout'} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Date</Label>
+                    <Label>Program name</Label>
                     <Input
-                      type="date"
-                      value={form.date}
-                      onChange={(event) => {
-                        const nextDate = event.target.value || todayDateKey;
-                        setForm({ ...form, date: nextDate });
-                        setSelectedDateKey(nextDate);
-                      }}
+                      value={builder.name}
+                      onChange={(event) => setBuilder({ ...builder, name: event.target.value })}
+                      placeholder="Program name"
+                      className="h-11 rounded-lg"
                     />
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <Label>Main exercise</Label>
-                  <Input value={form.exerciseName} onChange={(event) => setForm({ ...form, exerciseName: event.target.value })} placeholder={today?.exercises[0] || 'Bench press, squat, run...'} />
-                </div>
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                  <div className="space-y-2">
-                    <Label>Sets</Label>
-                    <Input type="number" min={1} value={form.sets} onChange={(event) => setForm({ ...form, sets: event.target.value })} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Reps</Label>
-                    <Input type="number" min={0} value={form.reps} onChange={(event) => setForm({ ...form, reps: event.target.value })} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Kg</Label>
-                    <Input type="number" min={0} value={form.weight} onChange={(event) => setForm({ ...form, weight: event.target.value })} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Minutes</Label>
-                    <Input type="number" min={0} value={form.duration} onChange={(event) => setForm({ ...form, duration: event.target.value })} />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label>Notes</Label>
-                  <Textarea
-                    value={form.notes}
-                    onChange={(event) => setForm({ ...form, notes: event.target.value })}
-                    placeholder="Energy, pain, personal record, next target..."
-                    className="min-h-20 resize-none"
-                  />
-                </div>
-                <Button onClick={logWorkout} className="h-12 w-full rounded-lg font-bold" disabled={saving}>
-                  {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-                  Log Workout
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
 
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <CardTitle className="flex items-center gap-2 text-base uppercase tracking-wide">
-                    <CalendarDays className="h-4 w-4 text-primary" />
-                    Weekly Program
-                  </CardTitle>
-                  <div className="flex gap-2">
-                    <Button onClick={deleteProgram} variant="outline" size="sm" className="rounded-lg" disabled={saving || programs.length <= 1}>
-                      <Trash2 className="h-4 w-4" />
-                      Delete
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label>Goal</Label>
+                      <Select value={builder.goal} onValueChange={(value: BuilderDraft['goal']) => setBuilder({ ...builder, goal: value })}>
+                        <SelectTrigger className="h-11 rounded-lg">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="strength">Strength</SelectItem>
+                          <SelectItem value="muscle">Muscle gain</SelectItem>
+                          <SelectItem value="fat-loss">Fat loss</SelectItem>
+                          <SelectItem value="balanced">Balanced fitness</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Level</Label>
+                      <Select value={builder.level} onValueChange={(value: BuilderDraft['level']) => setBuilder({ ...builder, level: value })}>
+                        <SelectTrigger className="h-11 rounded-lg">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="beginner">Beginner</SelectItem>
+                          <SelectItem value="intermediate">Intermediate</SelectItem>
+                          <SelectItem value="advanced">Advanced</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Days per week</Label>
+                      <Select value={builder.daysPerWeek} onValueChange={(value) => setBuilder({ ...builder, daysPerWeek: value })}>
+                        <SelectTrigger className="h-11 rounded-lg">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {['2', '3', '4', '5', '6'].map((value) => (
+                            <SelectItem key={value} value={value}>{value} days</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Equipment</Label>
+                      <Select value={builder.equipment} onValueChange={(value: BuilderDraft['equipment']) => setBuilder({ ...builder, equipment: value })}>
+                        <SelectTrigger className="h-11 rounded-lg">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="gym">Gym</SelectItem>
+                          <SelectItem value="home">Home</SelectItem>
+                          <SelectItem value="no-equipment">No equipment</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <Button onClick={generateProgram} variant="outline" className="h-12 rounded-lg font-bold">
+                      <RefreshCw className="h-4 w-4" />
+                      Generate
                     </Button>
-                    <Button onClick={saveSchedule} size="sm" className="rounded-lg" disabled={saving || !selectedProgramId}>
-                      {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                      Save
+                    <Button onClick={saveAsNewProgram} className="h-12 rounded-lg font-bold" disabled={saving}>
+                      {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                      Save New
                     </Button>
                   </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {loading ? (
-                  <div className="flex min-h-72 items-center justify-center text-sm text-muted-foreground">
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Loading program...
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <CardTitle className="flex items-center gap-2 text-base uppercase tracking-wide">
+                      <CalendarDays className="h-4 w-4 text-primary" />
+                      Weekly Program
+                    </CardTitle>
+                    <div className="flex gap-2">
+                      <Button onClick={deleteProgram} variant="outline" size="sm" className="rounded-lg" disabled={saving || programs.length <= 1}>
+                        <Trash2 className="h-4 w-4" />
+                        Delete
+                      </Button>
+                      <Button onClick={saveSchedule} size="sm" className="rounded-lg" disabled={saving || !selectedProgramId}>
+                        {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                        Save
+                      </Button>
+                    </div>
                   </div>
-                ) : (
-                  <div className="space-y-3">
-                    {days.map((day) => (
-                      <div
-                        key={day.dayOfWeek}
-                        className={cn(
-                          'rounded-lg border bg-muted/20 p-4 transition-colors',
-                          day.dayOfWeek === todayIndex && 'border-primary/60 bg-primary/10'
-                        )}
+                </CardHeader>
+                <CardContent>
+                  {loading ? (
+                    <div className="flex min-h-72 items-center justify-center text-sm text-muted-foreground">
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Loading program...
+                    </div>
+                  ) : (
+                    <Accordion type="multiple" defaultValue={[`day-${todayIndex}`]} className="space-y-3">
+                      {days.map((day) => (
+                        <AccordionItem
+                          key={day.dayOfWeek}
+                          value={`day-${day.dayOfWeek}`}
+                          className={cn(
+                            'rounded-lg border border-white/10 bg-muted/15 px-4',
+                            day.dayOfWeek === todayIndex && 'border-primary/50 bg-primary/10'
+                          )}
+                        >
+                          <AccordionTrigger className="py-4 hover:no-underline">
+                            <div className="flex min-w-0 items-center gap-3">
+                              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-background text-xs font-black">
+                                {day.dayName.slice(0, 3)}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="truncate text-sm font-black uppercase">{day.splitTitle}</p>
+                                <p className="mt-1 text-xs text-muted-foreground">
+                                  {day.isRestDay ? 'Recovery day' : `${day.exercises.length} exercises`}
+                                  {day.dayOfWeek === todayIndex ? ' - Today' : ''}
+                                </p>
+                              </div>
+                            </div>
+                          </AccordionTrigger>
+                          <AccordionContent className="space-y-4 pb-4">
+                            <label className="flex w-fit items-center gap-2 text-xs font-bold uppercase text-muted-foreground">
+                              <Checkbox
+                                checked={day.isRestDay}
+                                onCheckedChange={(checked) =>
+                                  updateDay(day.dayOfWeek, {
+                                    isRestDay: Boolean(checked),
+                                    splitTitle: checked ? 'Rest Day' : day.splitTitle === 'Rest Day' ? 'Training' : day.splitTitle,
+                                    exercises: checked ? [] : day.exercises,
+                                  })
+                                }
+                              />
+                              Rest day
+                            </label>
+                            <div className="grid gap-4 lg:grid-cols-[0.78fr_1.22fr]">
+                              <div className="space-y-2">
+                                <Label className="text-xs">Split</Label>
+                                <Input
+                                  value={day.splitTitle}
+                                  onChange={(event) => updateDay(day.dayOfWeek, { splitTitle: event.target.value })}
+                                  placeholder="Push, Pull, Legs..."
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label className="text-xs">Exercises</Label>
+                                <Textarea
+                                  value={day.exercises.join('\n')}
+                                  onChange={(event) => updateDay(day.dayOfWeek, { exercises: splitExerciseText(event.target.value), isRestDay: false })}
+                                  placeholder="One exercise per line"
+                                  className="min-h-24 resize-none"
+                                />
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              <Label className="text-xs">Notes</Label>
+                              <Input
+                                value={day.notes || ''}
+                                onChange={(event) => updateDay(day.dayOfWeek, { notes: event.target.value })}
+                                placeholder="Intensity, rest periods, progression..."
+                              />
+                            </div>
+                          </AccordionContent>
+                        </AccordionItem>
+                      ))}
+                    </Accordion>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="today" className="mt-0">
+            <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+              <Card className="overflow-hidden">
+                <CardHeader>
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-xs font-black uppercase tracking-wide text-muted-foreground">{formatDate(todayDateKey)}</p>
+                      <CardTitle className="mt-2 text-3xl font-black uppercase">{today?.splitTitle || 'Training'}</CardTitle>
+                    </div>
+                    <Badge className={cn('w-fit', todayCompleted ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground')}>
+                      {todayCompleted ? 'Completed' : today?.isRestDay ? 'Recovery' : 'Ready'}
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="rounded-lg border border-white/10 bg-muted/20 p-4">
+                    <p className="text-sm leading-7 text-muted-foreground">
+                      {today?.notes || (today?.isRestDay ? 'Recover, walk, stretch, and prepare for the next session.' : 'Keep form sharp and track your main lift.')}
+                    </p>
+                  </div>
+
+                  {!today?.isRestDay && today?.exercises.length > 0 && (
+                    <Accordion type="single" collapsible defaultValue="exercises">
+                      <AccordionItem value="exercises" className="rounded-lg border border-white/10 bg-muted/15 px-4">
+                        <AccordionTrigger className="py-4 font-black uppercase hover:no-underline">
+                          Today&apos;s exercises
+                        </AccordionTrigger>
+                        <AccordionContent className="pb-4">
+                          <div className="grid gap-2 sm:grid-cols-2">
+                            {today.exercises.map((exercise) => (
+                              <div key={exercise} className="flex items-center gap-2 rounded-lg border border-white/10 bg-background/60 px-3 py-2 text-sm">
+                                <CheckCircle2 className={cn('h-4 w-4', todayCompleted ? 'text-primary' : 'text-muted-foreground')} />
+                                <span className="min-w-0 truncate">{exercise}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    </Accordion>
+                  )}
+
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    {!today?.isRestDay && (
+                      <Button
+                        onClick={toggleTodayCompletion}
+                        variant={todayCompleted ? 'secondary' : 'default'}
+                        className="h-12 rounded-lg font-bold"
+                        disabled={saving || !selectedProgramId}
                       >
-                        <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                          <div className="flex min-w-0 items-center gap-3">
-                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-background text-sm font-black">
-                              {day.dayName.slice(0, 3)}
-                            </div>
-                            <div className="min-w-0">
-                              <p className="truncate text-sm font-black uppercase">{day.splitTitle}</p>
-                              {day.dayOfWeek === todayIndex && <p className="text-xs font-bold uppercase text-primary">Today</p>}
-                            </div>
-                          </div>
-                          <label className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <Checkbox
-                              checked={day.isRestDay}
-                              onCheckedChange={(checked) =>
-                                updateDay(day.dayOfWeek, {
-                                  isRestDay: Boolean(checked),
-                                  splitTitle: checked ? 'Rest Day' : day.splitTitle === 'Rest Day' ? 'Training' : day.splitTitle,
-                                  exercises: checked ? [] : day.exercises,
-                                })
-                              }
-                            />
-                            Rest day
-                          </label>
-                        </div>
+                        <CheckCircle2 className="h-4 w-4" />
+                        {todayCompleted ? 'Reopen Workout' : 'Mark Done'}
+                      </Button>
+                    )}
+                    <Button
+                      type="button"
+                      variant={showWorkoutLog ? 'secondary' : 'outline'}
+                      className="h-12 rounded-lg font-bold"
+                      onClick={() => setShowWorkoutLog((value) => !value)}
+                    >
+                      <Plus className="h-4 w-4" />
+                      {showWorkoutLog ? 'Hide Log' : 'Log Workout'}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
 
-                        <div className="grid gap-3 lg:grid-cols-[0.78fr_1.22fr]">
-                          <div className="space-y-2">
-                            <Label className="text-xs">Split</Label>
-                            <Input
-                              value={day.splitTitle}
-                              onChange={(event) => updateDay(day.dayOfWeek, { splitTitle: event.target.value })}
-                              placeholder="Push, Pull, Legs..."
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label className="text-xs">Exercises</Label>
-                            <Textarea
-                              value={day.exercises.join('\n')}
-                              onChange={(event) => updateDay(day.dayOfWeek, { exercises: splitExerciseText(event.target.value), isRestDay: false })}
-                              placeholder="One exercise per line"
-                              className="min-h-20 resize-none"
-                            />
-                          </div>
-                        </div>
-                        <div className="mt-3 space-y-2">
-                          <Label className="text-xs">Notes</Label>
-                          <Input
-                            value={day.notes || ''}
-                            onChange={(event) => updateDay(day.dayOfWeek, { notes: event.target.value })}
-                            placeholder="Intensity, rest periods, progression..."
-                          />
-                        </div>
+              {showWorkoutLog ? (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-base uppercase tracking-wide">
+                      <Dumbbell className="h-4 w-4 text-primary" />
+                      Quick Workout Log
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label>Workout</Label>
+                        <Input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder={today?.splitTitle || 'Workout'} />
                       </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base uppercase tracking-wide">
-                  <Target className="h-4 w-4 text-primary" />
-                  Recent Workouts
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {store.workoutLogs.length === 0 ? (
-                  <div className="py-10 text-center text-sm text-muted-foreground">
-                    No workouts yet. Log one and your history appears here.
-                  </div>
-                ) : (
-                  <div className="max-h-[520px] space-y-3 overflow-y-auto pr-1">
-                    {store.workoutLogs.slice(0, 8).map((log) => (
-                      <div key={log.id} className="rounded-lg border bg-muted/20 p-3">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <p className="truncate font-black uppercase">{log.name}</p>
-                            <p className="mt-1 text-xs text-muted-foreground">
-                              {formatDate(log.date)} - {log.duration || 0} min - {Math.round(workoutVolume(log)).toLocaleString()} kg
-                            </p>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => deleteWorkout(log)}
-                            disabled={syncingWorkoutId === log.id}
-                            aria-label="Delete workout"
-                            className="h-9 w-9 shrink-0 text-muted-foreground hover:text-destructive"
-                          >
-                            {syncingWorkoutId === log.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-                          </Button>
-                        </div>
-                        <p className="mt-2 truncate text-xs text-muted-foreground">
-                          {log.exercises.map((exercise) => exercise.exerciseName).join(', ')}
-                        </p>
+                      <div className="space-y-2">
+                        <Label>Date</Label>
+                        <Input
+                          type="date"
+                          value={form.date}
+                          onChange={(event) => setForm({ ...form, date: event.target.value || todayDateKey })}
+                        />
                       </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Main exercise</Label>
+                      <Input value={form.exerciseName} onChange={(event) => setForm({ ...form, exerciseName: event.target.value })} placeholder={today?.exercises[0] || 'Bench press, squat, run...'} />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                      <div className="space-y-2">
+                        <Label>Sets</Label>
+                        <Input type="number" min={1} value={form.sets} onChange={(event) => setForm({ ...form, sets: event.target.value })} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Reps</Label>
+                        <Input type="number" min={0} value={form.reps} onChange={(event) => setForm({ ...form, reps: event.target.value })} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Kg</Label>
+                        <Input type="number" min={0} value={form.weight} onChange={(event) => setForm({ ...form, weight: event.target.value })} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Minutes</Label>
+                        <Input type="number" min={0} value={form.duration} onChange={(event) => setForm({ ...form, duration: event.target.value })} />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Notes</Label>
+                      <Textarea
+                        value={form.notes}
+                        onChange={(event) => setForm({ ...form, notes: event.target.value })}
+                        placeholder="Energy, pain, personal record, next target..."
+                        className="min-h-24 resize-none"
+                      />
+                    </div>
+                    <Button onClick={logWorkout} className="h-12 w-full rounded-lg font-bold" disabled={saving}>
+                      {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                      Save Workout
+                    </Button>
+                  </CardContent>
+                </Card>
+              ) : (
+                <Card className="hidden min-h-80 items-center justify-center border-dashed lg:flex">
+                  <CardContent className="max-w-sm p-8 text-center">
+                    <Dumbbell className="mx-auto h-10 w-10 text-primary" />
+                    <h3 className="mt-4 text-lg font-black uppercase">Log stays tucked away</h3>
+                    <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                      Tap Log Workout when you need it. The daily view stays focused until then.
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </TabsContent>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base uppercase tracking-wide">
-                  <CalendarCheck2 className="h-4 w-4 text-primary" />
-                  Completion History
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {history.length === 0 ? (
-                  <div className="py-10 text-center text-sm text-muted-foreground">
-                    Mark workouts done and your completed schedule appears here.
-                  </div>
-                ) : (
-                  <div className="max-h-[360px] space-y-3 overflow-y-auto pr-1">
-                    {history.slice(0, 12).map((completion) => {
-                      const dateKey = completionDateKey(completion);
-                      const day = dayForDate(dateKey);
-
+          <TabsContent value="history" className="mt-0">
+            <div className="grid gap-6 xl:grid-cols-[0.78fr_1.22fr]">
+              <div className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-base uppercase tracking-wide">
+                      <Target className="h-4 w-4 text-primary" />
+                      Stats
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
+                    {[
+                      { label: 'Workouts', value: store.workoutLogs.length.toLocaleString(), icon: CalendarCheck2 },
+                      { label: 'Volume', value: `${Math.round(stats.totalVolume).toLocaleString()} kg`, icon: BarChart3 },
+                      { label: 'Minutes', value: `${stats.totalMinutes} min`, icon: Clock },
+                    ].map((stat) => {
+                      const Icon = stat.icon;
                       return (
-                        <div key={completion.id} className="rounded-lg border bg-muted/20 p-3">
+                        <div key={stat.label} className="rounded-lg border border-white/10 bg-muted/20 p-4">
+                          <Icon className="h-4 w-4 text-muted-foreground" />
+                          <p className="mt-3 text-xs font-black uppercase text-muted-foreground">{stat.label}</p>
+                          <p className="mt-1 truncate text-2xl font-black">{stat.value}</p>
+                        </div>
+                      );
+                    })}
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-base uppercase tracking-wide">
+                      <CalendarCheck2 className="h-4 w-4 text-primary" />
+                      Completed Days
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {history.length === 0 ? (
+                      <div className="py-8 text-center text-sm text-muted-foreground">
+                        Mark workouts done and your completed schedule appears here.
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {history.slice(0, 6).map((completion) => {
+                          const dateKey = completionDateKey(completion);
+                          return (
+                            <div key={completion.id} className="rounded-lg border border-white/10 bg-muted/20 p-3">
+                              <p className="truncate text-sm font-black uppercase">{completion.splitTitle}</p>
+                              <p className="mt-1 text-xs text-muted-foreground">{formatDate(dateKey)}</p>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base uppercase tracking-wide">
+                    <Dumbbell className="h-4 w-4 text-primary" />
+                    Recent Workouts
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {store.workoutLogs.length === 0 ? (
+                    <div className="py-16 text-center text-sm text-muted-foreground">
+                      No workouts yet. Log one from the Today tab and it will appear here.
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {store.workoutLogs.slice(0, 10).map((log) => (
+                        <div key={log.id} className="rounded-lg border border-white/10 bg-muted/20 p-4">
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0">
-                              <p className="truncate font-black uppercase">{completion.splitTitle}</p>
+                              <p className="truncate font-black uppercase">{log.name}</p>
                               <p className="mt-1 text-xs text-muted-foreground">
-                                {formatDate(dateKey)} - finished {new Date(completion.completedAt).toLocaleTimeString('en-US', {
-                                  hour: 'numeric',
-                                  minute: '2-digit',
-                                })}
+                                {formatDate(log.date)} - {log.duration || 0} min - {Math.round(workoutVolume(log)).toLocaleString()} kg
                               </p>
                             </div>
                             <Button
                               variant="ghost"
-                              size="sm"
-                              className="h-9 shrink-0 rounded-lg text-muted-foreground"
-                              disabled={saving || !selectedProgramId}
-                              onClick={() => setCompletionForDate(dateKey, day, false)}
+                              size="icon"
+                              onClick={() => deleteWorkout(log)}
+                              disabled={syncingWorkoutId === log.id}
+                              aria-label="Delete workout"
+                              className="h-9 w-9 shrink-0 text-muted-foreground hover:text-destructive"
                             >
-                              Reopen
+                              {syncingWorkoutId === log.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                             </Button>
                           </div>
+                          <p className="mt-3 truncate text-xs text-muted-foreground">
+                            {log.exercises.map((exercise) => exercise.exerciseName).join(', ')}
+                          </p>
                         </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
