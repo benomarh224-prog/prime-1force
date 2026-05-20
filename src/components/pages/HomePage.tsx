@@ -138,14 +138,14 @@ export function HomePage() {
           fill
           priority
           sizes="100vw"
-          className="object-cover object-[58%_center]"
+          className="scale-110 object-cover object-[84%_center] sm:scale-100 sm:object-[62%_center] lg:object-[58%_center]"
         />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.96)_0%,rgba(0,0,0,0.80)_42%,rgba(0,0,0,0.34)_72%,rgba(0,0,0,0.72)_100%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.76)_0%,rgba(0,0,0,0.58)_34%,rgba(0,0,0,0.92)_100%)] sm:bg-[linear-gradient(90deg,rgba(0,0,0,0.96)_0%,rgba(0,0,0,0.80)_42%,rgba(0,0,0,0.34)_72%,rgba(0,0,0,0.72)_100%)]" />
         <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-background to-transparent" />
 
         <div className="relative z-10 mx-auto flex min-h-[92svh] w-full max-w-[1400px] items-center px-4 pb-20 pt-28 sm:px-8 lg:px-10">
           <div className="grid w-full items-center gap-10 lg:grid-cols-[minmax(0,1fr)_26rem]">
-            <motion.div initial="hidden" animate="visible" className="max-w-4xl">
+            <motion.div initial="hidden" animate="visible" className="hero-copy-frame min-w-0 max-w-4xl">
               <motion.div variants={fadeUp} custom={0}>
                 <Badge className="mb-6 border-white/15 bg-white/[0.08] px-3 py-1.5 text-white">
                   <ShieldCheck className="h-3.5 w-3.5" />
@@ -156,15 +156,16 @@ export function HomePage() {
               <motion.h1
                 variants={fadeUp}
                 custom={1}
-                className="max-w-5xl text-5xl font-black uppercase leading-[0.95] tracking-normal sm:text-7xl lg:text-[7.25rem]"
+                className="max-w-5xl text-[2.55rem] font-black uppercase leading-[0.95] tracking-normal sm:text-7xl lg:text-[7.25rem]"
               >
-                Become A Stronger Man
+                <span className="block">Become A</span>
+                <span className="block">Stronger Man</span>
               </motion.h1>
 
               <motion.p
                 variants={fadeUp}
                 custom={2}
-                className="mt-6 max-w-2xl text-base leading-8 text-white/78 sm:text-xl"
+                className="hero-subcopy mt-6 text-base leading-8 text-white/78 sm:text-xl"
               >
                 Prime Forge teaches you how to train, eat, recover, and stay consistent. No confusion,
                 no random workouts, just a clear path from beginner to stronger every week.
@@ -197,7 +198,7 @@ export function HomePage() {
               <motion.div
                 variants={fadeUp}
                 custom={4}
-                className="mt-10 grid max-w-2xl grid-cols-3 overflow-hidden rounded-lg border border-white/[0.12] bg-black/35 backdrop-blur-md"
+                className="mt-10 grid w-[calc(100vw-3rem)] max-w-2xl grid-cols-3 overflow-hidden rounded-lg border border-white/[0.12] bg-black/35 backdrop-blur-md sm:w-full"
               >
                 {stats.map((item) => (
                   <div key={item.label} className="border-r border-white/10 p-4 last:border-r-0 sm:p-5">

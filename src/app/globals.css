@@ -205,13 +205,13 @@
 }
 
 .hero-copy-frame {
-  width: calc(100vw - 2rem);
+  width: calc(100vw - 3rem);
   max-width: 760px;
 }
 
 .hero-subcopy {
-  width: calc(100vw - 2rem);
-  max-width: calc(100vw - 2rem);
+  width: calc(100vw - 3rem);
+  max-width: calc(100vw - 3rem);
   overflow-wrap: break-word;
   white-space: normal;
 }
@@ -224,6 +224,13 @@
   .hero-subcopy {
     width: auto;
     max-width: 36rem;
+  }
+}
+
+@media (max-width: 639px) {
+  .hero-subcopy {
+    width: min(calc(100vw - 3rem), 20.5rem);
+    max-width: min(calc(100vw - 3rem), 20.5rem);
   }
 }
 
