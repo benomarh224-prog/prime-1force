@@ -279,10 +279,10 @@ Guidelines:
   };
 
   return (
-    <div className="flex min-h-screen flex-col pb-48 pt-24 lg:pb-16">
+    <div className="flex min-h-screen flex-col pb-[calc(10.25rem+env(safe-area-inset-bottom))] pt-20 sm:pt-24 lg:pb-16">
       <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 sm:px-6 lg:px-8">
         <motion.div
-          className="mb-6 flex flex-col justify-between gap-4 lg:flex-row lg:items-end"
+          className="mb-5 flex flex-col justify-between gap-4 sm:mb-6 lg:flex-row lg:items-end"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -292,8 +292,8 @@ Guidelines:
               <Sparkles className="h-3 w-3" />
               Smarter personal coaching
             </Badge>
-            <h1 className="flex items-center gap-3 text-3xl font-bold tracking-tight sm:text-4xl">
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+            <h1 className="flex items-center gap-3 text-3xl font-black tracking-tight sm:text-4xl">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
                 <Bot className="h-5 w-5 text-primary" />
               </span>
               AI <span className="gradient-text">Coach</span>
@@ -308,7 +308,7 @@ Guidelines:
                 key={coachMode.id}
                 onClick={() => setMode(coachMode)}
                 className={cn(
-                  'flex min-h-12 items-center justify-center gap-2 rounded-lg border px-3 text-xs font-bold uppercase transition-colors',
+                  'flex min-h-11 items-center justify-center gap-2 rounded-lg border px-2 text-[11px] font-bold uppercase transition-colors sm:min-h-12 sm:px-3 sm:text-xs',
                   mode.id === coachMode.id
                     ? 'border-primary/50 bg-primary text-primary-foreground'
                     : 'border-border/60 bg-card hover:border-primary/40 hover:text-primary'
@@ -321,7 +321,7 @@ Guidelines:
           </div>
         </motion.div>
 
-        <Card className="mb-4 border-border/50 p-4">
+        <Card className="mb-4 border-border/50 p-3 sm:p-4">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-start gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
@@ -423,7 +423,7 @@ Guidelines:
             </Card>
           </div>
 
-        <Card className="flex min-h-[58svh] flex-1 flex-col overflow-hidden border-border/50 sm:min-h-[620px]">
+        <Card className="flex min-h-[56svh] flex-1 flex-col overflow-hidden border-border/50 sm:min-h-[620px]">
           <div className="flex items-center justify-between border-b px-4 py-3 sm:px-6">
             <div className="flex items-center gap-2">
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
@@ -438,8 +438,8 @@ Guidelines:
               <Trash2 className="h-4 w-4" />
             </Button>
           </div>
-          <ScrollArea className="flex-1 p-4 sm:p-6" ref={scrollRef}>
-            <div className="space-y-6">
+          <ScrollArea className="flex-1 p-3 sm:p-6" ref={scrollRef}>
+            <div className="space-y-4 sm:space-y-6">
               <AnimatePresence>
                 {messages.map((msg) => (
                   <motion.div
@@ -447,7 +447,7 @@ Guidelines:
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3 }}
-                    className={cn('flex min-w-0 gap-3', msg.role === 'user' ? 'justify-end' : 'justify-start')}
+                    className={cn('flex min-w-0 gap-2 sm:gap-3', msg.role === 'user' ? 'justify-end' : 'justify-start')}
                   >
                     {msg.role === 'assistant' && (
                       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
@@ -456,7 +456,7 @@ Guidelines:
                     )}
                     <div
                       className={cn(
-                        'max-w-[calc(100%-2.75rem)] overflow-hidden break-words rounded-2xl px-4 py-3 text-sm leading-relaxed sm:max-w-[78%]',
+                        'max-w-[calc(100%-2.5rem)] overflow-hidden break-words rounded-2xl px-3.5 py-3 text-sm leading-relaxed sm:max-w-[78%] sm:px-4',
                         msg.role === 'user'
                           ? 'rounded-br-md bg-primary text-primary-foreground'
                           : 'rounded-bl-md bg-muted'
@@ -561,7 +561,7 @@ Guidelines:
         </div>
       </div>
 
-      <div className="fixed inset-x-0 bottom-[calc(5.2rem+env(safe-area-inset-bottom))] z-40 border-t border-border/70 bg-background/95 px-3 py-3 shadow-[0_-14px_38px_oklch(0_0_0_/_0.32)] backdrop-blur-xl sm:px-4 lg:hidden">
+      <div className="fixed inset-x-0 bottom-[calc(5.15rem+env(safe-area-inset-bottom))] z-40 border-t border-border/70 bg-background/95 px-3 py-2.5 shadow-[0_-14px_38px_oklch(0_0_0_/_0.32)] backdrop-blur-xl sm:px-4 lg:hidden">
         <div className="mx-auto flex max-w-md gap-2">
           <Input
             placeholder={`Ask Coach in ${mode.label} mode...`}

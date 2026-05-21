@@ -123,6 +123,12 @@ const plannedFocusMap: Record<string, string[]> = {
   cardio: ['Push-Ups'],
 };
 
+const sessionPrepItems = [
+  '5 min easy warm-up',
+  'One light ramp-up set',
+  'Phone on timer mode',
+];
+
 function getDateKey(date = new Date()) {
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
@@ -207,6 +213,7 @@ export function WorkoutsPage() {
   const [sessionShouldCompleteToday, setSessionShouldCompleteToday] = useState(false);
   const [sessionStartedAt, setSessionStartedAt] = useState<number | null>(null);
   const [sessionElapsed, setSessionElapsed] = useState(0);
+  const [sessionPrepChecks, setSessionPrepChecks] = useState(sessionPrepItems.map(() => false));
   const [restSeconds, setRestSeconds] = useState(90);
   const [restRunning, setRestRunning] = useState(false);
   const [sessionExercises, setSessionExercises] = useState<SessionExercise[]>([]);
@@ -395,6 +402,9 @@ export function WorkoutsPage() {
   const activeSessionExercise = activeSessionExerciseIndex >= 0
     ? sessionExercises[activeSessionExerciseIndex]
     : sessionExercises[sessionExercises.length - 1] || null;
+  const activeSessionSetIndex = activeSessionExerciseIndex >= 0
+    ? sessionExercises[activeSessionExerciseIndex]?.sets.findIndex((set) => !set.done) ?? -1
+    : -1;
   const nextSessionExercise = activeSessionExerciseIndex >= 0
     ? sessionExercises.slice(activeSessionExerciseIndex + 1).find((exercise) => !exercise.done) || null
     : null;
@@ -493,6 +503,7 @@ export function WorkoutsPage() {
 
     setRestSeconds(90);
     setRestRunning(false);
+    setSessionPrepChecks(sessionPrepItems.map(() => false));
     setSessionElapsed(0);
     setSessionStartedAt(Date.now());
     setSessionOpen(true);
@@ -559,6 +570,17 @@ export function WorkoutsPage() {
 
     setRestSeconds(90);
     setRestRunning(true);
+  };
+
+  const toggleSessionPrep = (prepIndex: number) => {
+    setSessionPrepChecks((current) =>
+      current.map((checked, currentIndex) => currentIndex === prepIndex ? !checked : checked)
+    );
+  };
+
+  const completeNextSessionSet = () => {
+    if (activeSessionExerciseIndex < 0 || activeSessionSetIndex < 0) return;
+    toggleSessionSet(activeSessionExerciseIndex, activeSessionSetIndex);
   };
 
   const toggleSessionExercise = (exerciseIndex: number) => {
@@ -818,31 +840,31 @@ export function WorkoutsPage() {
   };
 
   return (
-    <div className="min-h-screen pt-24 pb-16">
+    <div className="min-h-screen pb-10 pt-20 sm:pt-24 lg:pb-16">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Page Header */}
         <motion.div
-          className="mb-8"
+          className="mb-6 sm:mb-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-2">
+          <h1 className="mb-2 text-3xl font-black tracking-tight sm:text-4xl">
             Workout <span className="gradient-text">Library</span>
           </h1>
-          <p className="text-muted-foreground">
+          <p className="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
             Browse {exercises.length}+ exercises, log sets, and track your progress
           </p>
         </motion.div>
 
         <motion.div
-          className="mb-8 overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm"
+          className="mb-6 overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm sm:mb-8"
           initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.03 }}
         >
           <div className="grid gap-0 lg:grid-cols-[1.1fr_0.9fr]">
-            <div className="p-5 sm:p-6">
+            <div className="p-4 sm:p-6">
               <div className="mb-4 flex flex-wrap items-center gap-2">
                 <Badge className="rounded-md bg-primary/10 text-primary hover:bg-primary/10">
                   {formatDate(todayDateKey)}
@@ -875,11 +897,11 @@ export function WorkoutsPage() {
                   </p>
                 </div>
 
-                <div className="flex shrink-0 gap-2">
+                <div className="grid w-full grid-cols-[2.75rem_1fr_1fr] gap-2 sm:flex sm:w-auto sm:shrink-0">
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-11 w-11 rounded-lg"
+                    className="h-11 w-full rounded-lg sm:w-11"
                     onClick={() => loadTodaySchedule(true)}
                     disabled={scheduleLoading}
                     aria-label="Refresh today plan"
@@ -907,7 +929,7 @@ export function WorkoutsPage() {
               </div>
             </div>
 
-            <div className="border-t bg-muted/25 p-5 lg:border-l lg:border-t-0 sm:p-6">
+            <div className="border-t bg-muted/25 p-4 sm:p-6 lg:border-l lg:border-t-0">
               <div className="grid h-full gap-3 sm:grid-cols-3 lg:grid-cols-1">
                 <div className="rounded-lg border bg-background/70 p-3">
                   <div className="flex items-center gap-2 text-xs font-black uppercase text-muted-foreground">
@@ -937,7 +959,7 @@ export function WorkoutsPage() {
 
         {/* Tracking Summary */}
         <motion.div
-          className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8"
+          className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:mb-8 lg:grid-cols-4"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.05 }}
@@ -1008,7 +1030,7 @@ export function WorkoutsPage() {
 
         {/* Search & Filters */}
         <motion.div
-          className="mb-8 space-y-4"
+          className="mb-6 space-y-4 sm:mb-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
@@ -1021,14 +1043,14 @@ export function WorkoutsPage() {
                 placeholder="Search exercises by name or muscle group..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-10 h-11 rounded-xl bg-card"
+                className="h-11 rounded-xl bg-card pl-10 text-sm"
               />
             </div>
             <Button
               variant="outline"
               onClick={() => setShowFilters(!showFilters)}
               className={cn(
-                "h-11 rounded-xl gap-2",
+                "h-11 rounded-xl gap-2 px-3",
                 showFilters && "bg-primary/10 text-primary border-primary/20"
               )}
             >
@@ -1041,7 +1063,7 @@ export function WorkoutsPage() {
           </div>
 
           {/* Category Tabs */}
-          <div className="flex gap-2 overflow-x-auto pb-1">
+          <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:px-0">
             {categories.map((cat) => (
               <Button
                 key={cat.id}
@@ -1049,7 +1071,7 @@ export function WorkoutsPage() {
                 size="sm"
                 onClick={() => setSelectedCategory(cat.id)}
                 className={cn(
-                  "rounded-lg gap-2 shrink-0 transition-all",
+                  "h-10 shrink-0 rounded-lg gap-2 transition-all",
                   selectedCategory === cat.id && "neon-glow"
                 )}
               >
@@ -1172,7 +1194,7 @@ export function WorkoutsPage() {
 
         {/* Exercise Grid */}
         <motion.div
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+          className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 lg:gap-6"
           layout
         >
           <AnimatePresence mode="popLayout">
@@ -1311,7 +1333,7 @@ export function WorkoutsPage() {
                       <PlayCircle className="h-4 w-4" />
                       Start This Exercise
                     </Button>
-                    <div className="mt-2 grid grid-cols-1 gap-2 min-[390px]:grid-cols-3">
+                    <div className="mt-2 grid grid-cols-3 gap-2">
                       <Button
                         variant="outline"
                         size="sm"
@@ -1538,6 +1560,64 @@ export function WorkoutsPage() {
           </div>
 
           <div className="space-y-5 p-4 sm:p-5">
+            <div className="grid gap-3 lg:grid-cols-[0.9fr_1.1fr]">
+              <div className="rounded-lg border border-primary/25 bg-primary/10 p-4">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-black uppercase tracking-wide text-primary">Start flow</p>
+                    <h3 className="mt-1 text-lg font-black">Prepare before the first working set</h3>
+                  </div>
+                  <Badge variant="outline" className="rounded-md bg-background/50">
+                    {sessionPrepChecks.filter(Boolean).length}/{sessionPrepItems.length}
+                  </Badge>
+                </div>
+                <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-1">
+                  {sessionPrepItems.map((item, index) => (
+                    <button
+                      key={item}
+                      type="button"
+                      onClick={() => toggleSessionPrep(index)}
+                      className={cn(
+                        'flex items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm transition-colors',
+                        sessionPrepChecks[index]
+                          ? 'border-primary/40 bg-primary/15 text-foreground'
+                          : 'border-border/60 bg-background/40 text-muted-foreground hover:text-foreground'
+                      )}
+                    >
+                      <CheckCircle2 className={cn('h-4 w-4 shrink-0', sessionPrepChecks[index] ? 'text-primary' : 'text-muted-foreground')} />
+                      <span className="min-w-0 truncate">{item}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-lg border bg-muted/20 p-4">
+                <p className="text-xs font-black uppercase tracking-wide text-muted-foreground">Today&apos;s sequence</p>
+                <div className="mt-3 grid grid-cols-4 gap-2">
+                  {['Prep', 'Lift', 'Rest', 'Finish'].map((step, index) => {
+                    const active =
+                      (index === 0 && sessionDoneSetCount === 0 && sessionPrepChecks.some((checked) => !checked)) ||
+                      (index === 1 && sessionProgress > 0 && sessionProgress < 100 && !restRunning) ||
+                      (index === 2 && restRunning) ||
+                      (index === 3 && sessionProgress >= 100);
+
+                    return (
+                      <div
+                        key={step}
+                        className={cn(
+                          'rounded-lg border px-2 py-3 text-center',
+                          active ? 'border-primary/40 bg-primary/10' : 'border-border/50 bg-background/40'
+                        )}
+                      >
+                        <p className={cn('text-lg font-black', active && 'text-primary')}>{index + 1}</p>
+                        <p className="mt-1 truncate text-[10px] font-black uppercase text-muted-foreground">{step}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
             <div className="grid gap-3 xl:grid-cols-[1fr_18rem_18rem]">
               <div className="rounded-lg border bg-muted/20 p-4">
                 <div className="mb-3 flex items-center justify-between gap-3">
@@ -1585,7 +1665,7 @@ export function WorkoutsPage() {
                 <div className="space-y-2 text-sm text-muted-foreground">
                   <p>
                     {activeSessionExercise
-                      ? `${activeSessionExercise.sets.filter((set) => set.done).length}/${activeSessionExercise.sets.length} sets complete`
+                      ? `${activeSessionExercise.sets.filter((set) => set.done).length}/${activeSessionExercise.sets.length} sets complete${activeSessionSetIndex >= 0 ? ` - set ${activeSessionSetIndex + 1} next` : ''}`
                       : 'Add an exercise to begin.'}
                   </p>
                   <p className="line-clamp-1">
@@ -1593,6 +1673,14 @@ export function WorkoutsPage() {
                   </p>
                   <p>{Math.round(completedSessionVolume).toLocaleString()}kg completed volume</p>
                 </div>
+                <Button
+                  onClick={completeNextSessionSet}
+                  disabled={activeSessionExerciseIndex < 0 || activeSessionSetIndex < 0}
+                  className="mt-4 h-10 w-full rounded-lg font-bold"
+                >
+                  <CheckCircle2 className="h-4 w-4" />
+                  Mark Next Set
+                </Button>
               </div>
 
               <div className="rounded-lg border bg-muted/20 p-4">

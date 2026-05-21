@@ -26,6 +26,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { TodayDashboard } from '@/components/pages/TodayDashboard';
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/lib/store';
 
@@ -131,19 +132,19 @@ export function HomePage() {
 
   return (
     <div className="overflow-hidden bg-background">
-      <section className="relative min-h-[92svh] overflow-hidden bg-black text-white">
+      <section className="relative min-h-[88svh] overflow-hidden bg-black text-white sm:min-h-[92svh]">
         <Image
           src="/images/gym-hero.png"
           alt="Focused athlete training strength in a gym"
           fill
           priority
           sizes="100vw"
-          className="scale-110 object-cover object-[84%_center] sm:scale-100 sm:object-[62%_center] lg:object-[58%_center]"
+          className="scale-105 object-cover object-[73%_center] sm:scale-100 sm:object-[62%_center] lg:object-[58%_center]"
         />
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.76)_0%,rgba(0,0,0,0.58)_34%,rgba(0,0,0,0.92)_100%)] sm:bg-[linear-gradient(90deg,rgba(0,0,0,0.96)_0%,rgba(0,0,0,0.80)_42%,rgba(0,0,0,0.34)_72%,rgba(0,0,0,0.72)_100%)]" />
         <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-background to-transparent" />
 
-        <div className="relative z-10 mx-auto flex min-h-[92svh] w-full max-w-[1400px] items-center px-4 pb-20 pt-28 sm:px-8 lg:px-10">
+        <div className="relative z-10 mx-auto flex min-h-[88svh] w-full max-w-[1400px] items-center px-4 pb-28 pt-24 sm:min-h-[92svh] sm:px-8 sm:pb-20 sm:pt-28 lg:px-10">
           <div className="grid w-full items-center gap-10 lg:grid-cols-[minmax(0,1fr)_26rem]">
             <motion.div initial="hidden" animate="visible" className="hero-copy-frame min-w-0 max-w-4xl">
               <motion.div variants={fadeUp} custom={0}>
@@ -156,7 +157,7 @@ export function HomePage() {
               <motion.h1
                 variants={fadeUp}
                 custom={1}
-                className="max-w-5xl text-[2.55rem] font-black uppercase leading-[0.95] tracking-normal sm:text-7xl lg:text-[7.25rem]"
+                className="max-w-5xl text-[2.35rem] font-black uppercase leading-[0.96] tracking-normal min-[380px]:text-[2.75rem] sm:text-7xl lg:text-[7.25rem]"
               >
                 <span className="block">Become A</span>
                 <span className="block">Stronger Man</span>
@@ -165,7 +166,7 @@ export function HomePage() {
               <motion.p
                 variants={fadeUp}
                 custom={2}
-                className="hero-subcopy mt-6 text-base leading-8 text-white/78 sm:text-xl"
+                className="hero-subcopy mt-5 text-[0.95rem] leading-7 text-white/78 sm:mt-6 sm:text-xl sm:leading-8"
               >
                 Prime Forge teaches you how to train, eat, recover, and stay consistent. No confusion,
                 no random workouts, just a clear path from beginner to stronger every week.
@@ -174,12 +175,12 @@ export function HomePage() {
               <motion.div
                 variants={fadeUp}
                 custom={3}
-                className="mt-9 flex w-full flex-col gap-3 sm:w-auto sm:flex-row"
+                className="mt-7 flex w-full flex-col gap-3 sm:mt-9 sm:w-auto sm:flex-row"
               >
                 <Button
                   size="lg"
                   onClick={startToday}
-                  className="h-[3.25rem] rounded-lg px-8 text-sm font-black uppercase"
+                  className="h-[3.15rem] w-full rounded-lg px-8 text-sm font-black uppercase sm:w-auto"
                 >
                   Start Training
                   <ArrowRight className="h-4 w-4" />
@@ -188,7 +189,7 @@ export function HomePage() {
                   size="lg"
                   variant="outline"
                   onClick={() => navigate('ai-coach')}
-                  className="h-[3.25rem] rounded-lg border-white/20 bg-black/30 px-8 text-sm font-black uppercase text-white hover:bg-white/10 hover:text-white"
+                  className="h-[3.15rem] w-full rounded-lg border-white/20 bg-black/30 px-8 text-sm font-black uppercase text-white hover:bg-white/10 hover:text-white sm:w-auto"
                 >
                   <Bot className="h-4 w-4" />
                   Ask The Coach
@@ -198,11 +199,11 @@ export function HomePage() {
               <motion.div
                 variants={fadeUp}
                 custom={4}
-                className="mt-10 grid w-[calc(100vw-3rem)] max-w-2xl grid-cols-3 overflow-hidden rounded-lg border border-white/[0.12] bg-black/35 backdrop-blur-md sm:w-full"
+                className="mt-8 grid w-full max-w-2xl grid-cols-3 overflow-hidden rounded-xl border border-white/[0.12] bg-black/40 backdrop-blur-md sm:mt-10 sm:w-full"
               >
                 {stats.map((item) => (
-                  <div key={item.label} className="border-r border-white/10 p-4 last:border-r-0 sm:p-5">
-                    <p className="text-2xl font-black text-primary sm:text-3xl">{item.value}</p>
+                  <div key={item.label} className="border-r border-white/10 p-3 last:border-r-0 sm:p-5">
+                    <p className="text-xl font-black text-primary sm:text-3xl">{item.value}</p>
                     <p className="mt-1 text-[11px] font-semibold uppercase text-white/58 sm:text-xs">{item.label}</p>
                   </div>
                 ))}
@@ -250,6 +251,8 @@ export function HomePage() {
           </div>
         </div>
       </section>
+
+      <TodayDashboard />
 
       <section className="py-16 sm:py-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

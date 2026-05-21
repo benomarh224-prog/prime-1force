@@ -88,8 +88,8 @@ export function Header() {
             : 'glass'
         }`}
       >
-        <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-10">
-          <div className="flex h-16 items-center justify-between">
+        <div className="mx-auto max-w-[1400px] px-3 sm:px-6 lg:px-10">
+          <div className="flex h-14 items-center justify-between sm:h-16">
           {/* Logo */}
           <button
             onClick={() => navigate('home')}
@@ -97,7 +97,7 @@ export function Header() {
             aria-label="Prime Forge home"
           >
             <span className="block shrink-0 transition-transform group-hover:scale-[1.02]">
-              <Image src="/logo-wordmark.png" alt="Prime Forge" width={182} height={28} className="h-7 w-auto sm:h-8" priority />
+              <Image src="/logo-wordmark.png" alt="Prime Forge" width={182} height={28} className="h-6 w-auto sm:h-8" priority />
             </span>
           </button>
 
@@ -179,26 +179,34 @@ export function Header() {
             {/* Mobile Menu */}
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className={`lg:hidden rounded-lg ${heroTop ? 'text-white hover:bg-white/10 hover:text-white' : ''}`}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={`h-11 w-11 rounded-lg lg:hidden ${
+                    heroTop
+                      ? 'bg-black/20 text-white ring-1 ring-white/10 hover:bg-white/10 hover:text-white'
+                      : 'bg-card/55 ring-1 ring-primary/10'
+                  }`}
+                >
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[min(92vw,20rem)] p-0 luxury-surface">
+              <SheetContent side="right" className="w-[min(92vw,21rem)] rounded-l-xl p-0 luxury-surface">
                 <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
                 <div className="flex min-h-full flex-col">
-                  <div className="flex shrink-0 items-center justify-between border-b p-4">
+                  <div className="flex shrink-0 items-center justify-between border-b p-4 pr-12">
                     <span className="block">
-                      <Image src="/logo-wordmark.png" alt="Prime Forge" width={182} height={28} className="h-8 w-auto" />
+                      <Image src="/logo-wordmark.png" alt="Prime Forge" width={182} height={28} className="h-7 w-auto" />
                     </span>
                   </div>
-                  <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto p-2">
+                  <nav className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto p-3">
                     {navItems.map((item) => (
                       <Button
                         key={item.page}
                         variant={currentPage === item.page ? 'secondary' : 'ghost'}
-                        className={`justify-start gap-3 rounded-lg h-12 ${
+                        className={`h-12 justify-start gap-3 rounded-lg text-[0.95rem] ${
                           currentPage === item.page
-                            ? 'bg-primary/10 text-primary font-medium'
+                            ? 'bg-primary/10 text-primary ring-1 ring-primary/20 font-semibold'
                             : 'text-muted-foreground'
                         }`}
                         onClick={() => navigateFromMobile(item.page)}
@@ -208,7 +216,7 @@ export function Header() {
                       </Button>
                     ))}
                   </nav>
-                  <div className="shrink-0 space-y-2 border-t p-4">
+                  <div className="shrink-0 space-y-2 border-t p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
                     {status === 'authenticated' ? (
                       <>
                         <Button

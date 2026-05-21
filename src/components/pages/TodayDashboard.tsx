@@ -92,6 +92,29 @@ function getGoalCopy(goal: string) {
   return 'maintenance';
 }
 
+const workoutFlowSteps = [
+  {
+    label: 'Prepare',
+    title: 'Check the plan',
+    detail: 'Know the split, read the notes, and set your first weight before you start.',
+  },
+  {
+    label: 'Warm up',
+    title: 'Prime the joints',
+    detail: 'Do 5-8 minutes easy movement, then one lighter set for the first lift.',
+  },
+  {
+    label: 'Train',
+    title: 'Log every set',
+    detail: 'Mark sets done, use the rest timer, and keep reps honest.',
+  },
+  {
+    label: 'Finish',
+    title: 'Save the session',
+    detail: 'Finish saves history, marks today complete, and updates your dashboard.',
+  },
+];
+
 function statCard({
   icon,
   label,
@@ -235,7 +258,7 @@ export function TodayDashboard() {
   };
 
   return (
-    <section className="relative overflow-hidden border-y border-primary/10 bg-muted/20 py-16 sm:py-20">
+    <section className="relative overflow-hidden border-y border-primary/10 bg-muted/20 py-12 sm:py-20">
       <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_18%_0%,oklch(0.62_0.24_27_/_0.16),transparent_34%),radial-gradient(circle_at_82%_20%,oklch(0.36_0.18_27_/_0.16),transparent_30%)]" />
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <motion.div
@@ -243,33 +266,33 @@ export function TodayDashboard() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-80px' }}
           transition={{ duration: 0.55 }}
-          className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between"
+          className="mb-6 flex flex-col gap-4 sm:mb-8 lg:flex-row lg:items-end lg:justify-between"
         >
           <div>
             <Badge className="mb-4 gap-2 rounded-md border-primary/25 bg-primary/10 text-primary">
               <Sparkles className="h-3.5 w-3.5" />
-              Today Command Center
+              Today&apos;s Workout Flow
             </Badge>
-            <h2 className="text-3xl font-black uppercase tracking-tight sm:text-4xl lg:text-5xl">
-              Welcome back, <span className="gradient-text">{displayName}</span>
+            <h2 className="text-2xl font-black uppercase tracking-tight min-[380px]:text-3xl sm:text-4xl lg:text-5xl">
+              Know exactly what to do today, <span className="gradient-text">{displayName}</span>
             </h2>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-              Your workout, nutrition target, streak, and next best action in one place.
+              Start the plan, log sets while you train, finish the session, and let the app update your progress.
             </p>
           </div>
 
-          <div className="flex flex-col gap-2 sm:flex-row">
+          <div className="flex flex-col gap-2 sm:flex-row lg:shrink-0">
             {!isSignedIn && (
               <Button
                 variant="outline"
                 onClick={() => openAuthDialog('signup')}
-                className="h-11 rounded-lg border-primary/25 font-bold"
+                className="h-11 w-full rounded-lg border-primary/25 font-bold sm:w-auto"
               >
                 Save My Progress
               </Button>
             )}
-            <Button onClick={handlePrimaryAction} className="h-11 rounded-lg font-bold neon-glow">
-              {primaryAction.label}
+            <Button onClick={handlePrimaryAction} className="h-11 w-full rounded-lg font-bold neon-glow sm:w-auto">
+              {primaryAction.page === 'workouts' ? 'Start Guided Workout' : primaryAction.label}
               <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
@@ -279,13 +302,13 @@ export function TodayDashboard() {
           <Card className="overflow-hidden border-primary/15 bg-card/80">
             <CardContent className="p-0">
               <div className="grid gap-0 lg:grid-cols-[1fr_18rem]">
-                <div className="p-5 sm:p-6">
+                <div className="p-4 sm:p-6">
                   <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
                     <div>
                       <p className="text-xs font-black uppercase tracking-wide text-muted-foreground">
                         {programName}
                       </p>
-                      <h3 className="mt-2 text-2xl font-black uppercase sm:text-3xl">
+                      <h3 className="mt-2 text-xl font-black uppercase min-[380px]:text-2xl sm:text-3xl">
                         {loading ? 'Loading today' : todayPlan?.splitTitle || 'Build your first plan'}
                       </h3>
                     </div>
@@ -298,7 +321,7 @@ export function TodayDashboard() {
                     </Badge>
                   </div>
 
-                  <div className="mb-6 grid gap-2 sm:grid-cols-2">
+                  <div className="mb-5 grid gap-2 sm:mb-6 sm:grid-cols-2">
                     {(todayPlan?.exercises.length ? todayPlan.exercises : ['Choose a program', 'Log your first workout', 'Ask the coach for a plan'])
                       .slice(0, 6)
                       .map((exercise) => (
@@ -309,6 +332,38 @@ export function TodayDashboard() {
                       ))}
                   </div>
 
+                  <div className="mb-5 grid gap-3 sm:mb-6 sm:grid-cols-2">
+                    {workoutFlowSteps.map((step, index) => {
+                      const active =
+                        (todayStatus === 'Ready' && index === 0) ||
+                        (todayStatus === 'Complete' && index === workoutFlowSteps.length - 1);
+
+                      return (
+                        <div
+                          key={step.label}
+                          className={cn(
+                            'rounded-lg border p-3',
+                            active ? 'border-primary/40 bg-primary/10' : 'border-border/50 bg-background/40'
+                          )}
+                        >
+                          <div className="mb-2 flex items-center gap-2">
+                            <span className={cn(
+                              'flex h-7 w-7 items-center justify-center rounded-md text-xs font-black',
+                              active ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                            )}>
+                              {index + 1}
+                            </span>
+                            <p className="text-[10px] font-black uppercase tracking-wide text-muted-foreground">
+                              {step.label}
+                            </p>
+                          </div>
+                          <h4 className="text-sm font-black">{step.title}</h4>
+                          <p className="mt-1 text-xs leading-5 text-muted-foreground">{step.detail}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+
                   <p className="mb-5 text-sm leading-6 text-muted-foreground">
                     {todayPlan?.isRestDay
                       ? todayPlan.notes || 'Recover, walk, stretch, and get ready for the next training day.'
@@ -316,18 +371,18 @@ export function TodayDashboard() {
                   </p>
 
                   <div className="flex flex-col gap-2 sm:flex-row">
-                    <Button onClick={handlePrimaryAction} className="rounded-lg font-bold">
+                    <Button onClick={handlePrimaryAction} className="h-11 rounded-lg font-bold">
                       <Dumbbell className="h-4 w-4" />
-                      {primaryAction.label}
+                      {primaryAction.page === 'workouts' ? 'Start Guided Workout' : primaryAction.label}
                     </Button>
-                    <Button variant="outline" onClick={() => navigate('ai-coach')} className="rounded-lg border-primary/20 font-bold">
+                    <Button variant="outline" onClick={() => navigate('ai-coach')} className="h-11 rounded-lg border-primary/20 font-bold">
                       <Bot className="h-4 w-4" />
                       Ask Coach
                     </Button>
                   </div>
                 </div>
 
-                <div className="border-t bg-muted/20 p-5 sm:p-6 lg:border-l lg:border-t-0">
+                <div className="border-t bg-muted/20 p-4 sm:p-6 lg:border-l lg:border-t-0">
                   <div className="mb-4 flex items-center justify-between gap-3">
                     <p className="text-xs font-black uppercase tracking-wide text-muted-foreground">Weekly target</p>
                     <Badge variant="outline" className="rounded-md">

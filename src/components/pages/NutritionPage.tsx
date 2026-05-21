@@ -185,19 +185,19 @@ export function NutritionPage() {
   };
 
   return (
-    <div className="min-h-screen pb-16 pt-24">
+    <div className="min-h-screen pb-10 pt-20 sm:pt-24 lg:pb-16">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8 grid gap-6 lg:grid-cols-[1fr_360px] lg:items-end"
+          className="mb-6 grid gap-5 sm:mb-8 lg:grid-cols-[1fr_360px] lg:items-end"
         >
           <div>
             <Badge className="mb-4 gap-2 rounded-md border-primary/25 bg-primary/10 text-primary">
               <Leaf className="h-3.5 w-3.5" />
               Goal-based nutrition
             </Badge>
-            <h1 className="text-4xl font-black uppercase leading-none sm:text-5xl lg:text-6xl">
+            <h1 className="text-3xl font-black uppercase leading-none min-[380px]:text-4xl sm:text-5xl lg:text-6xl">
               Nutrition Hub
             </h1>
             <p className="mt-4 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
@@ -206,11 +206,11 @@ export function NutritionPage() {
           </div>
 
           <Card className="overflow-hidden border-primary/20 bg-primary/10">
-            <CardContent className="p-5">
+            <CardContent className="p-4 sm:p-5">
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Daily target</p>
-                  <p className="mt-2 text-4xl font-black text-primary">{calculator.goalCalories}</p>
+                  <p className="mt-2 text-3xl font-black text-primary sm:text-4xl">{calculator.goalCalories}</p>
                   <p className="text-xs text-muted-foreground">calories for {getGoalLabel(userGoal)}</p>
                 </div>
                 <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-background/80">
@@ -221,7 +221,7 @@ export function NutritionPage() {
           </Card>
         </motion.div>
 
-        <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
           {[
             { label: 'Meal calories', value: totals.calories, suffix: 'cal', icon: Flame, tone: 'text-orange-400' },
             { label: 'Protein', value: totals.protein, suffix: 'g', icon: Beef, tone: 'text-emerald-400' },
@@ -229,12 +229,12 @@ export function NutritionPage() {
             { label: 'Fat', value: totals.fat, suffix: 'g', icon: Droplets, tone: 'text-sky-400' },
           ].map((stat) => (
             <Card key={stat.label} className="border-border/50">
-              <CardContent className="flex items-center gap-4 p-4">
-                <div className={cn('flex h-11 w-11 items-center justify-center rounded-lg bg-muted', stat.tone)}>
+              <CardContent className="flex items-center gap-3 p-3 sm:gap-4 sm:p-4">
+                <div className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted sm:h-11 sm:w-11', stat.tone)}>
                   <stat.icon className="h-5 w-5" />
                 </div>
                 <div className="min-w-0">
-                  <p className="truncate text-2xl font-black">
+                  <p className="truncate text-xl font-black sm:text-2xl">
                     {stat.value}
                     <span className="ml-1 text-sm text-muted-foreground">{stat.suffix}</span>
                   </p>
@@ -246,7 +246,7 @@ export function NutritionPage() {
         </div>
 
         <Tabs defaultValue="ai-scan" className="space-y-6">
-          <TabsList className="grid h-11 w-full max-w-3xl grid-cols-5 rounded-lg">
+          <TabsList className="grid h-12 w-full max-w-3xl grid-cols-5 rounded-lg p-1">
             <TabsTrigger value="ai-scan" className="gap-1 rounded-md px-1 text-xs sm:gap-2 sm:px-2 sm:text-sm">
               <ScanLine className="h-4 w-4" />
               <span className="hidden min-[430px]:inline">AI Scan</span>

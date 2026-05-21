@@ -100,6 +100,8 @@
   }
   html {
     overflow-x: hidden;
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
   }
 
   body {
@@ -111,6 +113,20 @@
       linear-gradient(180deg, oklch(0.11 0.018 25) 0%, oklch(0.075 0.008 25) 34%, oklch(0.045 0.012 25) 100%);
     text-rendering: optimizeLegibility;
     font-feature-settings: "ss01" 1, "cv05" 1;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  button,
+  a,
+  input,
+  textarea,
+  select {
+    touch-action: manipulation;
+  }
+
+  img,
+  video {
+    max-width: 100%;
   }
 
   ::selection {
@@ -235,8 +251,7 @@
 }
 
 .mobile-bottom-nav {
-  width: 100vw;
-  max-width: 100%;
+  width: 100%;
   overflow-x: hidden;
 }
 
@@ -257,8 +272,19 @@
 }
 
 @media (max-width: 640px) {
+  :root {
+    --radius: 0.625rem;
+  }
+
   body {
     -webkit-tap-highlight-color: transparent;
+    background:
+      radial-gradient(560px 280px at 50% -6%, oklch(0.30 0.095 27 / 34%), transparent 70%),
+      linear-gradient(180deg, oklch(0.10 0.016 25) 0%, oklch(0.065 0.01 25) 45%, oklch(0.045 0.012 25) 100%);
+  }
+
+  main {
+    isolation: isolate;
   }
 
   h1 {
@@ -266,14 +292,49 @@
     overflow-wrap: anywhere;
   }
 
+  h2,
+  h3,
+  p {
+    overflow-wrap: break-word;
+  }
+
   input,
-  textarea {
+  textarea,
+  select,
+  button {
     min-height: 44px;
   }
 
   .container {
     padding-left: 1rem;
     padding-right: 1rem;
+  }
+
+  [data-slot="card"] {
+    box-shadow: 0 12px 28px oklch(0 0 0 / 24%), inset 0 1px 0 oklch(1 0 0 / 5%);
+  }
+
+  [data-slot="dialog-content"] {
+    width: calc(100vw - 1rem);
+    max-width: calc(100vw - 1rem);
+    max-height: calc(100dvh - 1rem);
+    border-radius: 0.875rem;
+    padding: 1rem;
+  }
+
+  [data-slot="sheet-content"] {
+    max-width: calc(100vw - 1rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
 
