@@ -33,6 +33,11 @@ export function ensureDashboardSchema() {
         CONSTRAINT "WorkoutSession_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
       )
     `);
+    await addColumnIfMissing('User', 'avatar', 'ALTER TABLE "User" ADD COLUMN "avatar" TEXT');
+    await addColumnIfMissing('User', 'weight', 'ALTER TABLE "User" ADD COLUMN "weight" REAL');
+    await addColumnIfMissing('User', 'height', 'ALTER TABLE "User" ADD COLUMN "height" REAL');
+    await addColumnIfMissing('User', 'goal', 'ALTER TABLE "User" ADD COLUMN "goal" TEXT DEFAULT \'lose_weight\'');
+    await addColumnIfMissing('User', 'level', 'ALTER TABLE "User" ADD COLUMN "level" TEXT DEFAULT \'beginner\'');
     await addColumnIfMissing('User', 'weeklyGoal', 'ALTER TABLE "User" ADD COLUMN "weeklyGoal" INTEGER DEFAULT 5');
     await addColumnIfMissing('WorkoutSession', 'name', 'ALTER TABLE "WorkoutSession" ADD COLUMN "name" TEXT NOT NULL DEFAULT \'Workout\'');
     await addColumnIfMissing('WorkoutSession', 'exercises', 'ALTER TABLE "WorkoutSession" ADD COLUMN "exercises" TEXT');

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback, useSyncExternalStore } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo, useSyncExternalStore } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -282,6 +282,15 @@ export function DashboardPage() {
     { name: 'Carbs', value: dailyCalorieData.reduce((s, d) => s + d.carbs, 0) / 7, fill: 'oklch(0.75 0.12 60)' },
     { name: 'Fat', value: dailyCalorieData.reduce((s, d) => s + d.fat, 0) / 7, fill: 'oklch(0.60 0.15 250)' },
   ];
+  const weightProgressData = useMemo(() => {
+    const latestDemoWeight = progressData[progressData.length - 1]?.weight ?? store.userWeight;
+    const profileOffset = store.userWeight - latestDemoWeight;
+
+    return progressData.map((entry) => ({
+      ...entry,
+      weight: Number((entry.weight + profileOffset).toFixed(1)),
+    }));
+  }, [store.userWeight]);
   const personalRecords = Array.from(
     store.workoutLogs
       .flatMap((log) =>
@@ -947,7 +956,7 @@ export function DashboardPage() {
                 <CardContent className="p-4 pt-0">
                   <div className="h-64">
                     <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={progressData}>
+                      <AreaChart data={weightProgressData}>
                         <defs>
                           <linearGradient id="weightGrad" x1="0" y1="0" x2="0" y2="1">
                             <stop offset="5%" stopColor="oklch(0.62 0.24 27)" stopOpacity={0.3} />
