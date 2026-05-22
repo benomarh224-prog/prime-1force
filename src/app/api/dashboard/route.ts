@@ -128,6 +128,34 @@ function sanitizeProfile(input: unknown): ProfilePatch {
   return patch;
 }
 
+function validateProfile(input: unknown) {
+  const source = input && typeof input === 'object' ? input as Record<string, unknown> : {};
+  const hasOwn = (key: string) => Object.prototype.hasOwnProperty.call(source, key);
+
+  if (hasOwn('weight')) {
+    const weight = Number(source.weight);
+    if (!Number.isFinite(weight) || weight < 30 || weight > 300) {
+      return 'Weight must be between 30 and 300 kg';
+    }
+  }
+
+  if (hasOwn('height')) {
+    const height = Number(source.height);
+    if (!Number.isFinite(height) || height < 100 || height > 250) {
+      return 'Height must be between 100 and 250 cm';
+    }
+  }
+
+  if (hasOwn('weeklyGoal')) {
+    const weeklyGoal = Number(source.weeklyGoal);
+    if (!Number.isInteger(weeklyGoal) || weeklyGoal < 1 || weeklyGoal > 14) {
+      return 'Weekly workout goal must be between 1 and 14';
+    }
+  }
+
+  return null;
+}
+
 async function getSessionUser() {
   const session = await getServerSession(authOptions);
   const user = session?.user as SessionUser | undefined;
@@ -224,7 +252,13 @@ export async function PATCH(request: Request) {
   }
 
   const body = await request.json();
-  const profilePatch = body.profile ? sanitizeProfile(body.profile) : null;
+  const profileError = body.profile ? validateProfile(body.profile) : null;
+  if (profileError) {
+    return NextResponse.json({ success: false, error: profileError }, { status: 400 });
+  }
+
+  const sanitizedProfile = body.profile ? sanitizeProfile(body.profile) : null;
+  const profilePatch = sanitizedProfile && Object.keys(sanitizedProfile).length > 0 ? sanitizedProfile : null;
   const workoutId = typeof body.workoutId === 'string' ? body.workoutId : null;
   const workoutPatch = body.workout ? normalizeWorkout({ ...body.workout, id: workoutId || body.workout.id }) : null;
 
@@ -239,6 +273,14 @@ export async function PATCH(request: Request) {
         where: { id: user.id },
         data: profilePatch,
       });
+
+      if (
+        profilePatch.weight !== undefined &&
+        (updatedUser.weight === null || Math.abs(updatedUser.weight - profilePatch.weight) > 0.001)
+      ) {
+        throw new Error('Profile weight was not persisted');
+      }
+
       profile = profileFromDbUser(updatedUser);
     }
 
@@ -269,6 +311,14 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ success: true, profile, workout });
   } catch (error: unknown) {
     console.error('[Dashboard] Patch fallback:', getErrorMessage(error));
+
+    if (profilePatch) {
+      return NextResponse.json(
+        { success: false, error: 'Could not save profile to the database. Please try again.' },
+        { status: 503 }
+      );
+    }
+
     const user = await ensureFallbackSessionUser(sessionUser);
     const patch: Partial<AuthUser> = {};
     let workout: StoredWorkoutLog | null = null;

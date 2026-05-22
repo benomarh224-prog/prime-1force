@@ -33,7 +33,7 @@ import {
   Dumbbell, Trophy, Edit3, Save, X, Check,
   Weight, Ruler, Activity, Apple, Camera,
   Plus, Trash2, Clock, ClipboardList, ListChecks, Award, Shield, BarChart3,
-  CheckCircle2,
+  CheckCircle2, Loader2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -189,16 +189,21 @@ export function DashboardPage() {
     }
   }, []);
 
+  const fetchDashboardData = useCallback(async () => {
+    const response = await fetch('/api/dashboard', { cache: 'no-store' });
+    const data = (await response.json()) as DashboardResponse;
+    if (!response.ok || !data.success) throw new Error(data.error || 'Could not load dashboard');
+    return data;
+  }, []);
+
   useEffect(() => {
     if (status !== 'authenticated') return;
 
     let mounted = true;
     setDashboardLoading(true);
 
-    fetch('/api/dashboard')
-      .then(async (response) => {
-        const data = (await response.json()) as DashboardResponse;
-        if (!response.ok || !data.success) throw new Error(data.error || 'Could not load dashboard');
+    fetchDashboardData()
+      .then((data) => {
         if (mounted) applyDashboardData(data);
       })
       .catch((error) => {
@@ -216,7 +221,7 @@ export function DashboardPage() {
     return () => {
       mounted = false;
     };
-  }, [applyDashboardData, status, toast]);
+  }, [applyDashboardData, fetchDashboardData, status, toast]);
 
   useEffect(() => {
     if (status !== 'unauthenticated') return;
@@ -448,13 +453,44 @@ export function DashboardPage() {
       return;
     }
 
+    const weight = Number(editData.weight);
+    const height = Number(editData.height);
+    const weeklyGoal = Number(editData.weeklyGoal);
+
+    if (!Number.isFinite(weight) || weight < 30 || weight > 300) {
+      toast({
+        title: 'Check your weight',
+        description: 'Weight must be between 30 and 300 kg.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!Number.isFinite(height) || height < 100 || height > 250) {
+      toast({
+        title: 'Check your height',
+        description: 'Height must be between 100 and 250 cm.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!Number.isInteger(weeklyGoal) || weeklyGoal < 1 || weeklyGoal > 14) {
+      toast({
+        title: 'Check your weekly goal',
+        description: 'Weekly workout goal must be between 1 and 14.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     const profile = {
       name: editData.name.trim() || undefined,
-      weight: editData.weight,
-      height: editData.height,
+      weight,
+      height,
       goal: editData.goal,
       level: editData.level,
-      weeklyGoal: editData.weeklyGoal,
+      weeklyGoal,
       avatar: editData.avatar,
     };
 
@@ -468,7 +504,8 @@ export function DashboardPage() {
       const data = (await response.json()) as DashboardResponse;
       if (!response.ok || !data.success) throw new Error(data.error || 'Could not save profile');
 
-      store.setUserProfile(data.profile || profile);
+      const freshData = await fetchDashboardData();
+      applyDashboardData(freshData);
       setIsEditing(false);
       setShowAvatarPicker(false);
       setProfileSuccess(true);
@@ -1378,7 +1415,7 @@ export function DashboardPage() {
                 <Input
                   type="number"
                   min={30}
-                  max={250}
+                  max={300}
                   value={editData.weight}
                   onChange={(e) => setEditData({ ...editData, weight: Number(e.target.value) })}
                   className="h-10 rounded-lg"
@@ -1445,7 +1482,8 @@ export function DashboardPage() {
               Cancel
             </Button>
             <Button onClick={handleSave} className="rounded-xl gap-2" disabled={dashboardSaving}>
-              <Save className="h-4 w-4" /> Save Profile
+              {dashboardSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+              {dashboardSaving ? 'Saving...' : 'Save Profile'}
             </Button>
           </DialogFooter>
         </DialogContent>
