@@ -504,8 +504,7 @@ export function DashboardPage() {
       const data = (await response.json()) as DashboardResponse;
       if (!response.ok || !data.success) throw new Error(data.error || 'Could not save profile');
 
-      const freshData = await fetchDashboardData();
-      applyDashboardData(freshData);
+      applyDashboardData(data);
       setIsEditing(false);
       setShowAvatarPicker(false);
       setProfileSuccess(true);

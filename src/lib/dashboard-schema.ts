@@ -6,9 +6,17 @@ async function columnExists(table: string, column: string) {
   return rows.some((row) => row.name === column);
 }
 
+function isDuplicateColumnError(error: unknown) {
+  return error instanceof Error && error.message.toLowerCase().includes('duplicate column name');
+}
+
 async function addColumnIfMissing(table: string, column: string, sql: string) {
   if (!(await columnExists(table, column))) {
-    await db.$executeRawUnsafe(sql);
+    try {
+      await db.$executeRawUnsafe(sql);
+    } catch (error: unknown) {
+      if (!isDuplicateColumnError(error)) throw error;
+    }
   }
 }
 

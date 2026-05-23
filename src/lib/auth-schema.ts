@@ -25,12 +25,20 @@ async function columnExists(table: string, column: string) {
   return rows.some((row) => row.name === column);
 }
 
+function isDuplicateColumnError(error: unknown) {
+  return error instanceof Error && error.message.toLowerCase().includes('duplicate column name');
+}
+
 export function ensureAuthSchema() {
   schemaReady ??= (async () => {
     await db.$executeRawUnsafe(createUserTableSql);
 
     if (!(await columnExists('User', 'passwordHash'))) {
-      await db.$executeRawUnsafe('ALTER TABLE "User" ADD COLUMN "passwordHash" TEXT');
+      try {
+        await db.$executeRawUnsafe('ALTER TABLE "User" ADD COLUMN "passwordHash" TEXT');
+      } catch (error: unknown) {
+        if (!isDuplicateColumnError(error)) throw error;
+      }
     }
 
     try {
