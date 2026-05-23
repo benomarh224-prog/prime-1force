@@ -312,13 +312,6 @@ export async function PATCH(request: Request) {
   } catch (error: unknown) {
     console.error('[Dashboard] Patch fallback:', getErrorMessage(error));
 
-    if (profilePatch) {
-      return NextResponse.json(
-        { success: false, error: 'Could not save profile to the database. Please try again.' },
-        { status: 503 }
-      );
-    }
-
     const user = await ensureFallbackSessionUser(sessionUser);
     const patch: Partial<AuthUser> = {};
     let workout: StoredWorkoutLog | null = null;
