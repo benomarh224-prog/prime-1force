@@ -116,7 +116,7 @@ const plannedFocusMap: Record<string, string[]> = {
   core: ['Push-Ups'],
   abs: ['Push-Ups'],
   quads: ['Barbell Back Squat', 'Leg Extension Machine'],
-  hamstrings: ['Conventional Deadlift'],
+  hamstrings: ['Barbell Back Squat', 'Leg Extension Machine'],
   glutes: ['Barbell Back Squat'],
   calves: ['Leg Extension Machine'],
   legs: ['Barbell Back Squat', 'Leg Extension Machine'],

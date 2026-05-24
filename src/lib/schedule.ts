@@ -29,7 +29,7 @@ export const defaultSchedule = [
   {
     dayOfWeek: 3,
     splitTitle: 'Lower Body',
-    exercises: ['Barbell Back Squat', 'Leg Press Machine', 'Leg Extension Machine', 'Conventional Deadlift'],
+    exercises: ['Barbell Back Squat', 'Leg Press Machine', 'Leg Extension Machine', 'Seated Row Machine'],
     isRestDay: false,
   },
   {
@@ -47,7 +47,7 @@ export const defaultSchedule = [
   {
     dayOfWeek: 6,
     splitTitle: 'Legs + Conditioning',
-    exercises: ['Barbell Back Squat', 'Leg Extension Machine', 'Push-Ups', 'Conventional Deadlift'],
+    exercises: ['Barbell Back Squat', 'Leg Extension Machine', 'Push-Ups', 'Lat Pulldown Machine'],
     isRestDay: false,
   },
 ];

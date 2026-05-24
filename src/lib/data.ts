@@ -302,34 +302,6 @@ export const exercises: Exercise[] = [
     ]
   },
   {
-    id: 'deadlift',
-    name: 'Conventional Deadlift',
-    description: 'The most effective full-body strength exercise. Deadlifts target your posterior chain including hamstrings, glutes, and lower back while building incredible raw strength.',
-    category: 'gym',
-    difficulty: 'advanced',
-    muscleGroup: 'Back',
-    equipment: 'Barbell',
-    duration: 10,
-    calories: 110,
-    image: '/images/workout-strength-luxe.jpg',
-    gif: 'https://static.exercisedb.dev/media/ila4NZS.gif',
-    steps: [
-      'Stand with feet hip-width apart, barbell over mid-foot',
-      'Hinge at hips and grip the bar just outside your knees',
-      'Drop your hips and lift your chest, creating tension in your back',
-      'Drive through your heels, pushing the floor away',
-      'Keep the bar close to your body as you stand up',
-      'Lock out by standing tall with hips extended',
-      'Reverse the movement with control to lower the bar'
-    ],
-    tips: [
-      'Your arms are just hooks - pull with your legs and back',
-      'Keep your neutral spine throughout the entire lift',
-      'Use mixed grip or straps if grip becomes a limiting factor',
-      'Never round your lower back - this is the most important safety tip'
-    ]
-  },
-  {
     id: 'shoulder-press-machine',
     name: 'Shoulder Press Machine',
     description: 'A stable machine press for building strong shoulders. The guided path helps you train the delts with less setup than free weights.',
@@ -1126,7 +1098,7 @@ export const workoutPrograms: WorkoutProgram[] = [
     highlights: ['6 days per week', '60 min sessions', 'Push/Pull/Legs split', 'Optimal recovery', 'Progressive overload'],
     schedule: [
       { day: 'Monday', focus: 'Push', exercises: ['Bench Press 4×8', 'Shoulder Press Machine 3×10', 'Chest Press Machine 3×12', 'Lateral Raise Machine 3×15', 'Cable Triceps Pushdown 3×12'] },
-      { day: 'Tuesday', focus: 'Pull', exercises: ['Deadlift 4×6', 'Pull-Ups 4×8', 'Barbell Row 3×10', 'Face Pulls 3×15', 'Machine Bicep Curl 3×12'] },
+      { day: 'Tuesday', focus: 'Pull', exercises: ['Lat Pulldown Machine 4×10', 'Pull-Ups 4×8', 'Barbell Row 3×10', 'Face Pulls 3×15', 'Machine Bicep Curl 3×12'] },
       { day: 'Wednesday', focus: 'Legs', exercises: ['Barbell Squat 4×8', 'Leg Press 3×12', 'Romanian Deadlift 3×10', 'Leg Curl 3×12', 'Calf Raises 4×15'] },
       { day: 'Thursday', focus: 'Push', exercises: ['Shoulder Press Machine 4×8', 'Chest Press Machine 3×10', 'Cable Flyes 3×15', 'Tricep Dips 3×12', 'Shrugs 3×15'] },
       { day: 'Friday', focus: 'Pull', exercises: ['Barbell Row 4×8', 'Lat Pulldown 3×10', 'Seated Cable Row 3×12', 'Machine Bicep Curl 3×12', 'Hanging Leg Raise 3×15'] },
@@ -1153,7 +1125,7 @@ export const workoutPrograms: WorkoutProgram[] = [
   {
     id: 'strength-builder',
     name: 'Strength Builder',
-    description: 'A classic strength-focused program built around the big compound lifts. Designed to increase your 1RM on squat, bench press, deadlift, and overhead press through progressive overload.',
+    description: 'A classic strength-focused program built around the big compound lifts. Designed to increase your 1RM on squat, bench press, rows, and overhead press through progressive overload.',
     level: 'advanced',
     duration: '16 weeks',
     daysPerWeek: 4,
@@ -1196,7 +1168,7 @@ export const workoutPrograms: WorkoutProgram[] = [
     highlights: ['5 days per week', '70 min sessions', 'High volume', 'Short rest (60-90s)', 'Mind-muscle connection'],
     schedule: [
       { day: 'Monday', focus: 'Chest & Triceps', exercises: ['Bench Press 4×10', 'Chest Press Machine 4×10', 'Cable Flyes 3×15', 'Dips 3×12', 'Overhead Extension 3×15'] },
-      { day: 'Tuesday', focus: 'Back & Biceps', exercises: ['Deadlift 4×8', 'Pull-Ups 4×10', 'Barbell Row 4×10', 'Machine Bicep Curl 3×12', 'Cable Curl 3×12'] },
+      { day: 'Tuesday', focus: 'Back & Biceps', exercises: ['Lat Pulldown Machine 4×10', 'Pull-Ups 4×10', 'Barbell Row 4×10', 'Machine Bicep Curl 3×12', 'Cable Curl 3×12'] },
       { day: 'Wednesday', focus: 'Shoulders & Abs', exercises: ['Shoulder Press Machine 4×10', 'Lateral Raise Machine 4×15', 'Face Pulls 3×15', 'Hanging Leg Raise 4×15', 'Cable Crunch 3×20'] },
       { day: 'Thursday', focus: 'Legs', exercises: ['Squat 4×10', 'Leg Press 4×12', 'Leg Curl 4×12', 'Leg Extension 3×15', 'Calf Raises 5×15'] },
       { day: 'Friday', focus: 'Full Body Pump', exercises: ['Chest Press Machine 3×12', 'Seated Row Machine 3×12', 'Lunges 3×12/leg', 'Shoulder Press Machine 3×12', 'Leg Extension Machine 3×15'] },

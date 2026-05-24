@@ -136,12 +136,12 @@ const programTemplates = {
     },
     {
       splitTitle: 'Lower Strength',
-      exercises: ['barbell-squat', 'deadlift', 'leg-extension-machine', 'seated-row-machine'].map((id) => exerciseName(id, id)),
+      exercises: ['barbell-squat', 'leg-press', 'leg-extension-machine', 'seated-row-machine'].map((id) => exerciseName(id, id)),
       notes: 'Prioritize clean bracing, depth, and controlled warm-up sets.',
     },
     {
       splitTitle: 'Full Body Power',
-      exercises: ['deadlift', 'bench-press', 'pull-ups', 'lat-pulldown'].map((id) => exerciseName(id, id)),
+      exercises: ['barbell-squat', 'bench-press', 'pull-ups', 'lat-pulldown'].map((id) => exerciseName(id, id)),
       notes: 'Move heavy, stay crisp, stop sets before form breaks.',
     },
   ],
@@ -153,12 +153,12 @@ const programTemplates = {
     },
     {
       splitTitle: 'Pull Hypertrophy',
-      exercises: ['pull-ups', 'deadlift', 'bicep-curl', 'seated-row-machine'].map((id) => exerciseName(id, id)),
+      exercises: ['pull-ups', 'lat-pulldown', 'bicep-curl', 'seated-row-machine'].map((id) => exerciseName(id, id)),
       notes: 'Control the lowering phase and chase quality volume.',
     },
     {
       splitTitle: 'Leg Hypertrophy',
-      exercises: ['barbell-squat', 'leg-extension-machine', 'deadlift', 'lat-pulldown'].map((id) => exerciseName(id, id)),
+      exercises: ['barbell-squat', 'leg-extension-machine', 'leg-press', 'lat-pulldown'].map((id) => exerciseName(id, id)),
       notes: 'Keep rest near 60-90 seconds on accessory work.',
     },
   ],
@@ -187,7 +187,7 @@ const programTemplates = {
     },
     {
       splitTitle: 'Full Body B',
-      exercises: ['deadlift', 'shoulder-press-machine', 'bicep-curl', 'leg-extension-machine'].map((id) => exerciseName(id, id)),
+      exercises: ['barbell-squat', 'shoulder-press-machine', 'bicep-curl', 'leg-extension-machine'].map((id) => exerciseName(id, id)),
       notes: 'Balance strength work with mobility and steady effort.',
     },
     {
