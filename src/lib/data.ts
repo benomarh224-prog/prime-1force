@@ -256,7 +256,7 @@ export const exercises: Exercise[] = [
     equipment: 'None',
     duration: 5,
     calories: 35,
-    image: '/images/workout-pushup-luxe.jpg',
+    image: '/images/workout-no-equip.png',
     gif: 'https://static.exercisedb.dev/media/I4hDWkc.gif',
     steps: [
       'Start in a high plank position with hands shoulder-width apart',
@@ -1175,7 +1175,7 @@ export const workoutPrograms: WorkoutProgram[] = [
     duration: '10 weeks',
     daysPerWeek: 4,
     goal: 'Balanced Muscle & Strength',
-    image: '/images/workout-pushup-luxe.jpg',
+    image: '/images/workout-no-equip.png',
     highlights: ['4 days per week', '55 min sessions', 'Upper/Lower split', '2 rest days', 'Balanced volume'],
     schedule: [
       { day: 'Monday', focus: 'Upper Body A', exercises: ['Bench Press 4×8', 'Barbell Row 4×8', 'Shoulder Press Machine 3×10', 'Lat Pulldown 3×10', 'Face Pulls 3×15'] },

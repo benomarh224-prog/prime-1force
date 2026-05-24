@@ -101,7 +101,7 @@ const programCards = [
   {
     title: 'Home Discipline',
     level: 'No equipment',
-    image: '/images/workout-pushup-luxe.jpg',
+    image: '/images/workout-no-equip.png',
     stats: '30 min - bodyweight',
     goal: 'Daily habit',
     progress: '54%',
