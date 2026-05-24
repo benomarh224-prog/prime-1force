@@ -10,7 +10,6 @@ import { motion } from 'framer-motion';
 import {
   Dumbbell,
   Home,
-  LayoutDashboard,
   Utensils,
   Mail,
   Menu,
@@ -28,7 +27,6 @@ const navItems: { label: string; page: PageName; icon: React.ReactNode }[] = [
   { label: 'Workouts', page: 'workouts', icon: <Dumbbell className="h-4 w-4" /> },
   { label: 'Schedule', page: 'schedule', icon: <CalendarDays className="h-4 w-4" /> },
   { label: 'AI Coach', page: 'ai-coach', icon: <Bot className="h-4 w-4" /> },
-  { label: 'Dashboard', page: 'dashboard', icon: <LayoutDashboard className="h-4 w-4" /> },
   { label: 'Nutrition', page: 'nutrition', icon: <Utensils className="h-4 w-4" /> },
   { label: 'Contact', page: 'contact', icon: <Mail className="h-4 w-4" /> },
 ];
