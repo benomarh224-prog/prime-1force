@@ -35,7 +35,7 @@ export const defaultSchedule = [
   {
     dayOfWeek: 4,
     splitTitle: 'Push Volume',
-    exercises: ['Push-Ups', 'Chest Press Machine', 'Shoulder Press Machine', 'Cable Triceps Pushdown'],
+    exercises: ['Barbell Bench Press', 'Chest Press Machine', 'Shoulder Press Machine', 'Cable Triceps Pushdown'],
     isRestDay: false,
   },
   {
@@ -47,7 +47,7 @@ export const defaultSchedule = [
   {
     dayOfWeek: 6,
     splitTitle: 'Legs + Conditioning',
-    exercises: ['Barbell Back Squat', 'Leg Extension Machine', 'Push-Ups', 'Lat Pulldown Machine'],
+    exercises: ['Barbell Back Squat', 'Leg Extension Machine', 'Chest Press Machine', 'Lat Pulldown Machine'],
     isRestDay: false,
   },
 ];

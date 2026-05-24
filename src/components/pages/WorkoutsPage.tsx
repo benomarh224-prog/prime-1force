@@ -113,14 +113,14 @@ const plannedFocusMap: Record<string, string[]> = {
   back: ['Lat Pulldown Machine', 'Seated Row Machine'],
   biceps: ['Machine Bicep Curl'],
   'rear delts': ['Seated Row Machine'],
-  core: ['Push-Ups'],
-  abs: ['Push-Ups'],
+  core: ['Barbell Back Squat', 'Seated Row Machine'],
+  abs: ['Barbell Back Squat', 'Seated Row Machine'],
   quads: ['Barbell Back Squat', 'Leg Extension Machine'],
   hamstrings: ['Barbell Back Squat', 'Leg Extension Machine'],
   glutes: ['Barbell Back Squat'],
   calves: ['Leg Extension Machine'],
   legs: ['Barbell Back Squat', 'Leg Extension Machine'],
-  cardio: ['Push-Ups'],
+  cardio: ['Barbell Back Squat', 'Lat Pulldown Machine'],
 };
 
 const sessionPrepItems = [

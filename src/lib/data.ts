@@ -247,33 +247,6 @@ export const exercises: Exercise[] = [
     ]
   },
   {
-    id: 'push-ups',
-    name: 'Push-Ups',
-    description: 'The fundamental upper body exercise that requires no equipment. Push-ups build chest, shoulders, and triceps strength while engaging your core for stability.',
-    category: 'no-equipment',
-    difficulty: 'beginner',
-    muscleGroup: 'Chest',
-    equipment: 'None',
-    duration: 5,
-    calories: 35,
-    image: '/images/workout-no-equip.png',
-    gif: 'https://static.exercisedb.dev/media/I4hDWkc.gif',
-    steps: [
-      'Start in a high plank position with hands shoulder-width apart',
-      'Keep your body in a straight line from head to heels',
-      'Lower your chest toward the ground by bending your elbows',
-      'Keep elbows at a 45-degree angle from your body',
-      'Push back up to the starting position by extending your arms',
-      'Repeat for the desired number of repetitions'
-    ],
-    tips: [
-      'Engage your core throughout the entire movement',
-      'Don\'t let your hips sag or pike up',
-      'If standard push-ups are too hard, start on your knees',
-      'For more challenge, try decline or diamond push-ups'
-    ]
-  },
-  {
     id: 'leg-extension-machine',
     name: 'Leg Extension Machine',
     description: 'A focused quad-building machine exercise. Sit tall, lock your thighs under the pad, and extend your knees with control to isolate the front of the legs.',
@@ -1037,7 +1010,7 @@ export const workoutPrograms: WorkoutProgram[] = [
     image: '/images/workout-gym-luxe.jpg',
     highlights: ['3 days per week', '45 min sessions', 'Full body each session', 'Progressive overload', 'Rest day between workouts'],
     schedule: [
-      { day: 'Monday', focus: 'Full Body A', exercises: ['Leg Extension Machine 3×12', 'Push-Ups 3×8-12', 'Seated Row Machine 3×10', 'Chest Press Machine 3×10', 'Lat Pulldown 3×10'] },
+      { day: 'Monday', focus: 'Full Body A', exercises: ['Leg Extension Machine 3×12', 'Chest Press Machine 3×10', 'Seated Row Machine 3×10', 'Shoulder Press Machine 3×10', 'Lat Pulldown 3×10'] },
       { day: 'Wednesday', focus: 'Full Body B', exercises: ['Leg Press 3×12', 'Shoulder Press Machine 3×10', 'Chest Press Machine 3×10', 'Cable Crunch 3×15', 'Face Pulls 3×15'] },
       { day: 'Friday', focus: 'Full Body C', exercises: ['Leg Extension Machine 3×15', 'Chest Press Machine 3×10', 'Seated Row Machine 3×12', 'Romanian Deadlift 3×10', 'Machine Bicep Curl 2×12'] },
     ]

@@ -166,7 +166,7 @@ function getLocalCoachResponse(messages: CoachMessage[]) {
       '- Incline chest press machine: 3 x 8-12, 90 sec rest',
       '- Pec deck fly: 3 x 12-15, 75 sec rest, 1 sec squeeze',
       '- Cable crossover: 2 x 15-20, 60 sec rest',
-      '- Assisted dips or push-ups: 2 sets close to failure',
+      '- Assisted dips or chest press machine: 2 sets close to failure',
       '',
       '**Progression**',
       '- When you hit the top of the rep range on every set, add a small amount of weight next time',
@@ -201,7 +201,7 @@ function getLocalCoachResponse(messages: CoachMessage[]) {
       '',
       'Do not wait to feel ready. Start with the smallest useful action: put on training clothes, do a 5-minute warm-up, or complete one easy set. Momentum usually arrives after you begin.',
       '',
-      '**Today\'s rule:** make the workout so easy you cannot say no. If energy is low, do 3 rounds of push-ups, squats, rows, and plank. If energy rises, continue.',
+      '**Today\'s rule:** make the workout so easy you cannot say no. If energy is low, do 3 rounds of squats, rows, chest press, and plank. If energy rises, continue.',
       '',
       'Your standard is not intensity every day. Your standard is showing up.'
     ].join('\n');
