@@ -41,7 +41,6 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const heroTop = currentPage === 'home' && !scrolled;
-  const userName = session?.user?.name || session?.user?.email?.split('@')[0] || 'Member';
 
   const openAuth = (mode: AuthDialogMode) => {
     setAuthMode(mode);
@@ -136,7 +135,7 @@ export function Header() {
                   }`}
                 >
                   <UserCircle className="h-4 w-4" />
-                  <span className="truncate">{userName}</span>
+                  <span>Dashboard</span>
                 </Button>
                 <Button
                   variant="ghost"
@@ -224,7 +223,7 @@ export function Header() {
                           className="w-full gap-2 rounded-lg neon-glow font-semibold"
                         >
                           <UserCircle className="h-4 w-4" />
-                          <span className="truncate">{userName}</span>
+                          Dashboard
                         </Button>
                         <Button
                           variant="outline"

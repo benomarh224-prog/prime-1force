@@ -729,7 +729,15 @@ export function DashboardPage() {
         >
           <div className="min-w-0">
             <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
-              Your <span className="gradient-text">Dashboard</span>
+              {store.userName ? (
+                <>
+                  <span className="gradient-text">{displayName}</span>'s Dashboard
+                </>
+              ) : (
+                <>
+                  Your <span className="gradient-text">Dashboard</span>
+                </>
+              )}
             </h1>
             <p className="text-muted-foreground mt-1">Track your fitness journey</p>
           </div>

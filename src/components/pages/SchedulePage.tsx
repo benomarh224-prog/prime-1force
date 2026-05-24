@@ -164,8 +164,8 @@ const programTemplates = {
   ],
   'fat-loss': [
     {
-      splitTitle: 'HIIT Conditioning',
-      exercises: ['hiit-cardio', 'lat-pulldown', 'chest-press-machine', 'seated-row-machine'].map((id) => exerciseName(id, id)),
+      splitTitle: 'Strength Conditioning',
+      exercises: ['barbell-squat', 'lat-pulldown', 'chest-press-machine', 'seated-row-machine'].map((id) => exerciseName(id, id)),
       notes: 'Alternate hard intervals with enough rest to keep output high.',
     },
     {
@@ -175,7 +175,7 @@ const programTemplates = {
     },
     {
       splitTitle: 'Recovery Burn',
-      exercises: ['shoulder-press-machine', 'hiit-cardio', 'seated-row-machine', 'leg-extension-machine'].map((id) => exerciseName(id, id)),
+      exercises: ['shoulder-press-machine', 'barbell-squat', 'seated-row-machine', 'leg-extension-machine'].map((id) => exerciseName(id, id)),
       notes: 'Keep intensity moderate and finish feeling better than you started.',
     },
   ],
@@ -192,7 +192,7 @@ const programTemplates = {
     },
     {
       splitTitle: 'Conditioning + Core',
-      exercises: ['hiit-cardio', 'lat-pulldown', 'chest-press-machine', 'seated-row-machine'].map((id) => exerciseName(id, id)),
+      exercises: ['barbell-squat', 'lat-pulldown', 'chest-press-machine', 'seated-row-machine'].map((id) => exerciseName(id, id)),
       notes: 'Keep transitions short and form sharp.',
     },
   ],

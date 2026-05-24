@@ -468,33 +468,6 @@ export const exercises: Exercise[] = [
     ]
   },
   {
-    id: 'hiit-cardio',
-    name: 'HIIT Cardio Blast',
-    description: 'High-Intensity Interval Training that maximizes calorie burn in minimum time. Alternates between intense bursts of activity and fixed periods of rest.',
-    category: 'home',
-    difficulty: 'intermediate',
-    muscleGroup: 'Full Body',
-    equipment: 'None',
-    duration: 15,
-    calories: 150,
-    image: '/images/workout-hiit-luxe.jpg',
-    steps: [
-      'Warm up with 2 minutes of light jogging in place',
-      'Round 1: 30 seconds high knees + 15 seconds rest',
-      'Round 2: 30 seconds mountain climbers + 15 seconds rest',
-      'Round 3: 30 seconds jump squats + 15 seconds rest',
-      'Round 4: 30 seconds mountain climbers + 15 seconds rest',
-      'Round 5: 30 seconds plank jacks + 15 seconds rest',
-      'Cool down with 2 minutes of stretching'
-    ],
-    tips: [
-      'Give maximum effort during work intervals - that\'s where the magic happens',
-      'Keep rest periods strict for best results',
-      'Stay hydrated throughout the session',
-      'Start with 3-4 rounds if 5 is too challenging'
-    ]
-  },
-  {
     id: 'shoulder-press',
     name: 'Lateral Raise Machine',
     description: 'A shoulder machine that targets the side delts for wider, more capped shoulders. The guided pads keep tension on the delts through the full rep.',
@@ -742,7 +715,7 @@ export const weeklySchedule = [
   { day: 'Wed', workout: 'Rest / Mobility', done: true, duration: 20, calories: 95 },
   { day: 'Thu', workout: 'Leg Day', done: false, duration: 60, calories: 500 },
   { day: 'Fri', workout: 'Upper Body', done: false, duration: 55, calories: 430 },
-  { day: 'Sat', workout: 'HIIT + Core', done: false, duration: 30, calories: 350 },
+  { day: 'Sat', workout: 'Core Strength', done: false, duration: 30, calories: 260 },
   { day: 'Sun', workout: 'Rest Day', done: false, duration: 0, calories: 0 },
 ];
 
@@ -1103,23 +1076,6 @@ export const workoutPrograms: WorkoutProgram[] = [
       { day: 'Thursday', focus: 'Push', exercises: ['Shoulder Press Machine 4×8', 'Chest Press Machine 3×10', 'Cable Flyes 3×15', 'Tricep Dips 3×12', 'Shrugs 3×15'] },
       { day: 'Friday', focus: 'Pull', exercises: ['Barbell Row 4×8', 'Lat Pulldown 3×10', 'Seated Cable Row 3×12', 'Machine Bicep Curl 3×12', 'Hanging Leg Raise 3×15'] },
       { day: 'Saturday', focus: 'Legs', exercises: ['Front Squat 4×8', 'Bulgarian Split Squat 3×10', 'Leg Extension Machine 3×15', 'Hip Thrust 3×12', 'Seated Row Machine 3×12'] },
-    ]
-  },
-  {
-    id: 'hiit-fat-loss',
-    name: 'HIIT Fat Burn',
-    description: 'An intense high-intensity interval training program designed to maximize calorie burn and fat loss. Combines cardio bursts with strength circuits for the ultimate conditioning challenge.',
-    level: 'intermediate',
-    duration: '6 weeks',
-    daysPerWeek: 4,
-    goal: 'Burn Fat & Improve Conditioning',
-    image: '/images/workout-hiit-luxe.jpg',
-    highlights: ['4 days per week', '30 min sessions', 'HIIT intervals', 'No equipment needed', 'Max calorie burn'],
-    schedule: [
-      { day: 'Monday', focus: 'HIIT Cardio', exercises: ['Warm-Up 3 min', 'Mountain Climbers 30s/Rest 15s ×4', 'Jump Squats 30s/Rest 15s ×4', 'High Knees 30s/Rest 15s ×4', 'Cool-Down 3 min'] },
-      { day: 'Tuesday', focus: 'Upper Body Circuit', exercises: ['Push-Ups ×15', 'Pike Push-Ups ×10', 'Tricep Dips ×12', 'Plank Shoulder Taps ×20', 'Rest 60s — Repeat 4 rounds'] },
-      { day: 'Thursday', focus: 'Lower Body Circuit', exercises: ['Jump Squats ×15', 'Walking Lunges ×12/leg', 'Glute Bridges ×20', 'Calf Raises ×25', 'Rest 60s — Repeat 4 rounds'] },
-      { day: 'Saturday', focus: 'Full Body HIIT', exercises: ['Mountain Climbers ×30', 'Tuck Jumps ×12', 'V-Up Crunches ×15', 'Plank Jacks ×20', 'Rest 60s — Repeat 5 rounds'] },
     ]
   },
   {
