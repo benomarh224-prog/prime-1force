@@ -107,6 +107,47 @@ function profileFromDbUser(user: {
   };
 }
 
+async function updateDbProfile(userId: string, patch: ProfilePatch) {
+  const columns: Record<keyof ProfilePatch, string> = {
+    name: 'name',
+    avatar: 'avatar',
+    weight: 'weight',
+    height: 'height',
+    goal: 'goal',
+    level: 'level',
+    weeklyGoal: 'weeklyGoal',
+  };
+  const entries = Object.entries(patch) as [keyof ProfilePatch, string | number][];
+  const assignments = entries.map(([key]) => `"${columns[key]}" = ?`);
+  const values = entries.map(([, value]) => value);
+
+  if (assignments.length === 0) {
+    const existing = await db.user.findUnique({ where: { id: userId } });
+    if (!existing) throw new Error('User not found');
+    return existing;
+  }
+
+  const affected = await db.$executeRawUnsafe(
+    `UPDATE "User" SET ${assignments.join(', ')}, "updatedAt" = CURRENT_TIMESTAMP WHERE "id" = ?`,
+    ...values,
+    userId
+  );
+
+  if (affected !== 1) throw new Error('Profile row was not updated');
+
+  const updated = await db.user.findUnique({ where: { id: userId } });
+  if (!updated) throw new Error('Profile row was not found after update');
+
+  if (
+    patch.weight !== undefined &&
+    (updated.weight === null || Math.abs(updated.weight - patch.weight) > 0.001)
+  ) {
+    throw new Error('Profile weight was not persisted to the database');
+  }
+
+  return updated;
+}
+
 function sanitizeProfile(input: unknown): ProfilePatch {
   const source = input && typeof input === 'object' ? input as Record<string, unknown> : {};
   const patch: ProfilePatch = {};
@@ -269,18 +310,7 @@ export async function PATCH(request: Request) {
     let workout: WorkoutLog | null = null;
 
     if (profilePatch) {
-      const updatedUser = await db.user.update({
-        where: { id: user.id },
-        data: profilePatch,
-      });
-
-      if (
-        profilePatch.weight !== undefined &&
-        (updatedUser.weight === null || Math.abs(updatedUser.weight - profilePatch.weight) > 0.001)
-      ) {
-        throw new Error('Profile weight was not persisted');
-      }
-
+      const updatedUser = await updateDbProfile(user.id, profilePatch);
       profile = profileFromDbUser(updatedUser);
     }
 
@@ -308,7 +338,7 @@ export async function PATCH(request: Request) {
       workout = serializeDbWorkout(updatedWorkout);
     }
 
-    return NextResponse.json({ success: true, profile, workout });
+    return NextResponse.json({ success: true, persistence: 'database', profile, workout });
   } catch (error: unknown) {
     console.error('[Dashboard] Patch fallback:', getErrorMessage(error));
 

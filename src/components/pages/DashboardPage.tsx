@@ -1423,6 +1423,8 @@ export function DashboardPage() {
                   type="number"
                   min={30}
                   max={300}
+                  step="0.1"
+                  inputMode="decimal"
                   value={editData.weight}
                   onChange={(e) => setEditData({ ...editData, weight: Number(e.target.value) })}
                   className="h-10 rounded-lg"
