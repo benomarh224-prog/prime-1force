@@ -72,7 +72,48 @@ function metricFormat(value: number, suffix: string) {
 }
 
 function todayKey(date = new Date()) {
-  return date.toISOString().slice(0, 10);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function savedMealDateKey(savedAt: string) {
+  const date = new Date(savedAt);
+  return Number.isNaN(date.getTime()) ? '' : todayKey(date);
+}
+
+function isSavedMeal(value: unknown): value is SavedMeal {
+  if (!value || typeof value !== 'object') return false;
+
+  const meal = value as Partial<SavedMeal>;
+  const totals = meal.totals;
+  return (
+    typeof meal.id === 'string' &&
+    typeof meal.savedAt === 'string' &&
+    savedMealDateKey(meal.savedAt) !== '' &&
+    Array.isArray(meal.foods) &&
+    meal.foods.length > 0 &&
+    meal.foods.every(
+      (food) =>
+        food &&
+        typeof food.name === 'string' &&
+        typeof food.servingSize === 'string' &&
+        Number.isFinite(food.calories) &&
+        Number.isFinite(food.protein) &&
+        Number.isFinite(food.carbs) &&
+        Number.isFinite(food.fat) &&
+        Number.isFinite(food.confidence)
+    ) &&
+    Boolean(totals) &&
+    Number.isFinite(totals?.calories) &&
+    Number.isFinite(totals?.protein) &&
+    Number.isFinite(totals?.carbs) &&
+    Number.isFinite(totals?.fat) &&
+    Number.isFinite(meal.confidence) &&
+    typeof meal.accuracyNote === 'string' &&
+    typeof meal.provider === 'string'
+  );
 }
 
 function readFileAsDataUrl(file: File) {
@@ -157,6 +198,7 @@ function providerLabel(provider: MealAnalysis['provider']) {
 export function AIMealAnalyzer({ dailyTargets }: AIMealAnalyzerProps) {
   const { toast } = useToast();
   const inputRef = useRef<HTMLInputElement>(null);
+  const fileSelectionIdRef = useRef(0);
   const [dragActive, setDragActive] = useState(false);
   const [preview, setPreview] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -169,13 +211,16 @@ export function AIMealAnalyzer({ dailyTargets }: AIMealAnalyzerProps) {
   useEffect(() => {
     try {
       const stored = localStorage.getItem(HISTORY_KEY);
-      if (stored) setHistory(JSON.parse(stored) as SavedMeal[]);
+      if (!stored) return;
+
+      const parsed = JSON.parse(stored) as unknown;
+      setHistory(Array.isArray(parsed) ? parsed.filter(isSavedMeal).slice(0, 30) : []);
     } catch {
       setHistory([]);
     }
   }, []);
 
-  const todayMeals = history.filter((meal) => meal.savedAt.slice(0, 10) === todayKey());
+  const todayMeals = history.filter((meal) => savedMealDateKey(meal.savedAt) === todayKey());
   const todayTotals = todayMeals.reduce(
     (sum, meal) => ({
       calories: sum.calories + meal.totals.calories,
@@ -191,7 +236,7 @@ export function AIMealAnalyzer({ dailyTargets }: AIMealAnalyzerProps) {
       const date = new Date();
       date.setDate(date.getDate() - (6 - index));
       const key = todayKey(date);
-      const meals = history.filter((meal) => meal.savedAt.slice(0, 10) === key);
+      const meals = history.filter((meal) => savedMealDateKey(meal.savedAt) === key);
       return {
         day: date.toLocaleDateString('en-US', { weekday: 'short' }),
         calories: meals.reduce((sum, meal) => sum + meal.totals.calories, 0),
@@ -207,25 +252,39 @@ export function AIMealAnalyzer({ dailyTargets }: AIMealAnalyzerProps) {
   };
 
   const validateAndSetFile = async (file: File) => {
+    const selectionId = ++fileSelectionIdRef.current;
     setError('');
     setFallbackReason('');
     setAnalysis(null);
+    setSelectedFile(null);
+    setPreview('');
 
     if (!SUPPORTED_TYPES.includes(file.type)) {
       setError('Use a JPEG, PNG, or WebP meal photo.');
       return;
     }
 
-    if (file.size > MAX_UPLOAD_BYTES) {
-      setError('Image is too large. Upload a photo under 5MB.');
-      return;
-    }
-
     try {
       const optimized = await compressImage(file);
+      if (selectionId !== fileSelectionIdRef.current) return;
+
+      if (optimized.size > MAX_UPLOAD_BYTES) {
+        setError('Image is too large. Upload a photo under 5MB.');
+        return;
+      }
+
+      if (optimized.size === 0) {
+        setError('This image is empty. Choose another meal photo.');
+        return;
+      }
+
+      const nextPreview = await readFileAsDataUrl(optimized);
+      if (selectionId !== fileSelectionIdRef.current) return;
+
       setSelectedFile(optimized);
-      setPreview(await readFileAsDataUrl(optimized));
+      setPreview(nextPreview);
     } catch (caughtError) {
+      if (selectionId !== fileSelectionIdRef.current) return;
       setError(caughtError instanceof Error ? caughtError.message : 'Could not process this image.');
     }
   };
@@ -375,6 +434,7 @@ export function AIMealAnalyzer({ dailyTargets }: AIMealAnalyzerProps) {
                 className="hidden"
                 onChange={(event) => {
                   const file = event.target.files?.[0];
+                  event.target.value = '';
                   if (file) validateAndSetFile(file);
                 }}
               />
