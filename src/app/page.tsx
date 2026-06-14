@@ -16,9 +16,9 @@ import { NutritionPage } from '@/components/pages/NutritionPage';
 import { ContactPage } from '@/components/pages/ContactPage';
 
 const pageVariants = {
-  initial: { opacity: 0, y: 12 },
+  initial: { opacity: 0, y: 4 },
   animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -12 },
+  exit: { opacity: 0, y: -4 },
 };
 
 const hashPages: PageName[] = ['home', 'workouts', 'exercise-detail', 'schedule', 'ai-coach', 'dashboard', 'nutrition', 'contact'];
@@ -76,7 +76,7 @@ export default function MainApp() {
             initial={false}
             animate="animate"
             exit="exit"
-            transition={{ duration: 0.3, ease: 'easeInOut' }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
           >
             {renderPage()}
           </motion.div>

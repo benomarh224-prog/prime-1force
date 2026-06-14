@@ -245,8 +245,8 @@
 
 @media (max-width: 639px) {
   .hero-subcopy {
-    width: min(calc(100vw - 3rem), 20.5rem);
-    max-width: min(calc(100vw - 3rem), 20.5rem);
+    width: min(calc(100vw - 3rem), 17rem);
+    max-width: min(calc(100vw - 3rem), 17rem);
   }
 }
 
@@ -269,6 +269,15 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.mobile-card-scroller {
+  scrollbar-width: none;
+  overscroll-behavior-inline: contain;
+}
+
+.mobile-card-scroller::-webkit-scrollbar {
+  display: none;
 }
 
 @media (max-width: 640px) {
@@ -324,6 +333,18 @@
 
   [data-slot="sheet-content"] {
     max-width: calc(100vw - 1rem);
+  }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  [data-slot="card"],
+  button,
+  a {
+    transition-duration: 150ms;
   }
 }
 

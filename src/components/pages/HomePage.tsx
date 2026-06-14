@@ -145,7 +145,7 @@ function StarterPlanPreview() {
   ];
 
   return (
-    <section className="relative overflow-hidden border-y border-primary/10 bg-muted/20 py-14 sm:py-20">
+    <section className="relative overflow-hidden border-y border-primary/10 bg-muted/20 py-10 sm:py-20">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_0%,oklch(0.62_0.24_27_/_0.15),transparent_36%)]" />
       <div className="relative mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:px-8">
         <div>
@@ -154,13 +154,14 @@ function StarterPlanPreview() {
             Built around your reality
           </Badge>
           <h2 className="text-3xl font-black tracking-normal sm:text-5xl">
-            Get a training week you can actually follow.
+            <span className="sm:hidden">A plan you can follow.</span>
+            <span className="hidden sm:inline">Get a training week you can actually follow.</span>
           </h2>
-          <p className="mt-5 max-w-xl text-base leading-8 text-muted-foreground">
+          <p className="mt-5 hidden max-w-xl text-base leading-8 text-muted-foreground sm:block">
             Prime Forge connects your workouts, schedule, nutrition, progress, and coaching instead of leaving you
             to piece together five different apps.
           </p>
-          <Button onClick={() => openAuthDialog('signup')} className="mt-7 h-12 rounded-lg px-6 font-black uppercase">
+          <Button onClick={() => openAuthDialog('signup')} className="mt-5 h-11 rounded-lg px-6 font-black uppercase sm:mt-7 sm:h-12">
             Build My Plan
             <ArrowRight className="h-4 w-4" />
           </Button>
@@ -170,14 +171,14 @@ function StarterPlanPreview() {
           {steps.map((step, index) => {
             const Icon = step.icon;
             return (
-              <div key={step.title} className="flex gap-4 rounded-lg border border-white/[0.08] bg-card/80 p-5">
+              <div key={step.title} className="flex gap-3 rounded-lg border border-white/[0.08] bg-card/80 p-4 sm:gap-4 sm:p-5">
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
                   <Icon className="h-5 w-5" />
                 </div>
                 <div>
                   <p className="text-xs font-black uppercase tracking-wide text-primary">Step {index + 1}</p>
                   <h3 className="mt-1 text-lg font-black">{step.title}</h3>
-                  <p className="mt-2 text-sm leading-6 text-muted-foreground">{step.text}</p>
+                  <p className="mt-2 hidden text-sm leading-6 text-muted-foreground sm:block">{step.text}</p>
                 </div>
               </div>
             );
@@ -199,74 +200,91 @@ export function HomePage() {
 
   return (
     <div className="overflow-hidden bg-background">
-      <section className="relative min-h-[88svh] overflow-hidden bg-black text-white sm:min-h-[92svh]">
+      <section className="relative min-h-[calc(100svh-4.75rem)] overflow-hidden bg-black text-white sm:min-h-[92svh]">
+        <Image
+          src="/images/hero-primeforge-mobile.webp"
+          alt="Focused athlete training strength in a gym"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-center sm:hidden"
+        />
         <Image
           src="/images/hero-primeforge.webp"
           alt="Focused athlete training strength in a gym"
           fill
           priority
           sizes="100vw"
-          className="scale-105 object-cover object-[73%_center] sm:scale-100 sm:object-[62%_center] lg:object-[58%_center]"
+          className="hidden object-cover object-[62%_center] sm:block lg:object-[58%_center]"
         />
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.76)_0%,rgba(0,0,0,0.58)_34%,rgba(0,0,0,0.92)_100%)] sm:bg-[linear-gradient(90deg,rgba(0,0,0,0.96)_0%,rgba(0,0,0,0.80)_42%,rgba(0,0,0,0.34)_72%,rgba(0,0,0,0.72)_100%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.42)_0%,rgba(0,0,0,0.16)_34%,rgba(0,0,0,0.58)_74%,rgba(0,0,0,0.92)_100%)] sm:bg-[linear-gradient(90deg,rgba(0,0,0,0.96)_0%,rgba(0,0,0,0.80)_42%,rgba(0,0,0,0.34)_72%,rgba(0,0,0,0.72)_100%)]" />
+        <div className="absolute inset-y-0 left-0 w-[78%] bg-gradient-to-r from-black/78 via-black/24 to-transparent sm:hidden" />
         <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-background to-transparent" />
 
-        <div className="relative z-10 mx-auto flex min-h-[88svh] w-full max-w-[1400px] items-center px-4 pb-28 pt-24 sm:min-h-[92svh] sm:px-8 sm:pb-20 sm:pt-28 lg:px-10">
+        <div className="relative z-10 mx-auto flex min-h-[calc(100svh-4.75rem)] w-full max-w-[1400px] items-start px-4 pb-24 pt-[5.5rem] sm:min-h-[92svh] sm:items-center sm:px-8 sm:pb-20 sm:pt-28 lg:px-10">
           <div className="grid w-full items-center gap-10 lg:grid-cols-[minmax(0,1fr)_26rem]">
             <motion.div initial="hidden" animate="visible" className="hero-copy-frame min-w-0 max-w-4xl">
               <motion.div variants={fadeUp} custom={0}>
-                <Badge className="mb-6 border-white/15 bg-white/[0.08] px-3 py-1.5 text-white">
+                <Badge className="mb-4 border-white/15 bg-black/35 px-3 py-1.5 text-white backdrop-blur-sm sm:mb-6 sm:bg-white/[0.08]">
                   <ShieldCheck className="h-3.5 w-3.5" />
-                  Learn strength. Build discipline. Become harder to break.
+                  <span className="sm:hidden">Train. Track. Get stronger.</span>
+                  <span className="hidden sm:inline">Learn strength. Build discipline. Become harder to break.</span>
                 </Badge>
               </motion.div>
 
               <motion.h1
                 variants={fadeUp}
                 custom={1}
-                className="max-w-5xl text-[2.35rem] font-black uppercase leading-[0.96] tracking-normal min-[380px]:text-[2.75rem] sm:text-7xl lg:text-[7.25rem]"
+                className="max-w-[20rem] text-[2.5rem] font-black uppercase leading-[0.92] tracking-normal min-[380px]:text-[2.9rem] sm:max-w-5xl sm:text-7xl lg:text-[7.25rem]"
               >
-                <span className="block">Forge A</span>
-                <span className="block">Stronger You</span>
+                <span className="block sm:hidden">Forge Your</span>
+                <span className="block sm:hidden">Strength</span>
+                <span className="hidden sm:block">Forge A</span>
+                <span className="hidden sm:block">Stronger You</span>
               </motion.h1>
 
               <motion.p
                 variants={fadeUp}
                 custom={2}
-                className="hero-subcopy mt-5 text-[0.95rem] leading-7 text-white/78 sm:mt-6 sm:text-xl sm:leading-8"
+                className="hero-subcopy mt-4 max-w-[17rem] text-sm leading-6 text-white/78 sm:mt-6 sm:max-w-2xl sm:text-xl sm:leading-8"
               >
-                Learn how to train, eat, recover, and stay consistent with a plan that connects every part
-                of your progress. No random workouts, just a clear next step.
+                <span className="sm:hidden">Smart workouts, simple nutrition, clear progress.</span>
+                <span className="hidden sm:inline">
+                  Learn how to train, eat, recover, and stay consistent with a plan that connects every part
+                  of your progress. No random workouts, just a clear next step.
+                </span>
               </motion.p>
 
               <motion.div
                 variants={fadeUp}
                 custom={3}
-                className="mt-7 flex w-full flex-col gap-3 sm:mt-9 sm:w-auto sm:flex-row"
+                className="mt-6 grid w-full max-w-[22rem] grid-cols-[1fr_auto] gap-2 sm:mt-9 sm:flex sm:w-auto sm:max-w-none sm:flex-row sm:gap-3"
               >
                 <Button
                   size="lg"
                   onClick={startToday}
-                  className="h-[3.15rem] w-full rounded-lg px-8 text-sm font-black uppercase sm:w-auto"
+                  className="h-12 w-full rounded-lg px-5 text-sm font-black uppercase sm:h-[3.15rem] sm:w-auto sm:px-8"
                 >
-                  Start Training
+                  <span className="sm:hidden">Start</span>
+                  <span className="hidden sm:inline">Start Training</span>
                   <ArrowRight className="h-4 w-4" />
                 </Button>
                 <Button
                   size="lg"
                   variant="outline"
                   onClick={() => navigate('ai-coach')}
-                  className="h-[3.15rem] w-full rounded-lg border-white/20 bg-black/30 px-8 text-sm font-black uppercase text-white hover:bg-white/10 hover:text-white sm:w-auto"
+                  className="h-12 w-auto rounded-lg border-white/20 bg-black/45 px-4 text-sm font-black uppercase text-white backdrop-blur-sm hover:bg-white/10 hover:text-white sm:h-[3.15rem] sm:px-8"
                 >
                   <Bot className="h-4 w-4" />
-                  Ask The Coach
+                  <span className="sm:hidden">Coach</span>
+                  <span className="hidden sm:inline">Ask The Coach</span>
                 </Button>
               </motion.div>
 
               <motion.div
                 variants={fadeUp}
                 custom={4}
-                className="mt-8 grid w-full max-w-2xl grid-cols-3 overflow-hidden rounded-xl border border-white/[0.12] bg-black/40 backdrop-blur-md sm:mt-10 sm:w-full"
+                className="mt-10 hidden w-full max-w-2xl grid-cols-3 overflow-hidden rounded-xl border border-white/[0.12] bg-black/40 backdrop-blur-md sm:grid"
               >
                 {stats.map((item) => (
                   <div key={item.label} className="border-r border-white/10 p-3 last:border-r-0 sm:p-5">
@@ -321,7 +339,7 @@ export function HomePage() {
 
       {status === 'authenticated' ? <TodayDashboard /> : <StarterPlanPreview />}
 
-      <section className="py-16 sm:py-24">
+      <section className="py-12 sm:py-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div
             initial="hidden"
@@ -335,15 +353,16 @@ export function HomePage() {
               Strength school
             </Badge>
             <h2 className="text-3xl font-black tracking-normal sm:text-5xl">
-              Everything a beginner needs to become confident in the gym.
+              <span className="sm:hidden">Build gym confidence.</span>
+              <span className="hidden sm:inline">Everything a beginner needs to become confident in the gym.</span>
             </h2>
-            <p className="mt-5 text-base leading-8 text-muted-foreground sm:text-lg">
+            <p className="mt-5 hidden text-base leading-8 text-muted-foreground sm:block sm:text-lg">
               Learn the foundations before adding complexity. Every part of Prime Forge supports the same
               repeatable loop: learn, act, measure, improve.
             </p>
           </motion.div>
 
-          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-7 grid grid-cols-2 gap-3 sm:mt-10 sm:gap-4 lg:grid-cols-4">
             {strengthPillars.map((pillar, index) => {
               const Icon = pillar.icon;
               return (
@@ -356,12 +375,12 @@ export function HomePage() {
                   custom={index}
                 >
                   <Card className="h-full py-0 transition-transform duration-300 hover:-translate-y-1">
-                    <CardContent className="p-6">
-                      <div className={cn('mb-5 flex h-12 w-12 items-center justify-center rounded-lg border', pillar.accent)}>
+                    <CardContent className="p-4 sm:p-6">
+                      <div className={cn('mb-4 flex h-11 w-11 items-center justify-center rounded-lg border sm:mb-5 sm:h-12 sm:w-12', pillar.accent)}>
                         <Icon className="h-5 w-5" />
                       </div>
-                      <h3 className="text-lg font-black">{pillar.title}</h3>
-                      <p className="mt-3 text-sm leading-7 text-muted-foreground">{pillar.text}</p>
+                      <h3 className="text-base font-black sm:text-lg">{pillar.title}</h3>
+                      <p className="mt-3 hidden text-sm leading-7 text-muted-foreground sm:block">{pillar.text}</p>
                     </CardContent>
                   </Card>
                 </motion.div>
@@ -371,7 +390,7 @@ export function HomePage() {
         </div>
       </section>
 
-      <section className="border-y border-white/[0.08] bg-muted/20 py-16 sm:py-24">
+      <section className="hidden border-y border-white/[0.08] bg-muted/20 py-12 sm:block sm:py-24">
         <div className="mx-auto grid max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-[0.92fr_1.08fr] lg:px-8">
           <motion.div
             initial={{ opacity: 0, x: -24 }}
@@ -391,7 +410,7 @@ export function HomePage() {
             <div className="absolute bottom-0 p-6 sm:p-8">
               <Badge className="mb-4 border-white/15 bg-white/10 text-white">Coach mindset</Badge>
               <h2 className="max-w-md text-3xl font-black text-white sm:text-4xl">Train hard, but train smart first.</h2>
-              <p className="mt-4 max-w-md text-sm leading-7 text-white/72">
+              <p className="mt-4 hidden max-w-md text-sm leading-7 text-white/72 sm:block">
                 Better form, patient progression, and honest tracking beat motivation that lasts only one week.
               </p>
             </div>
@@ -419,7 +438,10 @@ export function HomePage() {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.06, duration: 0.45 }}
-                  className="flex items-center gap-4 rounded-lg border border-white/[0.08] bg-card/70 p-4"
+                  className={cn(
+                    'items-center gap-4 rounded-lg border border-white/[0.08] bg-card/70 p-4',
+                    index > 2 ? 'hidden sm:flex' : 'flex'
+                  )}
                 >
                   <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/[0.12] text-sm font-black text-primary">
                     {index + 1}
@@ -443,7 +465,7 @@ export function HomePage() {
         </div>
       </section>
 
-      <section className="py-16 sm:py-24">
+      <section className="py-12 sm:py-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div
             initial="hidden"
@@ -457,7 +479,10 @@ export function HomePage() {
                 <Zap className="h-3.5 w-3.5" />
                 Training plans
               </Badge>
-              <h2 className="text-3xl font-black tracking-normal sm:text-5xl">Choose a program and know what to do next.</h2>
+              <h2 className="text-3xl font-black tracking-normal sm:text-5xl">
+                <span className="sm:hidden">Pick your program.</span>
+                <span className="hidden sm:inline">Choose a program and know what to do next.</span>
+              </h2>
             </div>
             <Button onClick={() => navigate('workouts')} variant="outline" className="h-12 rounded-lg font-bold">
               View all programs
@@ -465,7 +490,7 @@ export function HomePage() {
             </Button>
           </motion.div>
 
-          <div className="mt-10 grid gap-5 md:grid-cols-3">
+          <div className="mobile-card-scroller -mx-4 mt-7 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:mt-10 sm:px-0 md:grid md:grid-cols-3 md:overflow-visible md:pb-0">
             {programCards.map((program, index) => (
               <motion.article
                 key={program.title}
@@ -474,9 +499,9 @@ export function HomePage() {
                 viewport={{ once: true, margin: '-60px' }}
                 variants={fadeUp}
                 custom={index}
-                whileHover={{ y: -10 }}
+                whileHover={{ y: -6 }}
                 transition={{ type: 'spring', stiffness: 260, damping: 22 }}
-                className="group relative overflow-hidden rounded-lg border border-white/10 bg-card shadow-[0_16px_38px_oklch(0_0_0_/_0.20)]"
+                className="group relative min-w-[82vw] snap-start overflow-hidden rounded-lg border border-white/10 bg-card shadow-[0_16px_38px_oklch(0_0_0_/_0.20)] md:min-w-0"
               >
                 <motion.div
                   className={cn(
@@ -504,11 +529,7 @@ export function HomePage() {
                     transition={{ duration: 0.9, ease: 'easeOut' }}
                   />
                   <Badge className="absolute left-4 top-4 border-white/15 bg-black/45 text-white backdrop-blur-sm">{program.level}</Badge>
-                  <motion.div
-                    className="absolute bottom-4 right-4 rounded-lg border border-white/15 bg-black/50 px-3 py-2 text-right text-white backdrop-blur-md"
-                    animate={{ y: [0, -5, 0] }}
-                    transition={{ duration: 3, repeat: Infinity, delay: index * 0.35, ease: 'easeInOut' }}
-                  >
+                  <motion.div className="absolute bottom-4 right-4 rounded-lg border border-white/15 bg-black/50 px-3 py-2 text-right text-white backdrop-blur-md">
                     <p className="text-[10px] font-bold uppercase text-white/55">Goal</p>
                     <p className="text-xs font-black">{program.goal}</p>
                   </motion.div>
@@ -538,20 +559,21 @@ export function HomePage() {
         </div>
       </section>
 
-      <section className="border-y border-white/[0.08] bg-muted/20 py-16 sm:py-24">
+      <section className="border-y border-white/[0.08] bg-muted/20 py-12 sm:py-24">
         <div className="mx-auto grid max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-[1fr_1fr] lg:px-8">
           <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: '-80px' }}
             variants={sectionIntro}
+            className="hidden sm:block"
           >
             <Badge variant="secondary" className="mb-4">
               <CalendarCheck2 className="h-3.5 w-3.5" />
               Weekly structure
             </Badge>
             <h2 className="text-3xl font-black tracking-normal sm:text-5xl">Consistency gets easier when the week is already planned.</h2>
-            <p className="mt-5 max-w-2xl text-base leading-8 text-muted-foreground">
+            <p className="mt-5 hidden max-w-2xl text-base leading-8 text-muted-foreground sm:block">
               The schedule page helps users stop guessing. They can see what to train, when to recover,
               and how every session connects to their bigger strength goal.
             </p>
@@ -568,7 +590,7 @@ export function HomePage() {
                   <div key={item.title} className="rounded-lg border border-white/[0.08] bg-card/70 p-4">
                     <Icon className="h-5 w-5 text-primary" />
                     <h3 className="mt-3 font-black">{item.title}</h3>
-                    <p className="mt-2 text-sm leading-6 text-muted-foreground">{item.text}</p>
+                    <p className="mt-2 hidden text-sm leading-6 text-muted-foreground sm:block">{item.text}</p>
                   </div>
                 );
               })}
@@ -614,7 +636,7 @@ export function HomePage() {
         </div>
       </section>
 
-      <section className="relative overflow-hidden py-16 sm:py-24">
+      <section className="relative overflow-hidden py-12 sm:py-24">
         <Image
           src="/images/workout-gym-luxe.jpg"
           alt="Gym training environment"
@@ -635,9 +657,10 @@ export function HomePage() {
               Start before you feel ready
             </Badge>
             <h2 className="text-3xl font-black tracking-normal text-white sm:text-5xl">
-              The strongest version of you is built one honest session at a time.
+              <span className="sm:hidden">Start with one honest session.</span>
+              <span className="hidden sm:inline">The strongest version of you is built one honest session at a time.</span>
             </h2>
-            <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-white/66 sm:text-lg">
+            <p className="mx-auto mt-5 hidden max-w-2xl text-base leading-8 text-white/66 sm:block sm:text-lg">
               Open the workouts, ask the coach what you do not understand, and let the dashboard show your progress.
             </p>
             <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
