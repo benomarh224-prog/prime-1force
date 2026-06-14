@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
+import { useSession } from 'next-auth/react';
 import {
   Apple,
   ArrowRight,
@@ -16,6 +17,7 @@ import {
   HeartPulse,
   Play,
   ShieldCheck,
+  Sparkles,
   Target,
   Timer,
   TrendingUp,
@@ -27,6 +29,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { TodayDashboard } from '@/components/pages/TodayDashboard';
+import { openAuthDialog } from '@/lib/auth-dialog';
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/lib/store';
 
@@ -86,7 +89,7 @@ const programCards = [
     image: '/images/workout-barbell-squat.webp',
     stats: '3 days/week - full body',
     goal: 'Form first',
-    progress: '68%',
+    cadence: '3 sessions',
     accent: 'from-primary to-amber-400',
   },
   {
@@ -95,7 +98,7 @@ const programCards = [
     image: '/images/workout-bench-press.jpeg',
     stats: '4 days/week - upper/lower',
     goal: 'Volume work',
-    progress: '82%',
+    cadence: '4 sessions',
     accent: 'from-sky-400 to-primary',
   },
   {
@@ -104,7 +107,7 @@ const programCards = [
     image: '/images/workout-no-equip.png',
     stats: '30 min - bodyweight',
     goal: 'Daily habit',
-    progress: '54%',
+    cadence: '30 minutes',
     accent: 'from-emerald-300 to-primary',
   },
 ];
@@ -117,13 +120,77 @@ const weeklyPlan = [
 ];
 
 const stats = [
-  { value: '500+', label: 'exercises' },
-  { value: '24/7', label: 'AI coach' },
-  { value: '4', label: 'core habits' },
+  { value: '100+', label: 'exercises' },
+  { value: '5', label: 'connected tools' },
+  { value: '1', label: 'clear plan' },
 ];
+
+function StarterPlanPreview() {
+  const steps = [
+    {
+      icon: Target,
+      title: 'Set your direction',
+      text: 'Choose your goal, experience, equipment, and available training days.',
+    },
+    {
+      icon: CalendarCheck2,
+      title: 'Get your first week',
+      text: 'Turn those answers into a realistic schedule with clear sessions and recovery.',
+    },
+    {
+      icon: TrendingUp,
+      title: 'Train and adapt',
+      text: 'Log your work, review progress, and use the coach when the plan needs adjusting.',
+    },
+  ];
+
+  return (
+    <section className="relative overflow-hidden border-y border-primary/10 bg-muted/20 py-14 sm:py-20">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_0%,oklch(0.62_0.24_27_/_0.15),transparent_36%)]" />
+      <div className="relative mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:px-8">
+        <div>
+          <Badge className="mb-4 border-primary/25 bg-primary/10 text-primary">
+            <Sparkles className="h-3.5 w-3.5" />
+            Built around your reality
+          </Badge>
+          <h2 className="text-3xl font-black tracking-normal sm:text-5xl">
+            Get a training week you can actually follow.
+          </h2>
+          <p className="mt-5 max-w-xl text-base leading-8 text-muted-foreground">
+            Prime Forge connects your workouts, schedule, nutrition, progress, and coaching instead of leaving you
+            to piece together five different apps.
+          </p>
+          <Button onClick={() => openAuthDialog('signup')} className="mt-7 h-12 rounded-lg px-6 font-black uppercase">
+            Build My Plan
+            <ArrowRight className="h-4 w-4" />
+          </Button>
+        </div>
+
+        <div className="grid gap-3">
+          {steps.map((step, index) => {
+            const Icon = step.icon;
+            return (
+              <div key={step.title} className="flex gap-4 rounded-lg border border-white/[0.08] bg-card/80 p-5">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <Icon className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-xs font-black uppercase tracking-wide text-primary">Step {index + 1}</p>
+                  <h3 className="mt-1 text-lg font-black">{step.title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">{step.text}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
 
 export function HomePage() {
   const { navigate, requestStartTodayWorkout } = useAppStore();
+  const { status } = useSession();
 
   const startToday = () => {
     requestStartTodayWorkout();
@@ -134,7 +201,7 @@ export function HomePage() {
     <div className="overflow-hidden bg-background">
       <section className="relative min-h-[88svh] overflow-hidden bg-black text-white sm:min-h-[92svh]">
         <Image
-          src="/images/gym-hero.png"
+          src="/images/hero-primeforge.webp"
           alt="Focused athlete training strength in a gym"
           fill
           priority
@@ -159,8 +226,8 @@ export function HomePage() {
                 custom={1}
                 className="max-w-5xl text-[2.35rem] font-black uppercase leading-[0.96] tracking-normal min-[380px]:text-[2.75rem] sm:text-7xl lg:text-[7.25rem]"
               >
-                <span className="block">Become A</span>
-                <span className="block">Stronger Man</span>
+                <span className="block">Forge A</span>
+                <span className="block">Stronger You</span>
               </motion.h1>
 
               <motion.p
@@ -168,8 +235,8 @@ export function HomePage() {
                 custom={2}
                 className="hero-subcopy mt-5 text-[0.95rem] leading-7 text-white/78 sm:mt-6 sm:text-xl sm:leading-8"
               >
-                Prime Forge teaches you how to train, eat, recover, and stay consistent. No confusion,
-                no random workouts, just a clear path from beginner to stronger every week.
+                Learn how to train, eat, recover, and stay consistent with a plan that connects every part
+                of your progress. No random workouts, just a clear next step.
               </motion.p>
 
               <motion.div
@@ -252,7 +319,7 @@ export function HomePage() {
         </div>
       </section>
 
-      <TodayDashboard />
+      {status === 'authenticated' ? <TodayDashboard /> : <StarterPlanPreview />}
 
       <section className="py-16 sm:py-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -271,8 +338,8 @@ export function HomePage() {
               Everything a beginner needs to become confident in the gym.
             </h2>
             <p className="mt-5 text-base leading-8 text-muted-foreground sm:text-lg">
-              The site now guides people through the foundations instead of throwing them into a pile of random exercises.
-              Every section points toward the same simple goal: learn, act, measure, improve.
+              Learn the foundations before adding complexity. Every part of Prime Forge supports the same
+              repeatable loop: learn, act, measure, improve.
             </p>
           </motion.div>
 
@@ -453,22 +520,13 @@ export function HomePage() {
                       <p className="mt-2 text-sm text-muted-foreground">{program.stats}</p>
                     </div>
                     <div className="rounded-lg bg-primary/[0.10] px-2.5 py-1 text-xs font-black text-primary">
-                      {program.progress}
+                      {program.cadence}
                     </div>
-                  </div>
-                  <div className="mt-5 h-1.5 overflow-hidden rounded-full bg-white/10">
-                    <motion.div
-                      className={cn('h-full rounded-full bg-gradient-to-r', program.accent)}
-                      initial={{ width: 0 }}
-                      whileInView={{ width: program.progress }}
-                      viewport={{ once: true }}
-                      transition={{ delay: 0.3 + index * 0.12, duration: 0.9, ease: 'easeOut' }}
-                    />
                   </div>
                   <button
                     type="button"
                     onClick={() => navigate('workouts')}
-                    className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-primary transition-colors hover:text-primary/80"
+                    className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-primary transition-colors hover:text-primary/80"
                   >
                     Start this path
                     <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />

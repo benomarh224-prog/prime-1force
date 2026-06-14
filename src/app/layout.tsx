@@ -21,8 +21,8 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   icons: {
-    icon: "/favicon.ico",
-    apple: "/apple-touch-icon.png",
+    icon: "/logo.svg",
+    shortcut: "/logo.svg",
   },
   openGraph: {
     title: "Prime Forge - Learn Strength, Train Smarter",
@@ -31,12 +31,20 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: SITE_URL,
     siteName: "Prime Forge",
+    images: [
+      {
+        url: "/opengraph-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Prime Forge strength training",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Prime Forge - Learn Strength, Train Smarter",
     description: "Learn how to train, eat, recover, and track progress with clear workouts, AI coaching, and strength-focused guidance.",
-    creator: "@primeforge",
+    images: ["/opengraph-image.jpg"],
   },
   robots: {
     index: true,

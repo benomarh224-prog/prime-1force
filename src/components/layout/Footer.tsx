@@ -3,7 +3,8 @@
 import Image from 'next/image';
 import { useAppStore } from '@/lib/store';
 import { Separator } from '@/components/ui/separator';
-import { Facebook, Twitter, Instagram, Heart } from 'lucide-react';
+import { ArrowRight, Heart, Mail } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export function Footer() {
   const { navigate } = useAppStore();
@@ -11,7 +12,7 @@ export function Footer() {
   return (
     <footer className="mt-auto border-t border-primary/10 bg-background/80 backdrop-blur-sm">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 sm:py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
           {/* Brand */}
           <div className="md:col-span-1">
             <button
@@ -48,47 +49,16 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Company */}
           <div>
-            <h3 className="font-semibold mb-4 text-sm uppercase tracking-wider text-primary">Company</h3>
-            <ul className="space-y-2">
-              {['About Us', 'Careers', 'Blog', 'Privacy Policy', 'Terms of Service'].map((item) => (
-                <li key={item}>
-                  <button
-                    onClick={() => navigate('contact')}
-                    className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                  >
-                    {item}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Social */}
-          <div>
-            <h3 className="font-semibold mb-4 text-sm uppercase tracking-wider text-primary">Connect</h3>
-            <div className="flex gap-3">
-              {[
-                { Icon: Instagram, href: 'https://www.instagram.com/elliot_alderson112?igsh=MTdsc21jaG90dWl5OA%3D%3D&utm_source=qr', label: 'Instagram' },
-                { Icon: Facebook, href: 'https://www.facebook.com/share/1JQCj2ChYT/?mibextid=wwXIfr', label: 'Facebook' },
-                { Icon: Twitter, href: 'https://x.com/ho50539?s=21', label: 'X' },
-              ].map(({ Icon, href, label }) => (
-                <a
-                  key={label}
-                  href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={label}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-primary/15 bg-card/60 text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
-                >
-                  <Icon className="h-4 w-4" />
-                </a>
-              ))}
-            </div>
-            <p className="mt-4 break-words text-sm text-muted-foreground">
-              houssambenomar17@gmail.com
+            <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-primary">Get in touch</h3>
+            <p className="max-w-sm text-sm leading-relaxed text-muted-foreground">
+              Questions, feedback, or a training feature you want to see? Send a message directly through Prime Forge.
             </p>
+            <Button onClick={() => navigate('contact')} variant="outline" className="mt-5 rounded-lg border-primary/20">
+              <Mail className="h-4 w-4" />
+              Contact Prime Forge
+              <ArrowRight className="h-4 w-4" />
+            </Button>
           </div>
         </div>
 

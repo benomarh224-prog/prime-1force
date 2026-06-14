@@ -652,8 +652,8 @@ export const features: Feature[] = [
   },
   {
     id: 'workouts',
-    title: '500+ Exercises',
-    description: 'Access a massive library of exercises with step-by-step instructions, video demos, and difficulty ratings.',
+    title: '100+ Exercises',
+    description: 'Access a focused exercise library with step-by-step instructions, form guidance, and difficulty ratings.',
     icon: 'dumbbell'
   },
   {
