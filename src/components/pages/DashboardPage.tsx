@@ -93,26 +93,62 @@ function getWorkoutDate(date: string) {
   return new Date(`${date}T00:00:00`);
 }
 
+type DashboardProfile = {
+  name?: string;
+  avatar?: string;
+  weight?: number;
+  height?: number;
+  goal?: string;
+  level?: string;
+  weeklyGoal?: number;
+};
+
 type DashboardResponse = {
   success: boolean;
   error?: string;
-  profile?: {
-    name?: string;
-    avatar?: string;
-    weight?: number;
-    height?: number;
-    goal?: string;
-    level?: string;
-    weeklyGoal?: number;
-  };
+  persistence?: 'database' | 'fallback';
+  profile?: DashboardProfile;
   workoutLogs?: WorkoutLog[];
   workout?: WorkoutLog;
 };
 
+function fallbackProfileStorageKey(userId: string) {
+  return `primeforge-fallback-profile:${userId}`;
+}
+
+function readFallbackProfile(userId: string): DashboardProfile | null {
+  try {
+    const value = window.localStorage.getItem(fallbackProfileStorageKey(userId));
+    if (!value) return null;
+
+    const profile = JSON.parse(value);
+    return profile && typeof profile === 'object' ? profile as DashboardProfile : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeFallbackProfile(userId: string, profile: DashboardProfile) {
+  try {
+    window.localStorage.setItem(fallbackProfileStorageKey(userId), JSON.stringify(profile));
+  } catch {
+    // The Zustand store still keeps the saved profile for the current page session.
+  }
+}
+
+function clearFallbackProfile(userId: string) {
+  try {
+    window.localStorage.removeItem(fallbackProfileStorageKey(userId));
+  } catch {
+    // Storage can be unavailable in private browsing modes.
+  }
+}
+
 export function DashboardPage() {
   const store = useAppStore();
   const { toast } = useToast();
-  const { status } = useSession();
+  const { data: session, status } = useSession();
+  const sessionUserId = (session?.user as { id?: string } | undefined)?.id;
   const [isEditing, setIsEditing] = useState(false);
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   const [dashboardLoading, setDashboardLoading] = useState(false);
@@ -204,7 +240,18 @@ export function DashboardPage() {
 
     fetchDashboardData()
       .then((data) => {
-        if (mounted) applyDashboardData(data);
+        if (!mounted) return;
+
+        if (data.persistence === 'fallback' && sessionUserId) {
+          const cachedProfile = readFallbackProfile(sessionUserId);
+          applyDashboardData(cachedProfile ? { ...data, profile: cachedProfile } : data);
+          return;
+        }
+
+        if (data.persistence === 'database' && sessionUserId) {
+          clearFallbackProfile(sessionUserId);
+        }
+        applyDashboardData(data);
       })
       .catch((error) => {
         if (!mounted) return;
@@ -221,7 +268,7 @@ export function DashboardPage() {
     return () => {
       mounted = false;
     };
-  }, [applyDashboardData, fetchDashboardData, status, toast]);
+  }, [applyDashboardData, fetchDashboardData, sessionUserId, status, toast]);
 
   useEffect(() => {
     if (status !== 'unauthenticated') return;
@@ -503,6 +550,12 @@ export function DashboardPage() {
       });
       const data = (await response.json()) as DashboardResponse;
       if (!response.ok || !data.success) throw new Error(data.error || 'Could not save profile');
+
+      if (data.persistence === 'fallback' && sessionUserId && data.profile) {
+        writeFallbackProfile(sessionUserId, data.profile);
+      } else if (data.persistence === 'database' && sessionUserId) {
+        clearFallbackProfile(sessionUserId);
+      }
 
       applyDashboardData(data);
       setIsEditing(false);
