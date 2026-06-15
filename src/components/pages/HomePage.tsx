@@ -75,11 +75,11 @@ const strengthPillars = [
 ];
 
 const learningPath = [
-  'Pick your level and main goal',
-  'Learn the technique before lifting heavy',
-  'Complete your weekly workout plan',
-  'Track weight, reps, food, and energy',
-  'Adjust with AI coaching when you get stuck',
+  'Choose your goal and experience',
+  'Learn proper form before adding weight',
+  'Follow short, easy workouts',
+  'Track simple progress every week',
+  'Ask the coach whenever you need help',
 ];
 
 const programCards = [
@@ -151,24 +151,18 @@ function StarterPlanPreview() {
         <div>
           <Badge className="mb-4 border-primary/25 bg-primary/10 text-primary">
             <Sparkles className="h-3.5 w-3.5" />
-            Built around your reality
-          </Badge>
-          <h2 className="text-3xl font-black tracking-normal sm:text-5xl">
-            <span className="sm:hidden">A plan you can follow.</span>
-            <span className="hidden sm:inline">Get a training week you can actually follow.</span>
-          </h2>
-          <p className="mt-5 hidden max-w-xl text-base leading-8 text-muted-foreground sm:block">
-            Prime Forge connects your workouts, schedule, nutrition, progress, and coaching instead of leaving you
-            to piece together five different apps.
-          </p>
-          <Button onClick={() => openAuthDialog('signup')} className="mt-5 h-11 rounded-lg px-6 font-black uppercase sm:mt-7 sm:h-12">
-            Build My Plan
-            <ArrowRight className="h-4 w-4" />
-          </Button>
-        </div>
-
-        <div className="grid gap-3">
-          {steps.map((step, index) => {
+              Easy beginner start
+            </Badge>
+            <h2 className="text-3xl font-black tracking-normal sm:text-5xl">
+              <span className="sm:hidden">Your first week made easy.</span>
+              <span className="hidden sm:inline">Get a simple, beginner-friendly training week you can follow.</span>
+            </h2>
+            <p className="mt-5 hidden max-w-xl text-base leading-8 text-muted-foreground sm:block">
+              Prime Forge gives you one easy starter plan with clear sessions, recovery cues, and progress tracking so
+              strength training feels simple from day one.
+            </p>
+            <Button onClick={() => openAuthDialog('signup')} className="mt-5 h-11 rounded-lg px-6 font-black uppercase sm:mt-7 sm:h-12">
+              Start Your Plan
             const Icon = step.icon;
             return (
               <div key={step.title} className="flex gap-3 rounded-lg border border-white/[0.08] bg-card/80 p-4 sm:gap-4 sm:p-5">
@@ -227,8 +221,8 @@ export function HomePage() {
               <motion.div variants={fadeUp} custom={0}>
                 <Badge className="mb-4 border-white/15 bg-black/35 px-3 py-1.5 text-white backdrop-blur-sm sm:mb-6 sm:bg-white/[0.08]">
                   <ShieldCheck className="h-3.5 w-3.5" />
-                  <span className="sm:hidden">Train. Track. Get stronger.</span>
-                  <span className="hidden sm:inline">Learn strength. Build discipline. Become harder to break.</span>
+                  <span className="sm:hidden">Easy strength.</span>
+                  <span className="hidden sm:inline">Easy strength. Easy learning. Clear progress.</span>
                 </Badge>
               </motion.div>
 
@@ -237,10 +231,10 @@ export function HomePage() {
                 custom={1}
                 className="max-w-[20rem] text-[2.5rem] font-black uppercase leading-[0.92] tracking-normal min-[380px]:text-[2.9rem] sm:max-w-5xl sm:text-7xl lg:text-[7.25rem]"
               >
-                <span className="block sm:hidden">Forge Your</span>
                 <span className="block sm:hidden">Strength</span>
-                <span className="hidden sm:block">Forge A</span>
-                <span className="hidden sm:block">Stronger You</span>
+                <span className="block sm:hidden">Made Simple</span>
+                <span className="hidden sm:block">Strength Made</span>
+                <span className="hidden sm:block">Simple</span>
               </motion.h1>
 
               <motion.p
@@ -248,10 +242,10 @@ export function HomePage() {
                 custom={2}
                 className="hero-subcopy mt-4 max-w-[17rem] text-sm leading-6 text-white/78 sm:mt-6 sm:max-w-2xl sm:text-xl sm:leading-8"
               >
-                <span className="sm:hidden">Smart workouts, simple nutrition, clear progress.</span>
+                <span className="sm:hidden">Simple workouts, clear steps, real progress.</span>
                 <span className="hidden sm:inline">
-                  Learn how to train, eat, recover, and stay consistent with a plan that connects every part
-                  of your progress. No random workouts, just a clear next step.
+                  Learn strength with easy-to-follow workouts, practical nutrition cues, and step-by-step progress so you
+                  feel more confident every time you train.
                 </span>
               </motion.p>
 
@@ -266,7 +260,7 @@ export function HomePage() {
                   className="h-12 w-full rounded-lg px-5 text-sm font-black uppercase sm:h-[3.15rem] sm:w-auto sm:px-8"
                 >
                   <span className="sm:hidden">Start</span>
-                  <span className="hidden sm:inline">Start Training</span>
+                  <span className="hidden sm:inline">Start Beginner Plan</span>
                   <ArrowRight className="h-4 w-4" />
                 </Button>
                 <Button
@@ -276,8 +270,8 @@ export function HomePage() {
                   className="h-12 w-auto rounded-lg border-white/20 bg-black/45 px-4 text-sm font-black uppercase text-white backdrop-blur-sm hover:bg-white/10 hover:text-white sm:h-[3.15rem] sm:px-8"
                 >
                   <Bot className="h-4 w-4" />
-                  <span className="sm:hidden">Coach</span>
-                  <span className="hidden sm:inline">Ask The Coach</span>
+                  <span className="sm:hidden">Help</span>
+                  <span className="hidden sm:inline">Get Coaching Help</span>
                 </Button>
               </motion.div>
 
@@ -353,12 +347,12 @@ export function HomePage() {
               Strength school
             </Badge>
             <h2 className="text-3xl font-black tracking-normal sm:text-5xl">
-              <span className="sm:hidden">Build gym confidence.</span>
-              <span className="hidden sm:inline">Everything a beginner needs to become confident in the gym.</span>
+              <span className="sm:hidden">Learn how to get stronger.</span>
+              <span className="hidden sm:inline">Everything a beginner needs to learn strength clearly and confidently.</span>
             </h2>
             <p className="mt-5 hidden text-base leading-8 text-muted-foreground sm:block sm:text-lg">
-              Learn the foundations before adding complexity. Every part of Prime Forge supports the same
-              repeatable loop: learn, act, measure, improve.
+              Start with the basics, follow a simple path, and build strength in a way that feels easy to understand
+              and easy to repeat.
             </p>
           </motion.div>
 
