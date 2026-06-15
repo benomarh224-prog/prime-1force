@@ -29,9 +29,9 @@ import { useAppStore } from '@/lib/store';
 import { useToast } from '@/hooks/use-toast';
 import { progressData, dailyCalorieData, weeklySchedule, exercises } from '@/lib/data';
 import {
-  User, Target, Flame, TrendingDown, Calendar,
+  Flame, TrendingDown, Calendar,
   Dumbbell, Trophy, Edit3, Save, X, Check,
-  Weight, Ruler, Activity, Apple, Camera,
+  Camera,
   Plus, Trash2, Clock, ClipboardList, ListChecks, Award, Shield, BarChart3,
   CheckCircle2, Loader2,
 } from 'lucide-react';
@@ -39,7 +39,6 @@ import { cn } from '@/lib/utils';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, BarChart, Bar,
-  PieChart, Pie, Cell,
 } from 'recharts';
 import { useSession } from 'next-auth/react';
 
@@ -54,13 +53,6 @@ const avatarOptions = [
   { id: 'fuchsia', emoji: '⭐', gradient: 'from-fuchsia-500 to-pink-600', ring: 'ring-fuchsia-500/40' },
   { id: 'teal', emoji: '🧬', gradient: 'from-teal-500 to-cyan-600', ring: 'ring-teal-500/40' },
 ];
-
-const goalLabels: Record<string, string> = {
-  lose_weight: 'Lose Weight',
-  gain_muscle: 'Build Muscle',
-  stay_fit: 'Stay Fit',
-  increase_endurance: 'Endurance',
-};
 
 const levelLabels: Record<string, string> = {
   beginner: 'Beginner',
@@ -581,6 +573,10 @@ export function DashboardPage() {
 
   // ─── Workout Tracker State ─────────────────────────────────
   const [showWorkoutDialog, setShowWorkoutDialog] = useState(false);
+  const [activeChart, setActiveChart] = useState<'weight' | 'calories'>('weight');
+  const [activeInsight, setActiveInsight] = useState<'achievements' | 'records'>('achievements');
+  const [showAllAchievements, setShowAllAchievements] = useState(false);
+  const [showAllWorkouts, setShowAllWorkouts] = useState(false);
   const [workoutForm, setWorkoutForm] = useState({
     name: '',
     date: new Date().toISOString().split('T')[0],
@@ -771,32 +767,43 @@ export function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen pt-24 pb-16">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen pb-16 pt-20 sm:pt-24">
+      <div className="mx-auto grid max-w-7xl grid-cols-12 gap-5 px-4 sm:px-6 lg:gap-6 lg:px-8">
         {/* Header */}
         <motion.div
-          className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+          className="col-span-12 flex flex-col gap-4 rounded-2xl border border-white/[0.08] bg-[linear-gradient(135deg,oklch(0.15_0.025_25_/_0.92),oklch(0.08_0.012_25_/_0.96))] p-5 shadow-[0_24px_70px_oklch(0_0_0_/_0.24)] sm:flex-row sm:items-center sm:justify-between sm:p-6"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <div className="min-w-0">
-            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
-              {store.userName ? (
-                <>
-                  <span className="gradient-text">{displayName}</span>'s Dashboard
-                </>
-              ) : (
-                <>
-                  Your <span className="gradient-text">Dashboard</span>
-                </>
-              )}
-            </h1>
-            <p className="text-muted-foreground mt-1">Track your fitness journey</p>
+          <div className="flex min-w-0 items-center gap-4">
+            <div className={cn(
+              'flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br text-lg font-black ring-1 ring-white/15',
+              avatar.gradient,
+            )}>
+              {store.userName ? getInitials(store.userName) : avatar.emoji}
+            </div>
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="text-xs font-black uppercase tracking-[0.16em] text-primary">Command center</p>
+                <Badge variant="outline" className="rounded-md border-white/10 bg-white/[0.04] text-[10px]">
+                  {levelLabels[store.userLevel] || store.userLevel}
+                </Badge>
+              </div>
+              <h1 className="mt-1 truncate text-2xl font-black tracking-tight sm:text-3xl">
+                {store.userName ? `Welcome back, ${displayName}` : 'Your training dashboard'}
+              </h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                One view for training, recovery, nutrition, and progress.
+              </p>
+            </div>
           </div>
-          <motion.div className="w-full sm:w-auto" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
-            <Button onClick={startEditing} className="w-full rounded-xl gap-2 sm:w-auto">
+          <motion.div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto" initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }}>
+            <Button onClick={startEditing} variant="outline" className="rounded-xl border-white/10 bg-white/[0.04] gap-2">
               <Edit3 className="h-4 w-4" /> Edit Profile
+            </Button>
+            <Button onClick={openWorkoutDialog} className="rounded-xl gap-2 shadow-lg shadow-primary/20">
+              <Plus className="h-4 w-4" /> Log Workout
             </Button>
           </motion.div>
         </motion.div>
@@ -805,7 +812,7 @@ export function DashboardPage() {
           <motion.div
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-6 flex items-center gap-3 rounded-lg border border-primary/30 bg-primary/10 px-4 py-3 text-sm text-primary"
+            className="col-span-12 flex items-center gap-3 rounded-xl border border-primary/30 bg-primary/10 px-4 py-3 text-sm text-primary"
           >
             <CheckCircle2 className="h-4 w-4 shrink-0" />
             <span className="font-semibold">Profile saved successfully.</span>
@@ -813,7 +820,7 @@ export function DashboardPage() {
         )}
 
         {/* Stats Cards Row */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="col-span-12 grid grid-cols-2 gap-3 lg:grid-cols-4">
           {[
             { icon: <Flame className="h-5 w-5" />, label: 'Calories Burned', value: totalCaloriesBurned.toLocaleString(), sub: 'This week', color: 'text-orange-500', bg: 'bg-orange-500/10' },
             { icon: <Dumbbell className="h-5 w-5" />, label: 'Workouts', value: `${totalWorkouts}/${store.weeklyGoal}`, sub: 'Weekly goal', color: 'text-primary', bg: 'bg-primary/10' },
@@ -826,14 +833,16 @@ export function DashboardPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: i * 0.05 }}
             >
-              <Card className="border-border/50">
-                <CardContent className="p-4">
-                  <div className={cn('h-10 w-10 rounded-xl flex items-center justify-center mb-3', stat.bg, stat.color)}>
+              <Card className="group h-full overflow-hidden border-white/[0.08] bg-card/65 transition-all duration-300 hover:-translate-y-1 hover:border-primary/25 hover:shadow-xl hover:shadow-primary/5">
+                <CardContent className="flex items-center gap-3 p-4">
+                  <div className={cn('flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition-transform duration-300 group-hover:scale-110', stat.bg, stat.color)}>
                     {stat.icon}
                   </div>
-                  <p className="text-2xl font-bold">{stat.value}</p>
-                  <p className="text-xs text-muted-foreground">{stat.label}</p>
-                  <p className="text-xs text-muted-foreground/70">{stat.sub}</p>
+                  <div className="min-w-0">
+                    <p className="text-xl font-black tabular-nums sm:text-2xl">{stat.value}</p>
+                    <p className="truncate text-xs font-semibold text-muted-foreground">{stat.label}</p>
+                    <p className="truncate text-[10px] text-muted-foreground/60">{stat.sub}</p>
+                  </div>
                 </CardContent>
               </Card>
             </motion.div>
@@ -842,22 +851,22 @@ export function DashboardPage() {
 
         {/* Forge Score */}
         <motion.div
-          className="mb-8 grid gap-6 lg:grid-cols-[1.05fr_0.95fr]"
+          className="col-span-12 grid gap-5 lg:grid-cols-[1.15fr_0.85fr]"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.08 }}
         >
-          <Card className="overflow-hidden border-primary/25 bg-primary/10">
-            <CardContent className="grid gap-6 p-5 sm:p-6 md:grid-cols-[210px_1fr] md:items-center">
-              <div className="relative mx-auto flex h-44 w-44 items-center justify-center rounded-full border border-primary/25 bg-background/70 shadow-2xl shadow-primary/10">
+          <Card className="overflow-hidden border-primary/20 bg-[radial-gradient(circle_at_10%_10%,oklch(0.62_0.24_27_/_0.18),transparent_42%),oklch(0.11_0.012_25_/_0.94)]">
+            <CardContent className="grid gap-5 p-5 sm:p-6 md:grid-cols-[170px_1fr] md:items-center">
+              <div className="relative mx-auto flex h-36 w-36 items-center justify-center rounded-full border border-primary/25 bg-background/70 shadow-2xl shadow-primary/10">
                 <div
                   className="absolute inset-3 rounded-full"
                   style={{
                     background: `conic-gradient(oklch(0.62 0.24 27) ${forgeScore * 3.6}deg, oklch(1 0 0 / 10%) 0deg)`,
                   }}
                 />
-                <div className="relative flex h-32 w-32 flex-col items-center justify-center rounded-full bg-background">
-                  <p className="text-5xl font-black tabular-nums">{forgeScore}</p>
+                <div className="relative flex h-24 w-24 flex-col items-center justify-center rounded-full bg-background">
+                  <p className="text-4xl font-black tabular-nums">{forgeScore}</p>
                   <p className="text-[10px] font-black uppercase tracking-wide text-primary">Forge Score</p>
                 </div>
               </div>
@@ -866,15 +875,15 @@ export function DashboardPage() {
                 <Badge className="mb-3 rounded-md border-primary/25 bg-background/80 text-primary">
                   {forgeRank}
                 </Badge>
-                <h2 className="text-2xl font-black uppercase tracking-tight sm:text-3xl">
-                  Your training signal
+                <h2 className="text-2xl font-black tracking-tight sm:text-3xl">
+                  Your training signal.
                 </h2>
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">
                   A single score blending consistency, streak, strength volume, and personal records.
                 </p>
-                <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                <div className="mt-4 grid grid-cols-2 gap-2 xl:grid-cols-4">
                   {forgeScoreFactors.map((factor) => (
-                    <div key={factor.label} className="rounded-lg border border-border/50 bg-background/60 p-3">
+                    <div key={factor.label} className="rounded-xl border border-white/[0.08] bg-background/55 p-3">
                       <div className="mb-2 flex items-center justify-between gap-2 text-sm">
                         <span className="font-bold">{factor.label}</span>
                         <span className="font-black text-primary">{factor.value}%</span>
@@ -888,17 +897,21 @@ export function DashboardPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-border/50">
-            <CardContent className="space-y-5 p-5 sm:p-6">
+          <Card className="border-white/[0.08] bg-card/65">
+            <CardContent className="flex h-full flex-col justify-between gap-4 p-5 sm:p-6">
               <div>
                 <p className="text-xs font-black uppercase tracking-wide text-muted-foreground">Coach review</p>
                 <h3 className="mt-2 text-xl font-black">This week&apos;s read</h3>
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">{weeklyReview}</p>
               </div>
-              <div className="rounded-lg border border-primary/20 bg-primary/10 p-4">
+              <button
+                type="button"
+                onClick={openWorkoutDialog}
+                className="rounded-xl border border-primary/20 bg-primary/10 p-4 text-left transition-all hover:border-primary/40 hover:bg-primary/15"
+              >
                 <p className="text-xs font-black uppercase tracking-wide text-primary">Next best move</p>
                 <p className="mt-2 text-sm font-semibold">{nextForgeMove}</p>
-              </div>
+              </button>
               <div>
                 <div className="mb-3 flex items-center justify-between gap-3">
                   <p className="text-xs font-black uppercase tracking-wide text-muted-foreground">Muscle coverage</p>
@@ -922,136 +935,176 @@ export function DashboardPage() {
         </motion.div>
 
         {/* Achievements */}
-        <div className="mb-8">
+        <div className="col-span-12">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.15 }}
           >
-            <Card className="border-border/50 h-full">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Award className="h-4 w-4 text-primary" />
-                  Achievements
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {achievements.map((achievement) => (
-                    <div
-                      key={achievement.title}
+            <Card className="h-full overflow-hidden border-white/[0.08] bg-card/65">
+              <CardHeader className="border-b border-white/[0.06] pb-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <Award className="h-4 w-4 text-primary" />
+                      Milestones
+                    </CardTitle>
+                    <p className="mt-1 text-xs text-muted-foreground">Achievements and strongest logged lifts.</p>
+                  </div>
+                  <div className="grid grid-cols-2 rounded-xl border border-white/[0.08] bg-background/55 p-1">
+                    <button
+                      type="button"
+                      onClick={() => setActiveInsight('achievements')}
                       className={cn(
-                        'rounded-xl border p-3 transition-colors',
-                        achievement.unlocked
-                          ? 'border-primary/35 bg-primary/10'
-                          : 'border-border/50 bg-muted/20'
+                        'rounded-lg px-3 py-2 text-xs font-bold transition-all',
+                        activeInsight === 'achievements'
+                          ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
+                          : 'text-muted-foreground hover:text-foreground'
                       )}
                     >
-                      <div className="flex items-start gap-3">
-                        <div
-                          className={cn(
-                            'h-9 w-9 shrink-0 rounded-lg flex items-center justify-center',
-                            achievement.unlocked ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
-                          )}
-                        >
-                          {achievement.icon}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center justify-between gap-2">
-                            <p className="text-sm font-semibold truncate">{achievement.title}</p>
-                            {achievement.unlocked && (
-                              <Badge className="h-5 border-primary/20 bg-primary/10 text-primary text-[10px]">Unlocked</Badge>
-                            )}
-                          </div>
-                          <p className="text-xs text-muted-foreground mt-0.5">{achievement.description}</p>
-                          <div className="mt-2">
-                            <Progress value={(achievement.progress / achievement.target) * 100} className="h-1.5" />
-                            <p className="mt-1 text-[10px] text-muted-foreground">
-                              {achievement.progress.toLocaleString()} / {achievement.target.toLocaleString()}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                      Achievements
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveInsight('records')}
+                      className={cn(
+                        'rounded-lg px-3 py-2 text-xs font-bold transition-all',
+                        activeInsight === 'records'
+                          ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
+                          : 'text-muted-foreground hover:text-foreground'
+                      )}
+                    >
+                      Records
+                    </button>
+                  </div>
                 </div>
+              </CardHeader>
+              <CardContent className="p-4 sm:p-5">
+                <AnimatePresence mode="wait" initial={false}>
+                  {activeInsight === 'achievements' ? (
+                    <motion.div
+                      key="achievements"
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 10 }}
+                      className="space-y-4"
+                    >
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        {(showAllAchievements ? achievements : achievements.slice(0, 4)).map((achievement) => (
+                          <div
+                            key={achievement.title}
+                            className={cn(
+                              'rounded-xl border p-3 transition-all hover:-translate-y-0.5',
+                              achievement.unlocked
+                                ? 'border-primary/35 bg-primary/10'
+                                : 'border-white/[0.08] bg-muted/15'
+                            )}
+                          >
+                            <div className="flex items-start gap-3">
+                              <div
+                                className={cn(
+                                  'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg',
+                                  achievement.unlocked ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                                )}
+                              >
+                                {achievement.icon}
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center justify-between gap-2">
+                                  <p className="truncate text-sm font-semibold">{achievement.title}</p>
+                                  <span className="text-[10px] font-black text-primary">
+                                    {Math.round((achievement.progress / achievement.target) * 100)}%
+                                  </span>
+                                </div>
+                                <p className="mt-0.5 truncate text-xs text-muted-foreground">{achievement.description}</p>
+                                <Progress value={(achievement.progress / achievement.target) * 100} className="mt-2 h-1.5" />
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowAllAchievements((current) => !current)}
+                        className="w-full rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-2.5 text-xs font-bold text-muted-foreground transition-colors hover:bg-white/[0.06] hover:text-foreground"
+                      >
+                        {showAllAchievements ? 'Show fewer achievements' : `Show all ${achievements.length} achievements`}
+                      </button>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="records"
+                      initial={{ opacity: 0, x: 10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -10 }}
+                    >
+                      {personalRecords.length === 0 ? (
+                        <div className="py-8 text-center">
+                          <Trophy className="mx-auto mb-3 h-9 w-9 text-muted-foreground/30" />
+                          <p className="text-sm font-semibold">No personal records yet</p>
+                          <p className="mt-1 text-xs text-muted-foreground">Log weighted sets to unlock this panel.</p>
+                        </div>
+                      ) : (
+                        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                          {personalRecords.map((record) => (
+                            <div
+                              key={record.exerciseId}
+                              className="rounded-xl border border-white/[0.08] bg-muted/15 p-4 transition-all hover:-translate-y-0.5 hover:border-primary/25"
+                            >
+                              <div className="flex items-start justify-between gap-2">
+                                <p className="truncate text-sm font-bold">{record.exerciseName}</p>
+                                <Trophy className="h-4 w-4 shrink-0 text-primary" />
+                              </div>
+                              <p className="mt-3 text-2xl font-black">{record.bestSet.weight}kg</p>
+                              <p className="text-xs text-muted-foreground">
+                                {record.bestSet.reps} reps · {record.volume.toLocaleString()}kg volume
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </CardContent>
             </Card>
           </motion.div>
         </div>
 
-        {/* Personal Records */}
-        <motion.div
-          className="mb-8"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.12 }}
-        >
-          <Card className="border-border/50">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Trophy className="h-4 w-4 text-primary" />
-                Personal Records
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {personalRecords.length === 0 ? (
-                <div className="text-center py-8">
-                  <Trophy className="h-10 w-10 mx-auto mb-3 text-muted-foreground/30" />
-                  <p className="text-sm font-medium text-muted-foreground">No records yet</p>
-                  <p className="text-xs text-muted-foreground/70 mt-1">Log sets with weight to unlock your strongest lifts.</p>
-                </div>
-              ) : (
-                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                  {personalRecords.map((record) => (
-                    <div key={record.exerciseId} className="rounded-xl border border-border/50 bg-muted/20 p-4">
-                      <div className="flex items-start justify-between gap-2 mb-3">
-                        <div className="min-w-0">
-                          <p className="font-semibold text-sm truncate">{record.exerciseName}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {new Date(`${record.date}T00:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                          </p>
-                        </div>
-                        {record.completed && (
-                          <Badge className="h-5 border-primary/20 bg-primary/10 text-primary text-[10px]">Complete</Badge>
-                        )}
-                      </div>
-                      <div className="grid grid-cols-2 gap-2 text-xs">
-                        <div className="rounded-lg bg-background/50 p-2">
-                          <p className="text-muted-foreground">Best Set</p>
-                          <p className="font-semibold">{record.bestSet.weight}kg x {record.bestSet.reps}</p>
-                        </div>
-                        <div className="rounded-lg bg-background/50 p-2">
-                          <p className="text-muted-foreground">Volume</p>
-                          <p className="font-semibold">{record.volume}kg</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        <div className="grid lg:grid-cols-3 gap-6">
+        <div className="col-span-12 grid gap-5 lg:grid-cols-3">
           {/* Left Column - Charts */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2">
             {/* Weight Progress Chart */}
             <motion.div
+              className={activeChart === 'weight' ? 'block' : 'hidden'}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
             >
-              <Card className="border-border/50">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <TrendingDown className="h-4 w-4 text-primary" />
-                    Weight Progress
-                  </CardTitle>
+              <Card className="overflow-hidden border-white/[0.08] bg-card/65">
+                <CardHeader className="border-b border-white/[0.06] pb-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <CardTitle className="flex items-center gap-2 text-base">
+                        <TrendingDown className="h-4 w-4 text-primary" />
+                        Progress analytics
+                      </CardTitle>
+                      <p className="mt-1 text-xs text-muted-foreground">Weight trend across the last eight checkpoints.</p>
+                    </div>
+                    <div className="grid grid-cols-2 rounded-xl border border-white/[0.08] bg-background/55 p-1">
+                      <button type="button" className="rounded-lg bg-primary px-3 py-2 text-xs font-bold text-primary-foreground">Weight</button>
+                      <button
+                        type="button"
+                        onClick={() => setActiveChart('calories')}
+                        className="rounded-lg px-3 py-2 text-xs font-bold text-muted-foreground transition-colors hover:text-foreground"
+                      >
+                        Calories
+                      </button>
+                    </div>
+                  </div>
                 </CardHeader>
-                <CardContent className="p-4 pt-0">
-                  <div className="h-64">
+                <CardContent className="p-4 sm:p-5">
+                  <div className="h-60">
                     <ResponsiveContainer width="100%" height="100%">
                       <AreaChart data={weightProgressData}>
                         <defs>
@@ -1081,19 +1134,35 @@ export function DashboardPage() {
 
             {/* Weekly Calories Chart */}
             <motion.div
+              className={activeChart === 'calories' ? 'block' : 'hidden'}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.3 }}
             >
-              <Card className="border-border/50">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <Flame className="h-4 w-4 text-orange-500" />
-                    Daily Calories
-                  </CardTitle>
+              <Card className="overflow-hidden border-white/[0.08] bg-card/65">
+                <CardHeader className="border-b border-white/[0.06] pb-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <CardTitle className="flex items-center gap-2 text-base">
+                        <Flame className="h-4 w-4 text-orange-500" />
+                        Progress analytics
+                      </CardTitle>
+                      <p className="mt-1 text-xs text-muted-foreground">Daily energy intake and training burn.</p>
+                    </div>
+                    <div className="grid grid-cols-2 rounded-xl border border-white/[0.08] bg-background/55 p-1">
+                      <button
+                        type="button"
+                        onClick={() => setActiveChart('weight')}
+                        className="rounded-lg px-3 py-2 text-xs font-bold text-muted-foreground transition-colors hover:text-foreground"
+                      >
+                        Weight
+                      </button>
+                      <button type="button" className="rounded-lg bg-primary px-3 py-2 text-xs font-bold text-primary-foreground">Calories</button>
+                    </div>
+                  </div>
                 </CardHeader>
-                <CardContent className="p-4 pt-0">
-                  <div className="h-64">
+                <CardContent className="p-4 sm:p-5">
+                  <div className="h-60">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={dailyCalorieData}>
                         <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.5 0 0 / 10%)" />
@@ -1112,6 +1181,14 @@ export function DashboardPage() {
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
+                  <div className="mt-4 grid grid-cols-3 gap-2 border-t border-white/[0.06] pt-4">
+                    {macroData.map((macro) => (
+                      <div key={macro.name} className="rounded-xl bg-muted/20 p-3 text-center">
+                        <p className="text-lg font-black">{Math.round(macro.value)}g</p>
+                        <p className="text-[10px] font-bold uppercase text-muted-foreground">{macro.name}</p>
+                      </div>
+                    ))}
+                  </div>
                 </CardContent>
               </Card>
             </motion.div>
@@ -1119,83 +1196,20 @@ export function DashboardPage() {
 
           {/* Right Column */}
           <div className="space-y-6">
-            {/* Profile Card */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.15 }}
-            >
-              <Card className="border-border/50 overflow-visible">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <User className="h-4 w-4 text-primary" />
-                    Profile
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <motion.div
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="space-y-4"
-                  >
-                        {/* Avatar + Name */}
-                        <div className="flex items-center gap-4">
-                          <div className={cn(
-                            'h-14 w-14 rounded-full bg-gradient-to-br flex items-center justify-center text-xl ring-2 ring-offset-2 ring-offset-background shrink-0',
-                            `bg-gradient-to-br ${avatar.gradient}`,
-                            avatar.ring,
-                          )}>
-                            {store.userName ? getInitials(store.userName) : avatar.emoji}
-                          </div>
-                          <div className="min-w-0">
-                            <p className="font-semibold text-lg truncate">{displayName}</p>
-                            <Badge variant="secondary" className="mt-1">{levelLabels[store.userLevel] || store.userLevel}</Badge>
-                          </div>
-                        </div>
-
-                        {/* Stats Grid */}
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="p-3 rounded-xl bg-muted/50 text-center">
-                            <Weight className="h-4 w-4 mx-auto mb-1 text-primary" />
-                            <p className="text-sm font-semibold">{store.userWeight}kg</p>
-                            <p className="text-xs text-muted-foreground">Weight</p>
-                          </div>
-                          <div className="p-3 rounded-xl bg-muted/50 text-center">
-                            <Ruler className="h-4 w-4 mx-auto mb-1 text-primary" />
-                            <p className="text-sm font-semibold">{store.userHeight}cm</p>
-                            <p className="text-xs text-muted-foreground">Height</p>
-                          </div>
-                          <div className="p-3 rounded-xl bg-muted/50 text-center">
-                            <Target className="h-4 w-4 mx-auto mb-1 text-primary" />
-                            <p className="text-sm font-semibold">{goalLabels[store.userGoal] || store.userGoal}</p>
-                            <p className="text-xs text-muted-foreground">Goal</p>
-                          </div>
-                          <div className="p-3 rounded-xl bg-muted/50 text-center">
-                            <Activity className="h-4 w-4 mx-auto mb-1 text-primary" />
-                            <p className="text-sm font-semibold">{store.weeklyGoal}/wk</p>
-                            <p className="text-xs text-muted-foreground">Target</p>
-                          </div>
-                        </div>
-                  </motion.div>
-                </CardContent>
-              </Card>
-            </motion.div>
-
             {/* Weekly Progress */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.25 }}
             >
-              <Card className="border-border/50">
-                <CardHeader className="pb-3">
+              <Card className="h-full overflow-hidden border-white/[0.08] bg-card/65">
+                <CardHeader className="border-b border-white/[0.06] pb-4">
                   <CardTitle className="text-base flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-primary" />
                     Weekly Progress
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-4 sm:p-5">
                   <div className="mb-4">
                     <div className="flex items-center justify-between text-sm mb-2">
                       <span>Workout Goal</span>
@@ -1203,9 +1217,9 @@ export function DashboardPage() {
                     </div>
                     <Progress value={Math.min(weeklyProgress, 100)} className="h-2" />
                   </div>
-                  <div className="space-y-2">
+                  <div className="grid gap-2">
                     {weeklySchedule.map((day) => (
-                      <div key={day.day} className="flex items-center justify-between text-sm">
+                      <div key={day.day} className="flex items-center justify-between rounded-xl border border-white/[0.06] bg-muted/15 px-3 py-2 text-sm transition-colors hover:bg-muted/25">
                         <div className="flex items-center gap-2">
                           <div className={cn(
                             'h-7 w-7 rounded-lg flex items-center justify-center text-xs font-medium',
@@ -1225,81 +1239,32 @@ export function DashboardPage() {
               </Card>
             </motion.div>
 
-            {/* Macro Breakdown */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-            >
-              <Card className="border-border/50">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <Apple className="h-4 w-4 text-primary" />
-                    Avg. Daily Macros
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-48">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={macroData}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={50}
-                          outerRadius={70}
-                          dataKey="value"
-                          strokeWidth={0}
-                        >
-                          {macroData.map((entry, i) => (
-                            <Cell key={i} fill={entry.fill} />
-                          ))}
-                        </Pie>
-                        <Tooltip
-                          contentStyle={{
-                            background: 'oklch(0.17 0.005 110)',
-                            border: '1px solid oklch(1 0 0 / 10%)',
-                            borderRadius: '12px',
-                            fontSize: 12,
-                          }}
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                  <div className="mt-2 flex flex-wrap justify-center gap-x-4 gap-y-2">
-                    {macroData.map((m) => (
-                      <div key={m.name} className="flex items-center gap-1.5 text-xs">
-                        <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: m.fill }} />
-                        <span className="text-muted-foreground">{m.name}: <span className="font-medium text-foreground">{Math.round(m.value)}g</span></span>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
           </div>
         </div>
 
         {/* ═══════════ WORKOUT TRACKER ═══════════ */}
         <motion.div
-          className="mt-8"
+          className="col-span-12"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.4 }}
         >
-          <Card className="border-border/50">
-            <CardHeader className="pb-3">
+          <Card className="overflow-hidden border-white/[0.08] bg-card/65">
+            <CardHeader className="border-b border-white/[0.06] pb-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <ClipboardList className="h-4 w-4 text-primary" />
-                  Workout Tracker
-                </CardTitle>
+                <div>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <ClipboardList className="h-4 w-4 text-primary" />
+                    Recent activity
+                  </CardTitle>
+                  <p className="mt-1 text-xs text-muted-foreground">Review, complete, or remove logged sessions.</p>
+                </div>
                 <Button onClick={openWorkoutDialog} size="sm" className="h-8 w-full rounded-lg gap-1.5 text-xs sm:w-auto">
                   <Plus className="h-3.5 w-3.5" /> Log Workout
                 </Button>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 sm:p-5">
               {store.workoutLogs.length === 0 ? (
                 <div className="text-center py-10">
                   <Dumbbell className="h-10 w-10 mx-auto mb-3 text-muted-foreground/30" />
@@ -1307,12 +1272,12 @@ export function DashboardPage() {
                   <p className="text-xs text-muted-foreground/70 mt-1">Start tracking your sessions to see history here</p>
                 </div>
               ) : (
-                <div className="space-y-3 max-h-[420px] overflow-y-auto pr-1">
-                  {store.workoutLogs.map((log) => (
+                <div className="space-y-3">
+                  {(showAllWorkouts ? store.workoutLogs : store.workoutLogs.slice(0, 3)).map((log) => (
                     <div
                       key={log.id}
                       className={cn(
-                        'p-4 rounded-xl border bg-muted/20 hover:bg-muted/30 transition-colors',
+                        'rounded-xl border bg-muted/15 p-4 transition-all hover:-translate-y-0.5 hover:bg-muted/25',
                         log.completed ? 'border-primary/40' : 'border-border/50'
                       )}
                     >
@@ -1372,6 +1337,15 @@ export function DashboardPage() {
                       )}
                     </div>
                   ))}
+                  {store.workoutLogs.length > 3 && (
+                    <button
+                      type="button"
+                      onClick={() => setShowAllWorkouts((current) => !current)}
+                      className="w-full rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-2.5 text-xs font-bold text-muted-foreground transition-colors hover:bg-white/[0.06] hover:text-foreground"
+                    >
+                      {showAllWorkouts ? 'Show recent workouts only' : `Show all ${store.workoutLogs.length} workouts`}
+                    </button>
+                  )}
                 </div>
               )}
             </CardContent>
