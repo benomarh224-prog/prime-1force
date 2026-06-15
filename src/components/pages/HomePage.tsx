@@ -163,6 +163,12 @@ function StarterPlanPreview() {
             </p>
             <Button onClick={() => openAuthDialog('signup')} className="mt-5 h-11 rounded-lg px-6 font-black uppercase sm:mt-7 sm:h-12">
               Start Your Plan
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </div>
+
+          <div className="grid gap-3">
+            {steps.map((step, index) => {
             const Icon = step.icon;
             return (
               <div key={step.title} className="flex gap-3 rounded-lg border border-white/[0.08] bg-card/80 p-4 sm:gap-4 sm:p-5">
@@ -278,10 +284,10 @@ export function HomePage() {
               <motion.div
                 variants={fadeUp}
                 custom={4}
-                className="mt-10 hidden w-full max-w-2xl grid-cols-3 overflow-hidden rounded-xl border border-white/[0.12] bg-black/40 backdrop-blur-md sm:grid"
+                className="mt-8 grid w-full max-w-[22rem] grid-cols-3 overflow-hidden rounded-xl border border-white/[0.12] bg-black/55 backdrop-blur-md sm:mt-10 sm:max-w-2xl sm:bg-black/40"
               >
                 {stats.map((item) => (
-                  <div key={item.label} className="border-r border-white/10 p-3 last:border-r-0 sm:p-5">
+                  <div key={item.label} className="border-r border-white/10 p-3 text-center last:border-r-0 sm:p-5 sm:text-left">
                     <p className="text-xl font-black text-primary sm:text-3xl">{item.value}</p>
                     <p className="mt-1 text-[11px] font-semibold uppercase text-white/58 sm:text-xs">{item.label}</p>
                   </div>
