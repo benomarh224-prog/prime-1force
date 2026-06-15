@@ -96,16 +96,16 @@ export function ContactPage() {
   };
 
   return (
-    <div className="min-h-screen pt-24 pb-16">
+    <div className="min-h-screen pb-12 pt-20 sm:pt-22">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <motion.div
-          className="mb-12 text-center"
+          className="mb-6 text-center"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-3">
+          <h1 className="mb-2 text-3xl font-black tracking-tight sm:text-4xl">
             Get in <span className="gradient-text">Touch</span>
           </h1>
           <p className="text-muted-foreground max-w-md mx-auto">
@@ -113,17 +113,17 @@ export function ContactPage() {
           </p>
         </motion.div>
 
-        <div className="grid lg:grid-cols-5 gap-8 max-w-5xl mx-auto">
+        <div className="mx-auto grid max-w-5xl gap-5 lg:grid-cols-5">
           {/* Contact Info */}
           <motion.div
-            className="lg:col-span-2 space-y-6"
+            className="space-y-5 lg:col-span-2"
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
           >
             <div>
-              <h2 className="text-xl font-semibold mb-6">Contact Information</h2>
-              <div className="space-y-4">
+              <h2 className="mb-4 text-lg font-bold">Contact Information</h2>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
                 {contactInfo.map((info) => (
                   <div key={info.label} className="flex items-center gap-4">
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0">
@@ -156,7 +156,7 @@ export function ContactPage() {
               </div>
             </div>
 
-            <Card className="bg-primary/5 border-primary/10">
+            <Card className="hidden">
               <CardContent className="p-5">
                 <h3 className="font-semibold text-sm mb-2">Response Time</h3>
                 <p className="text-sm text-muted-foreground">
@@ -191,7 +191,7 @@ export function ContactPage() {
             transition={{ duration: 0.6, delay: 0.2 }}
           >
             <Card className="border-border/50">
-              <CardContent className="p-6 sm:p-8">
+              <CardContent className="p-4 sm:p-5">
                 {submitted ? (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
@@ -210,7 +210,7 @@ export function ContactPage() {
                     </Button>
                   </motion.div>
                 ) : (
-                  <form onSubmit={handleSubmit} className="space-y-5">
+                  <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="name">Name *</Label>
@@ -253,7 +253,7 @@ export function ContactPage() {
                         placeholder="Tell us more about your inquiry..."
                         value={form.message}
                         onChange={(e) => setForm({ ...form, message: e.target.value })}
-                        className="min-h-[140px] rounded-xl resize-none"
+                        className="min-h-[110px] rounded-xl resize-none"
                         required
                       />
                     </div>
@@ -282,7 +282,7 @@ export function ContactPage() {
         </div>
 
         <motion.div
-          className="mx-auto mt-10 max-w-5xl"
+          className="hidden"
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3 }}

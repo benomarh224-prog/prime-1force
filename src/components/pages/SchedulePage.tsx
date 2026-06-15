@@ -688,21 +688,21 @@ export function SchedulePage() {
   };
 
   return (
-    <div className="min-h-screen bg-background pt-20 text-foreground sm:pt-24">
-      <div className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-background pt-20 text-foreground sm:pt-22">
+      <div className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between"
+          className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between"
         >
           <div className="max-w-3xl">
-            <Badge className="mb-4 rounded-md border-primary/25 bg-primary/10 px-3 py-1 text-[11px] uppercase tracking-wide text-primary">
+            <Badge className="mb-3 rounded-md border-primary/25 bg-primary/10 px-3 py-1 text-[11px] uppercase tracking-wide text-primary">
               Training Planner
             </Badge>
-            <h1 className="text-4xl font-black uppercase leading-none sm:text-5xl lg:text-6xl">
+            <h1 className="text-3xl font-black uppercase leading-none sm:text-4xl">
               Plan The Week. Hit Today.
             </h1>
-            <p className="mt-4 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
               Build your program, focus on today&apos;s session, and keep your workout history easy to scan.
             </p>
           </div>
@@ -718,13 +718,13 @@ export function SchedulePage() {
           </div>
         </motion.div>
 
-        <div className="mb-8 grid gap-4 md:grid-cols-2">
+        <div className="mb-5 grid grid-cols-2 gap-3">
           <Card className="py-0">
-            <CardContent className="p-5">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <p className="text-xs font-black uppercase tracking-wide text-muted-foreground">Weekly Progress</p>
-                  <p className="mt-2 text-3xl font-black">{stats.weeklyCompletions}/{stats.trainingDays}</p>
+                  <p className="mt-1 text-2xl font-black">{stats.weeklyCompletions}/{stats.trainingDays}</p>
                 </div>
                 <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
                   <CheckCircle2 className="h-5 w-5" />
@@ -734,10 +734,10 @@ export function SchedulePage() {
             </CardContent>
           </Card>
           <Card className="py-0">
-            <CardContent className="flex items-center justify-between gap-4 p-5">
+            <CardContent className="flex items-center justify-between gap-4 p-4">
               <div>
                 <p className="text-xs font-black uppercase tracking-wide text-muted-foreground">Streak</p>
-                <p className="mt-2 text-3xl font-black">{stats.streak} day{stats.streak === 1 ? '' : 's'}</p>
+                <p className="mt-1 text-2xl font-black">{stats.streak} day{stats.streak === 1 ? '' : 's'}</p>
               </div>
               <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
                 <Flame className="h-5 w-5" />
@@ -746,7 +746,7 @@ export function SchedulePage() {
           </Card>
         </div>
 
-        <Tabs defaultValue="planner" className="gap-6">
+        <Tabs defaultValue="planner" className="gap-4">
           <TabsList className="grid h-auto w-full grid-cols-3 rounded-lg border border-white/10 bg-card/70 p-1 sm:w-fit">
             {[
               { value: 'planner', label: 'Planner', icon: CalendarDays },
@@ -768,7 +768,7 @@ export function SchedulePage() {
           </TabsList>
 
           <TabsContent value="planner" className="mt-0">
-            <div className="grid gap-6 xl:grid-cols-[0.82fr_1.18fr]">
+            <div className="grid gap-4 xl:grid-cols-[0.78fr_1.22fr]">
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-base uppercase tracking-wide">

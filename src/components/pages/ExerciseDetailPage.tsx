@@ -211,7 +211,7 @@ export function ExerciseDetailPage() {
   };
 
   return (
-    <div className="min-h-screen pt-24 pb-16">
+    <div className="min-h-screen pb-12 pt-20 sm:pt-22">
       <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
         {/* Back Button */}
         <motion.div
@@ -222,7 +222,7 @@ export function ExerciseDetailPage() {
           <Button
             variant="ghost"
             onClick={() => navigate('workouts')}
-            className="mb-6 gap-2 rounded-xl"
+            className="mb-3 gap-2 rounded-xl"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to Workouts
@@ -231,12 +231,12 @@ export function ExerciseDetailPage() {
 
         {/* Hero Image */}
         <motion.div
-          className="relative mb-8 overflow-hidden rounded-2xl border border-white/10 bg-[radial-gradient(circle_at_50%_20%,oklch(0.23_0.014_95),oklch(0.11_0.01_95)_62%)] p-4 shadow-2xl shadow-black/25"
+          className="relative mb-5 overflow-hidden rounded-2xl border border-white/10 bg-[radial-gradient(circle_at_50%_20%,oklch(0.23_0.014_95),oklch(0.11_0.01_95)_62%)] p-3 shadow-2xl shadow-black/25"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <div className="relative aspect-video overflow-hidden rounded-xl bg-white shadow-inner dark:bg-white">
+          <div className="relative aspect-[16/8] overflow-hidden rounded-xl bg-white shadow-inner dark:bg-white">
             <AnimatePresence mode="wait">
               <motion.div
                 key={resolvedMediaSrc}
@@ -303,7 +303,7 @@ export function ExerciseDetailPage() {
           )}
 
           {/* Info overlay */}
-          <div className="absolute bottom-0 left-0 right-0 p-6">
+            <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <div className="flex gap-2 mb-2">
@@ -335,14 +335,14 @@ export function ExerciseDetailPage() {
           </div>
         </motion.div>
         {hasPlayableMedia && (
-          <p className="-mt-5 mb-8 text-xs text-muted-foreground">
+          <p className="-mt-2 mb-4 text-xs text-muted-foreground">
             Exercise media by ExerciseDB / AscendAPI.
           </p>
         )}
 
         {/* Stats Row */}
         <motion.div
-          className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8"
+          className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
@@ -366,7 +366,7 @@ export function ExerciseDetailPage() {
         </motion.div>
 
         <motion.div
-          className="mb-8 grid gap-3 sm:grid-cols-2"
+          className="mb-4 grid gap-3 sm:grid-cols-2"
           initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.18 }}
@@ -383,7 +383,7 @@ export function ExerciseDetailPage() {
 
         {/* Tracking History Summary */}
         <motion.div
-          className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8"
+          className="hidden"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.15 }}
@@ -408,7 +408,7 @@ export function ExerciseDetailPage() {
 
         {/* Description */}
         <motion.div
-          className="mb-8"
+          className="mb-5 rounded-xl border border-white/[0.08] bg-card/35 p-4"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
@@ -424,11 +424,11 @@ export function ExerciseDetailPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.3 }}
         >
-          <div className="flex flex-wrap gap-2 mb-6">
+          <div className="mb-4 grid grid-cols-3 gap-2">
             <Button
               variant={activeTab === 'instructions' ? 'default' : 'outline'}
               onClick={() => setActiveTab('instructions')}
-              className="rounded-xl gap-2"
+              className="rounded-xl gap-2 px-2"
             >
               <Target className="h-4 w-4" />
               Step-by-Step
@@ -436,7 +436,7 @@ export function ExerciseDetailPage() {
             <Button
               variant={activeTab === 'tips' ? 'default' : 'outline'}
               onClick={() => setActiveTab('tips')}
-              className="rounded-xl gap-2"
+              className="rounded-xl gap-2 px-2"
             >
               <Lightbulb className="h-4 w-4" />
               Pro Tips
@@ -444,7 +444,7 @@ export function ExerciseDetailPage() {
             <Button
               variant={activeTab === 'history' ? 'default' : 'outline'}
               onClick={() => setActiveTab('history')}
-              className="rounded-xl gap-2"
+              className="rounded-xl gap-2 px-2"
             >
               <Trophy className="h-4 w-4" />
               History
@@ -453,12 +453,12 @@ export function ExerciseDetailPage() {
 
           {activeTab === 'instructions' && (
             <Card className="border-border/50">
-              <CardContent className="p-6">
+              <CardContent className="p-4 sm:p-5">
                 <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                   <Target className="h-5 w-5 text-primary" />
                   How to Perform
                 </h3>
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {exercise.steps.map((step, i) => (
                     <motion.div
                       key={i}
@@ -480,7 +480,7 @@ export function ExerciseDetailPage() {
 
           {activeTab === 'tips' && (
             <Card className="border-border/50">
-              <CardContent className="p-6">
+              <CardContent className="p-4 sm:p-5">
                 <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                   <Lightbulb className="h-5 w-5 text-primary" />
                   Pro Tips
@@ -505,7 +505,7 @@ export function ExerciseDetailPage() {
 
           {activeTab === 'history' && (
             <Card className="border-border/50">
-              <CardContent className="p-6">
+              <CardContent className="p-4 sm:p-5">
                 <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                   <Trophy className="h-5 w-5 text-primary" />
                   Exercise History

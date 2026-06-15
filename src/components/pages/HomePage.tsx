@@ -339,20 +339,20 @@ export function HomePage() {
 
       {status === 'authenticated' ? <TodayDashboard /> : <StarterPlanPreview />}
 
-      <section className="py-12 sm:py-24">
+      <section className="py-10 sm:py-14">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: '-80px' }}
             variants={sectionIntro}
-            className="max-w-3xl"
+            className="max-w-2xl"
           >
             <Badge variant="secondary" className="mb-4">
               <BookOpen className="h-3.5 w-3.5" />
               Strength school
             </Badge>
-            <h2 className="text-3xl font-black tracking-normal sm:text-5xl">
+            <h2 className="text-3xl font-black tracking-normal sm:text-4xl">
               <span className="sm:hidden">Learn how to get stronger.</span>
               <span className="hidden sm:inline">Everything a beginner needs to learn strength clearly and confidently.</span>
             </h2>
@@ -362,7 +362,7 @@ export function HomePage() {
             </p>
           </motion.div>
 
-          <div className="mt-7 grid grid-cols-2 gap-3 sm:mt-10 sm:gap-4 lg:grid-cols-4">
+          <div className="mt-6 grid grid-cols-2 gap-3 sm:mt-8 lg:grid-cols-4">
             {strengthPillars.map((pillar, index) => {
               const Icon = pillar.icon;
               return (
@@ -390,7 +390,7 @@ export function HomePage() {
         </div>
       </section>
 
-      <section className="hidden border-y border-white/[0.08] bg-muted/20 py-12 sm:block sm:py-24">
+      <section className="hidden">
         <div className="mx-auto grid max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-[0.92fr_1.08fr] lg:px-8">
           <motion.div
             initial={{ opacity: 0, x: -24 }}
@@ -465,7 +465,7 @@ export function HomePage() {
         </div>
       </section>
 
-      <section className="py-12 sm:py-24">
+      <section className="py-10 sm:py-14">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div
             initial="hidden"
@@ -479,18 +479,18 @@ export function HomePage() {
                 <Zap className="h-3.5 w-3.5" />
                 Training plans
               </Badge>
-              <h2 className="text-3xl font-black tracking-normal sm:text-5xl">
+              <h2 className="text-3xl font-black tracking-normal sm:text-4xl">
                 <span className="sm:hidden">Pick your program.</span>
                 <span className="hidden sm:inline">Choose a program and know what to do next.</span>
               </h2>
             </div>
-            <Button onClick={() => navigate('workouts')} variant="outline" className="h-12 rounded-lg font-bold">
+            <Button onClick={() => navigate('workouts')} variant="outline" className="h-10 rounded-lg font-bold">
               View all programs
               <ArrowRight className="h-4 w-4" />
             </Button>
           </motion.div>
 
-          <div className="mobile-card-scroller -mx-4 mt-7 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:mt-10 sm:px-0 md:grid md:grid-cols-3 md:overflow-visible md:pb-0">
+          <div className="mobile-card-scroller -mx-4 mt-6 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:mt-8 sm:px-0 md:grid md:grid-cols-3 md:overflow-visible md:pb-0">
             {programCards.map((program, index) => (
               <motion.article
                 key={program.title}
@@ -513,7 +513,7 @@ export function HomePage() {
                   viewport={{ once: true }}
                   transition={{ delay: 0.25 + index * 0.12, duration: 0.7, ease: 'easeOut' }}
                 />
-                <div className="relative aspect-[4/3] overflow-hidden">
+                <div className="relative aspect-[16/10] overflow-hidden">
                   <Image
                     src={program.image}
                     alt={program.title}
@@ -534,7 +534,7 @@ export function HomePage() {
                     <p className="text-xs font-black">{program.goal}</p>
                   </motion.div>
                 </div>
-                <div className="p-5">
+                <div className="p-4">
                   <div className="flex items-start justify-between gap-4">
                     <div>
                       <h3 className="text-xl font-black">{program.title}</h3>
@@ -547,7 +547,7 @@ export function HomePage() {
                   <button
                     type="button"
                     onClick={() => navigate('workouts')}
-                    className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-primary transition-colors hover:text-primary/80"
+                    className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-primary transition-colors hover:text-primary/80"
                   >
                     Start this path
                     <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -559,7 +559,7 @@ export function HomePage() {
         </div>
       </section>
 
-      <section className="border-y border-white/[0.08] bg-muted/20 py-12 sm:py-24">
+      <section className="hidden">
         <div className="mx-auto grid max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-[1fr_1fr] lg:px-8">
           <motion.div
             initial="hidden"
@@ -636,7 +636,7 @@ export function HomePage() {
         </div>
       </section>
 
-      <section className="relative overflow-hidden py-12 sm:py-24">
+      <section className="relative overflow-hidden py-10 sm:py-14">
         <Image
           src="/images/workout-gym-luxe.jpg"
           alt="Gym training environment"
@@ -656,14 +656,14 @@ export function HomePage() {
               <Flame className="h-3.5 w-3.5" />
               Start before you feel ready
             </Badge>
-            <h2 className="text-3xl font-black tracking-normal text-white sm:text-5xl">
+            <h2 className="text-3xl font-black tracking-normal text-white sm:text-4xl">
               <span className="sm:hidden">Start with one honest session.</span>
               <span className="hidden sm:inline">The strongest version of you is built one honest session at a time.</span>
             </h2>
             <p className="mx-auto mt-5 hidden max-w-2xl text-base leading-8 text-white/66 sm:block sm:text-lg">
               Open the workouts, ask the coach what you do not understand, and let the dashboard show your progress.
             </p>
-            <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
+            <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
               <Button onClick={startToday} size="lg" className="h-[3.25rem] rounded-lg px-8 font-black uppercase">
                 Start Today
                 <ArrowRight className="h-4 w-4" />

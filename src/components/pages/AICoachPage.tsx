@@ -279,20 +279,20 @@ Guidelines:
   };
 
   return (
-    <div className="flex min-h-screen flex-col pb-[calc(10.25rem+env(safe-area-inset-bottom))] pt-20 sm:pt-24 lg:pb-16">
+    <div className="flex min-h-screen flex-col pb-[calc(10.25rem+env(safe-area-inset-bottom))] pt-20 sm:pt-22 lg:pb-12">
       <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 sm:px-6 lg:px-8">
         <motion.div
-          className="mb-5 flex flex-col justify-between gap-4 sm:mb-6 lg:flex-row lg:items-end"
+          className="mb-4 flex flex-col justify-between gap-3 lg:flex-row lg:items-end"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
           <div>
-            <Badge variant="secondary" className="mb-3 gap-1.5">
+            <Badge variant="secondary" className="mb-2 gap-1.5">
               <Sparkles className="h-3 w-3" />
               Smarter personal coaching
             </Badge>
-            <h1 className="flex items-center gap-3 text-3xl font-black tracking-tight sm:text-4xl">
+            <h1 className="flex items-center gap-3 text-3xl font-black tracking-tight">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
                 <Bot className="h-5 w-5 text-primary" />
               </span>
@@ -321,7 +321,7 @@ Guidelines:
           </div>
         </motion.div>
 
-        <Card className="mb-4 border-border/50 p-3 sm:p-4">
+        <Card className="mb-3 border-white/[0.08] p-3">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-start gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
@@ -329,7 +329,7 @@ Guidelines:
               </div>
               <div>
                 <p className="text-sm font-black uppercase">Form analysis upload</p>
-                <p className="text-sm text-muted-foreground">
+                <p className="hidden text-sm text-muted-foreground sm:block">
                   Add a short image or video, then ask for cues. The coach will combine it with your progress memory.
                 </p>
               </div>
@@ -381,7 +381,7 @@ Guidelines:
           )}
         </Card>
 
-        <div className="mb-4 grid gap-4 lg:grid-cols-[280px_1fr]">
+        <div className="mb-3 grid gap-4 lg:grid-cols-[250px_1fr]">
           <div className="hidden space-y-4 lg:block">
             <Card className="border-border/50 p-4">
               <div className="mb-3 flex items-center gap-2 text-sm font-black uppercase">
@@ -423,7 +423,7 @@ Guidelines:
             </Card>
           </div>
 
-        <Card className="flex min-h-[56svh] flex-1 flex-col overflow-hidden border-border/50 sm:min-h-[620px]">
+        <Card className="flex min-h-[52svh] flex-1 flex-col overflow-hidden border-white/[0.08] sm:min-h-[520px]">
           <div className="flex items-center justify-between border-b px-4 py-3 sm:px-6">
             <div className="flex items-center gap-2">
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
@@ -438,8 +438,8 @@ Guidelines:
               <Trash2 className="h-4 w-4" />
             </Button>
           </div>
-          <ScrollArea className="flex-1 p-3 sm:p-6" ref={scrollRef}>
-            <div className="space-y-4 sm:space-y-6">
+           <ScrollArea className="flex-1 p-3 sm:p-4" ref={scrollRef}>
+             <div className="space-y-4">
               <AnimatePresence>
                 {messages.map((msg) => (
                   <motion.div

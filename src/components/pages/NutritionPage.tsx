@@ -185,22 +185,22 @@ export function NutritionPage() {
   };
 
   return (
-    <div className="min-h-screen pb-10 pt-20 sm:pt-24 lg:pb-16">
+    <div className="min-h-screen pb-10 pt-20 sm:pt-22 lg:pb-12">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-6 grid gap-5 sm:mb-8 lg:grid-cols-[1fr_360px] lg:items-end"
+          className="mb-5 grid gap-4 lg:grid-cols-[1fr_320px] lg:items-end"
         >
           <div>
-            <Badge className="mb-4 gap-2 rounded-md border-primary/25 bg-primary/10 text-primary">
+            <Badge className="mb-3 gap-2 rounded-md border-primary/25 bg-primary/10 text-primary">
               <Leaf className="h-3.5 w-3.5" />
               Goal-based nutrition
             </Badge>
-            <h1 className="text-3xl font-black uppercase leading-none min-[380px]:text-4xl sm:text-5xl lg:text-6xl">
+            <h1 className="text-3xl font-black uppercase leading-none sm:text-4xl">
               Nutrition Hub
             </h1>
-            <p className="mt-4 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
               Calories, macros, meal ideas, and grocery-friendly food structure tuned for your current {getGoalLabel(userGoal)} goal.
             </p>
           </div>
@@ -221,7 +221,7 @@ export function NutritionPage() {
           </Card>
         </motion.div>
 
-        <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+        <div className="mb-5 grid grid-cols-2 gap-3 xl:grid-cols-4">
           {[
             { label: 'Meal calories', value: totals.calories, suffix: 'cal', icon: Flame, tone: 'text-orange-400' },
             { label: 'Protein', value: totals.protein, suffix: 'g', icon: Beef, tone: 'text-emerald-400' },
@@ -245,7 +245,7 @@ export function NutritionPage() {
           ))}
         </div>
 
-        <Tabs defaultValue="ai-scan" className="space-y-6">
+        <Tabs defaultValue="ai-scan" className="space-y-4">
           <TabsList className="grid h-12 w-full max-w-3xl grid-cols-5 rounded-lg p-1">
             <TabsTrigger value="ai-scan" className="gap-1 rounded-md px-1 text-xs sm:gap-2 sm:px-2 sm:text-sm">
               <ScanLine className="h-4 w-4" />
@@ -273,7 +273,7 @@ export function NutritionPage() {
             <AIMealAnalyzer dailyTargets={{ calories: calculator.goalCalories, protein: calculator.protein }} />
           </TabsContent>
 
-          <TabsContent value="planner" className="space-y-6">
+          <TabsContent value="planner" className="space-y-5">
             {(['breakfast', 'lunch', 'dinner', 'snack'] as const).map((category, index) => {
               const meta = categoryMeta[category];
               const Icon = meta.icon;
@@ -285,7 +285,7 @@ export function NutritionPage() {
                   initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.35, delay: index * 0.06 }}
-                  className="space-y-3"
+                  className="space-y-2"
                 >
                   <div className="flex items-center justify-between gap-3">
                     <h2 className="flex items-center gap-2 text-lg font-black uppercase">
@@ -297,11 +297,11 @@ export function NutritionPage() {
                     <Badge variant="outline" className="rounded-md">{meals.length} ideas</Badge>
                   </div>
 
-                  <div className="grid gap-4 md:grid-cols-2">
+                  <div className="grid gap-3 md:grid-cols-2">
                     {meals.map((meal) => (
                       <Card key={meal.id} className="group overflow-hidden border-border/50 transition-all hover:border-primary/35 hover:shadow-lg">
-                        <CardContent className="p-5">
-                          <div className="mb-4 flex items-start justify-between gap-3">
+                        <CardContent className="p-4">
+                          <div className="mb-3 flex items-start justify-between gap-3">
                             <div className="min-w-0">
                               <h3 className="truncate text-base font-black uppercase group-hover:text-primary">{meal.name}</h3>
                               <p className="mt-2 line-clamp-2 text-sm leading-6 text-muted-foreground">{meal.description}</p>
@@ -311,7 +311,7 @@ export function NutritionPage() {
                             </Badge>
                           </div>
 
-                          <div className="mb-4 grid grid-cols-3 gap-2">
+                          <div className="mb-3 grid grid-cols-3 gap-2">
                             {[
                               { label: 'P', value: meal.protein, color: 'text-emerald-400' },
                               { label: 'C', value: meal.carbs, color: 'text-amber-400' },
@@ -341,7 +341,7 @@ export function NutritionPage() {
           </TabsContent>
 
           <TabsContent value="builder">
-            <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+            <div className="grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
               <Card className="border-border/50">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-base uppercase">
@@ -415,7 +415,7 @@ export function NutritionPage() {
                 </CardContent>
               </Card>
 
-              <div className="space-y-6">
+              <div className="space-y-4">
                 <Card className="border-border/50">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-base uppercase">

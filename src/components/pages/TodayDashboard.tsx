@@ -258,7 +258,7 @@ export function TodayDashboard() {
   };
 
   return (
-    <section className="relative overflow-hidden border-y border-primary/10 bg-muted/20 py-12 sm:py-20">
+    <section className="relative overflow-hidden border-y border-primary/10 bg-muted/20 py-10 sm:py-14">
       <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_18%_0%,oklch(0.62_0.24_27_/_0.16),transparent_34%),radial-gradient(circle_at_82%_20%,oklch(0.36_0.18_27_/_0.16),transparent_30%)]" />
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <motion.div
@@ -266,7 +266,7 @@ export function TodayDashboard() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-80px' }}
           transition={{ duration: 0.55 }}
-          className="mb-6 flex flex-col gap-4 sm:mb-8 lg:flex-row lg:items-end lg:justify-between"
+          className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between"
         >
           <div>
             <Badge className="mb-4 gap-2 rounded-md border-primary/25 bg-primary/10 text-primary">
