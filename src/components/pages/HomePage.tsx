@@ -223,7 +223,7 @@ export function HomePage() {
 
         <div className="relative z-10 mx-auto flex min-h-[calc(100svh-4.75rem)] w-full max-w-[1400px] items-start px-4 pb-24 pt-[5.5rem] sm:min-h-[92svh] sm:items-center sm:px-8 sm:pb-20 sm:pt-28 lg:px-10">
           <div className="grid w-full items-center gap-10 lg:grid-cols-[minmax(0,1fr)_26rem]">
-            <motion.div initial="hidden" animate="visible" className="hero-copy-frame min-w-0 max-w-4xl">
+            <motion.div initial={false} animate="visible" className="hero-copy-frame min-w-0 max-w-4xl">
               <motion.div variants={fadeUp} custom={0}>
                 <Badge className="mb-4 border-white/15 bg-black/35 px-3 py-1.5 text-white backdrop-blur-sm sm:mb-6 sm:bg-white/[0.08]">
                   <ShieldCheck className="h-3.5 w-3.5" />
