@@ -9,9 +9,31 @@ type GeminiContent = {
   parts: { text: string }[];
 };
 
+type ChatCompletionResponse = {
+  choices?: Array<{
+    message?: {
+      content?: string;
+    };
+  }>;
+  error?: {
+    message?: string;
+  };
+};
+
+const OPENAI_API_BASE_URL =
+  process.env.OPENAI_BASE_URL ||
+  process.env.OPENAI_API_BASE_URL ||
+  'https://api.openai.com/v1';
+const configuredOpenAiModel =
+  process.env.OPENAI_AI_COACH_MODEL ||
+  process.env.OPENAI_MODEL ||
+  (process.env.AI_COACH_MODEL && !process.env.AI_COACH_MODEL.toLowerCase().startsWith('gemini')
+    ? process.env.AI_COACH_MODEL
+    : undefined);
+const OPENAI_AI_COACH_MODEL = configuredOpenAiModel || 'gpt-4o';
 const GEMINI_API_BASE_URL = process.env.GEMINI_API_BASE_URL || 'https://generativelanguage.googleapis.com/v1beta';
 const configuredGeminiModel = process.env.GEMINI_MODEL ||
-  (process.env.AI_COACH_MODEL?.startsWith('gemini') ? process.env.AI_COACH_MODEL : undefined);
+  (process.env.AI_COACH_MODEL?.toLowerCase().startsWith('gemini') ? process.env.AI_COACH_MODEL : undefined);
 const AI_COACH_MODEL = configuredGeminiModel || 'gemini-1.5-flash';
 const AI_COACH_TIMEOUT_MS = Number(process.env.AI_COACH_TIMEOUT_MS || 30000);
 const AI_COACH_MAX_TOKENS = Number(process.env.AI_COACH_MAX_TOKENS || 900);
@@ -297,7 +319,55 @@ function extractGeminiText(payload: unknown) {
   return text.length > 0 ? text : undefined;
 }
 
-async function getAiCoachResponse(messages: CoachMessage[]) {
+function toOpenAiMessages(messages: CoachMessage[]) {
+  return [
+    {
+      role: 'system',
+      content: AI_COACH_SYSTEM_PROMPT,
+    },
+    ...messages.map((message) => ({
+      role: message.role,
+      content: message.content,
+    })),
+  ];
+}
+
+async function getOpenAiCoachResponse(messages: CoachMessage[], apiKey: string) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), AI_COACH_TIMEOUT_MS);
+
+  const response = await fetch(`${OPENAI_API_BASE_URL.replace(/\/$/, '')}/chat/completions`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: OPENAI_AI_COACH_MODEL,
+      messages: toOpenAiMessages(messages),
+      max_tokens: AI_COACH_MAX_TOKENS,
+      temperature: 0.65,
+      top_p: 0.9,
+    }),
+    cache: 'no-store',
+    signal: controller.signal,
+  }).finally(() => clearTimeout(timeout));
+
+  const payload = (await response.json().catch(() => null)) as ChatCompletionResponse | null;
+
+  if (!response.ok) {
+    throw new Error(payload?.error?.message || `OpenAI request failed with status ${response.status}`);
+  }
+
+  const text = payload?.choices?.[0]?.message?.content?.trim();
+  if (!text) {
+    throw new Error('OpenAI response did not include text.');
+  }
+
+  return text;
+}
+
+async function getGeminiCoachResponse(messages: CoachMessage[]) {
   const apiKey = process.env.GEMINI_API_KEY ||
     process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
     process.env.GOOGLE_API_KEY;
@@ -346,6 +416,16 @@ async function getAiCoachResponse(messages: CoachMessage[]) {
   }
 
   return text;
+}
+
+async function getAiCoachResponse(messages: CoachMessage[]) {
+  const openAiKey = process.env.OPENAI_API_KEY;
+
+  if (openAiKey) {
+    return getOpenAiCoachResponse(messages, openAiKey);
+  }
+
+  return getGeminiCoachResponse(messages);
 }
 
 export async function POST(request: Request) {

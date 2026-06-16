@@ -840,16 +840,16 @@ export function WorkoutsPage() {
   };
 
   return (
-    <div className="min-h-screen pb-10 pt-20 sm:pt-22 lg:pb-12">
+    <div className="min-h-screen pb-10 pt-20 sm:pt-24 lg:pb-16">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Page Header */}
         <motion.div
-          className="mb-4"
+          className="mb-6 sm:mb-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <h1 className="mb-1 text-3xl font-black tracking-tight sm:text-4xl">
+          <h1 className="mb-2 text-3xl font-black tracking-tight sm:text-4xl">
             Workout <span className="gradient-text">Library</span>
           </h1>
           <p className="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
@@ -858,13 +858,13 @@ export function WorkoutsPage() {
         </motion.div>
 
         <motion.div
-          className="mb-4 overflow-hidden rounded-xl border border-white/[0.08] bg-card/70 shadow-sm"
+          className="mb-6 overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm sm:mb-8"
           initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.03 }}
         >
           <div className="grid gap-0 lg:grid-cols-[1.1fr_0.9fr]">
-            <div className="p-4 sm:p-5">
+            <div className="p-4 sm:p-6">
               <div className="mb-4 flex flex-wrap items-center gap-2">
                 <Badge className="rounded-md bg-primary/10 text-primary hover:bg-primary/10">
                   {formatDate(todayDateKey)}
@@ -929,7 +929,7 @@ export function WorkoutsPage() {
               </div>
             </div>
 
-            <div className="border-t bg-muted/20 p-4 lg:border-l lg:border-t-0">
+            <div className="border-t bg-muted/25 p-4 sm:p-6 lg:border-l lg:border-t-0">
               <div className="grid h-full gap-3 sm:grid-cols-3 lg:grid-cols-1">
                 <div className="rounded-lg border bg-background/70 p-3">
                   <div className="flex items-center gap-2 text-xs font-black uppercase text-muted-foreground">
@@ -959,7 +959,7 @@ export function WorkoutsPage() {
 
         {/* Tracking Summary */}
         <motion.div
-          className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4"
+          className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:mb-8 lg:grid-cols-4"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.05 }}
@@ -987,7 +987,7 @@ export function WorkoutsPage() {
           ))}
         </motion.div>
 
-        {false && recentLogs.length > 0 && (
+        {recentLogs.length > 0 && (
           <motion.div
             className="mb-8 rounded-xl border border-border/50 bg-card/60 p-4"
             initial={{ opacity: 0, y: 16 }}
@@ -1030,7 +1030,7 @@ export function WorkoutsPage() {
 
         {/* Search & Filters */}
         <motion.div
-          className="mb-5 space-y-3"
+          className="mb-6 space-y-4 sm:mb-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
@@ -1194,7 +1194,7 @@ export function WorkoutsPage() {
 
         {/* Exercise Grid */}
         <motion.div
-          className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-3 xl:grid-cols-4"
+          className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 lg:gap-6"
           layout
         >
           <AnimatePresence mode="popLayout">
@@ -1211,11 +1211,11 @@ export function WorkoutsPage() {
                   const media = getExerciseMedia(exercise, Boolean(playingMediaIds[exercise.id]));
 
                   return (
-                <Card className="group overflow-hidden border-white/[0.08] py-0 transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-xl hover:shadow-black/25">
+                <Card className="group overflow-hidden border-border/50 transition-all duration-300 hover:-translate-y-1 hover:border-primary/25 hover:shadow-xl hover:shadow-black/25">
                   <div
                     role="button"
                     tabIndex={0}
-                    className="relative block aspect-[16/11] w-full overflow-hidden bg-[radial-gradient(circle_at_50%_20%,oklch(0.23_0.014_95),oklch(0.11_0.01_95)_62%)] p-3 text-left"
+                    className="relative block aspect-[4/3] w-full overflow-hidden bg-[radial-gradient(circle_at_50%_20%,oklch(0.23_0.014_95),oklch(0.11_0.01_95)_62%)] p-3 text-left sm:aspect-[16/13]"
                     onClick={() => setExerciseId(exercise.id)}
                     onKeyDown={(event) => {
                       if (event.key === 'Enter' || event.key === ' ') {
@@ -1251,7 +1251,7 @@ export function WorkoutsPage() {
                               alt={exercise.name}
                               fill
                               unoptimized={media.animated}
-                              sizes="(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, 50vw"
+                              sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
                               className="object-contain p-3 transition-transform duration-500 group-hover:scale-[1.03]"
                             />
                           )}
@@ -1272,13 +1272,13 @@ export function WorkoutsPage() {
                           }));
                         }}
                         aria-label={`Play ${exercise.name} demo`}
-                        className="absolute left-1/2 top-[42%] z-10 flex h-10 w-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/55 text-white shadow-2xl shadow-black/40 backdrop-blur-md transition-colors hover:bg-primary/95 sm:h-14 sm:w-14"
+                        className="absolute left-1/2 top-[42%] z-10 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/55 text-white shadow-2xl shadow-black/40 backdrop-blur-md transition-colors hover:bg-primary/95"
                       >
-                        <PlayCircle className="h-5 w-5 sm:h-7 sm:w-7" />
+                        <PlayCircle className="h-7 w-7" />
                       </motion.button>
                     )}
-                    <div className="absolute left-2 top-2 flex gap-2 sm:left-3 sm:top-3">
-                      <Badge className={cn("border px-1.5 text-[10px] sm:text-xs", difficultyColor[exercise.difficulty])}>
+                    <div className="absolute top-3 left-3 flex gap-2">
+                      <Badge className={cn("text-xs border", difficultyColor[exercise.difficulty])}>
                         {exercise.difficulty}
                       </Badge>
                     </div>
@@ -1287,7 +1287,7 @@ export function WorkoutsPage() {
                         e.stopPropagation();
                         toggleFavorite(exercise.id);
                       }}
-                      className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/30 backdrop-blur-sm transition-colors hover:bg-black/50 sm:right-3 sm:top-3 sm:h-8 sm:w-8"
+                      className="absolute top-3 right-3 h-8 w-8 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center hover:bg-black/50 transition-colors"
                     >
                       <Heart
                         className={cn(
@@ -1298,8 +1298,8 @@ export function WorkoutsPage() {
                         )}
                       />
                     </button>
-                    <div className="absolute bottom-2 left-2 right-2 sm:bottom-3 sm:left-3 sm:right-3">
-                      <h3 className="text-xs font-semibold leading-tight text-white drop-shadow-lg sm:text-sm">
+                    <div className="absolute bottom-3 left-3 right-3">
+                      <h3 className="font-semibold text-white text-sm leading-tight drop-shadow-lg">
                         {exercise.name}
                       </h3>
                       {getLoggedCount(exercise.id) > 0 && (
@@ -1309,9 +1309,9 @@ export function WorkoutsPage() {
                       )}
                     </div>
                   </div>
-                  <CardContent className="p-2.5 sm:p-3.5">
-                    <div className="flex flex-wrap items-center justify-between gap-1.5 text-xs sm:gap-2 sm:text-sm">
-                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-muted-foreground sm:gap-x-3">
+                  <CardContent className="p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <Clock className="h-3.5 w-3.5" />
                           {exercise.duration} min
@@ -1321,29 +1321,54 @@ export function WorkoutsPage() {
                           {exercise.calories} cal
                         </span>
                       </div>
-                      <Badge variant="outline" className="max-w-full px-1.5 text-[10px] sm:text-xs">
+                      <Badge variant="outline" className="max-w-full text-xs">
                         {exercise.muscleGroup}
                       </Badge>
                     </div>
-                    <div className="mt-2.5 grid grid-cols-2 gap-1.5 sm:mt-3 sm:grid-cols-[1fr_auto] sm:gap-2">
+                    <Button
+                      size="sm"
+                      onClick={() => startSession('exercise', exercise)}
+                      className="mt-4 h-10 w-full rounded-lg gap-1.5 font-bold"
+                    >
+                      <PlayCircle className="h-4 w-4" />
+                      Start This Exercise
+                    </Button>
+                    <div className="mt-2 grid grid-cols-3 gap-2">
                       <Button
+                        variant="outline"
                         size="sm"
-                        onClick={() => startSession('exercise', exercise)}
-                        className="h-8 w-full gap-1 rounded-lg px-2 text-xs font-bold sm:h-9 sm:gap-1.5 sm:text-sm"
+                        onClick={() => setExerciseId(exercise.id)}
+                        className="w-full rounded-lg"
                       >
-                        <PlayCircle className="h-3.5 w-3.5" />
-                        Start
+                        Details
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
+                        onClick={() => setGuideExercise(exercise)}
+                        className="w-full rounded-lg gap-1.5"
+                      >
+                        <PlayCircle className="h-3.5 w-3.5" />
+                        Guide
+                      </Button>
+                      <Button
+                        size="sm"
                         onClick={() => openLogDialog(exercise)}
-                        className="h-8 gap-1 rounded-lg px-2 text-xs sm:h-9 sm:gap-1.5 sm:px-3 sm:text-sm"
+                        className="w-full rounded-lg gap-1.5"
                       >
                         <Plus className="h-3.5 w-3.5" />
                         Log
                       </Button>
                     </div>
+                    <Button
+                      variant={favorites.includes(exercise.id) ? 'secondary' : 'ghost'}
+                      size="sm"
+                      onClick={() => toggleFavorite(exercise.id)}
+                      className="mt-2 w-full rounded-lg gap-2"
+                    >
+                      <Heart className={cn('h-3.5 w-3.5', favorites.includes(exercise.id) && 'fill-red-500 text-red-500')} />
+                      {favorites.includes(exercise.id) ? 'Saved workout' : 'Save workout'}
+                    </Button>
                   </CardContent>
                 </Card>
                   );
