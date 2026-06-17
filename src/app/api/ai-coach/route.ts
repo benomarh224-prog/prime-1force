@@ -40,6 +40,9 @@ const AI_COACH_MAX_TOKENS = Number(process.env.AI_COACH_MAX_TOKENS || 900);
 const AI_COACH_SYSTEM_PROMPT = [
   'You are Prime Forge AI Coach, a high-performance strength, hypertrophy, conditioning, nutrition, and recovery coach.',
   'Answer like a real human coach: warm, conversational, concise when the user is just chatting, and decisive when they ask for fitness help.',
+  'Always answer in the same language as the latest user message. If the user writes Arabic or Moroccan Darija, answer naturally in Arabic/Darija, not English.',
+  'If the user mixes languages, mirror the main language and keep exercise names or technical terms in English only when they are clearer.',
+  'Behave like a strong GPT-style assistant: understand context, answer the real intent, avoid robotic templates, and keep the conversation natural.',
   'If the user says hi, hello, how are you, or similar small talk, reply naturally with a friendly greeting and ask how you can help today.',
   'When details are missing, make reasonable assumptions, give a complete usable plan first, then ask one short follow-up question at the end.',
   'For workouts, include exercises, sets, reps, rest times, intensity target, progression, warm-up, and recovery notes when useful.',
@@ -98,6 +101,86 @@ function isNutritionRequest(message: string) {
   return nutritionTerms.some((term) => normalized.includes(term));
 }
 
+function isArabicLikeMessage(message: string) {
+  const lower = message.toLowerCase();
+  const darijaTerms = [
+    'wach',
+    'bghit',
+    'bghiti',
+    'dir',
+    'diri',
+    'chno',
+    'chnu',
+    'kifach',
+    'khassni',
+    'ana',
+    'dyali',
+    'mzyan',
+    'mzyana',
+    'salam',
+    'labas',
+  ];
+
+  return /[\u0600-\u06FF]/.test(message) || darijaTerms.some((term) => lower.includes(term));
+}
+
+function getLocalArabicCoachResponse(message: string) {
+  const lower = message.toLowerCase();
+
+  if (/سلام|السلام|مرحبا|اهلا|أهلا|labas|salam/.test(lower)) {
+    return 'سلام، أنا معك. شنو بغيتي نعاونك فيه اليوم: تمرين، تغذية، ولا برنامج كامل؟';
+  }
+
+  if (/غداء|عشاء|فطور|ماكلة|اكل|أكل|بروتين|كالوري|سعرات|تنشيف|تضخيم|nutrition|protein|calorie/.test(lower)) {
+    return [
+      '**خطة تغذية بسيطة**',
+      '',
+      'خليك مع قاعدة واضحة: بروتين فكل وجبة، كارب حسب التمرين، خضرة بزاف، ودهون صحية بكمية صغيرة.',
+      '',
+      '**مثال عملي:**',
+      '- بروتين: دجاج، بيض، تونة، لحم خفيف، أو Greek yogurt',
+      '- كارب: رز، بطاطا، شوفان، خبز كامل',
+      '- خضرة: سلطة كبيرة أو خضار مطبوخة',
+      '- دهون: زيت زيتون، أفوكا، مكسرات بكمية قليلة',
+      '',
+      '**الهدف:** إلى بغيتي تنشف، نقص شوية من الكارب والدهون. إلى بغيتي تضخم، زيد الكارب حول التمرين.',
+      '',
+      'عطيني الوزن، الطول، والهدف ديالك ونحسب لك تقدير يومي أدق.'
+    ].join('\n');
+  }
+
+  if (/ألم|الم|اصابة|إصابة|وجع|ظهر|ركبة|كتف|pain|injury/.test(lower)) {
+    return [
+      '**ملاحظة مهمة على الألم**',
+      '',
+      'إلى كان الألم حاد، كيزيد، كينزل للرجل/اليد، أو جا فجأة، وقف التمرين القاسي وشوف مختص.',
+      '',
+      '**دابا دير غير الآمن:**',
+      '- سخونية خفيفة 5-8 دقايق',
+      '- حركات mobility بلا ألم',
+      '- نقص الوزن والحجم فالحصة',
+      '- سجل شنو الحركة اللي كتوجعك',
+      '',
+      'قول لي فين كاين الألم وشنو التمرين اللي وقع فيه باش نعطيك بدائل آمنة.'
+    ].join('\n');
+  }
+
+  return [
+    '**نقدر نعاونك**',
+    '',
+    'باش نعطيك جواب قوي ومفيد، غادي نبني على هدفك ونخلي الخطة واضحة وسهلة التطبيق.',
+    '',
+    '**قاعدة عامة للتدريب:**',
+    '- تمرن 3 حتى 5 مرات فالسيمانة حسب وقتك',
+    '- بدا بسخونية 5-8 دقايق',
+    '- خدم 4 حتى 6 تمارين فالحصة',
+    '- دير 2 حتى 4 sets لكل تمرين',
+    '- زيد الوزن أو reps بشوية ملي الفورمة تبقى نقية',
+    '',
+    'كتب لي الهدف ديالك: تنشيف، تضخيم، قوة، ولا غير تبدأ من الصفر، وزيد شحال من نهار تقدر تتمرن فالسيمانة.'
+  ].join('\n');
+}
+
 function getLunchResponse(message: string) {
   const wantsWeightLoss = /\b(cut|fat loss|lose weight|weight loss|lean|diet)\b/.test(message);
   const wantsMuscle = /\b(bulk|gain|muscle|hypertrophy|strength)\b/.test(message);
@@ -135,6 +218,10 @@ function getLunchResponse(message: string) {
 function getLocalCoachResponse(messages: CoachMessage[]) {
   const latestMessage = getLatestUserMessage(messages);
   const latest = latestMessage.toLowerCase();
+
+  if (isArabicLikeMessage(latestMessage)) {
+    return getLocalArabicCoachResponse(latestMessage);
+  }
 
   if (isGreetingMessage(latestMessage)) {
     return 'Hi, how can I help you today?';
