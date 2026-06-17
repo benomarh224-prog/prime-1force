@@ -30,6 +30,7 @@ function getPageFromHash(): PageName | null {
 
 export default function MainApp() {
   const { currentPage, navigate } = useAppStore();
+  const isChatPage = currentPage === 'ai-coach';
 
   useEffect(() => {
     const applyHashRoute = () => {
@@ -68,7 +69,7 @@ export default function MainApp() {
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
-      <main className="flex-1 pb-[calc(6.75rem+env(safe-area-inset-bottom))] lg:pb-0">
+      <main className={isChatPage ? 'flex min-h-0 flex-1 lg:block' : 'flex-1 pb-[calc(6.75rem+env(safe-area-inset-bottom))] lg:pb-0'}>
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={currentPage}
@@ -82,8 +83,8 @@ export default function MainApp() {
           </motion.div>
         </AnimatePresence>
       </main>
-      <Footer />
-      <MobileBottomNav />
+      {!isChatPage && <Footer />}
+      {!isChatPage && <MobileBottomNav />}
     </div>
   );
 }

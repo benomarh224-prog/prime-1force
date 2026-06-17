@@ -279,10 +279,10 @@ Guidelines:
   };
 
   return (
-    <div className="flex min-h-screen flex-col pb-[calc(10.25rem+env(safe-area-inset-bottom))] pt-20 sm:pt-22 lg:pb-12">
-      <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 sm:px-6 lg:px-8">
+    <div className="flex h-[100svh] min-h-0 w-full flex-col overflow-hidden pt-[4.75rem] lg:min-h-screen lg:overflow-visible lg:pb-12 lg:pt-20">
+      <div className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col px-3 sm:px-6 lg:px-8">
         <motion.div
-          className="mb-4 flex flex-col justify-between gap-3 lg:flex-row lg:items-end"
+          className="mb-4 hidden flex-col justify-between gap-3 lg:flex lg:flex-row lg:items-end"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -321,7 +321,7 @@ Guidelines:
           </div>
         </motion.div>
 
-        <Card className="mb-3 border-white/[0.08] p-3">
+        <Card className="mb-3 hidden border-white/[0.08] p-3 lg:block">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-start gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
@@ -381,7 +381,7 @@ Guidelines:
           )}
         </Card>
 
-        <div className="mb-3 grid gap-4 lg:grid-cols-[250px_1fr]">
+        <div className="grid min-h-0 flex-1 gap-4 lg:mb-3 lg:grid-cols-[250px_1fr]">
           <div className="hidden space-y-4 lg:block">
             <Card className="border-border/50 p-4">
               <div className="mb-3 flex items-center gap-2 text-sm font-black uppercase">
@@ -423,22 +423,22 @@ Guidelines:
             </Card>
           </div>
 
-        <Card className="flex min-h-[52svh] flex-1 flex-col overflow-hidden border-white/[0.08] sm:min-h-[520px]">
-          <div className="flex items-center justify-between border-b px-4 py-3 sm:px-6">
+        <Card className="flex min-h-0 flex-1 flex-col overflow-hidden border-white/[0.08] py-0 sm:min-h-[520px]">
+          <div className="flex shrink-0 items-center justify-between border-b px-3 py-2.5 sm:px-6 sm:py-3">
             <div className="flex items-center gap-2">
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
                 <Bot className="h-4 w-4 text-primary" />
               </div>
               <div>
-                <p className="text-sm font-black uppercase">Prime Coach</p>
-                <p className="text-xs text-muted-foreground">{mode.label} mode active</p>
+                 <p className="text-sm font-black uppercase">Prime Coach</p>
+                 <p className="text-xs text-muted-foreground">Ask anything</p>
               </div>
             </div>
             <Button variant="ghost" size="icon" onClick={clearChat} className="rounded-xl" title="Clear chat">
               <Trash2 className="h-4 w-4" />
             </Button>
           </div>
-           <ScrollArea className="flex-1 p-3 sm:p-4" ref={scrollRef}>
+            <ScrollArea className="min-h-0 flex-1 p-3 sm:p-4" ref={scrollRef}>
              <div className="space-y-4">
               <AnimatePresence>
                 {messages.map((msg) => (
@@ -519,7 +519,7 @@ Guidelines:
           </ScrollArea>
 
           {messages.length <= 2 && (
-            <div className="px-4 pb-3 sm:px-6">
+            <div className="hidden shrink-0 px-4 pb-3 sm:px-6 lg:block">
               <p className="mb-2 flex items-center gap-1 text-xs text-muted-foreground">
                 <Sparkles className="h-3 w-3" />
                 Quick suggestions
@@ -538,6 +538,27 @@ Guidelines:
               </div>
             </div>
           )}
+          <div className="shrink-0 border-t border-border/70 bg-background/95 px-3 py-2.5 sm:px-4 lg:hidden">
+            <div className="mx-auto flex max-w-md gap-2">
+              <Input
+                placeholder="Ask Coach anything..."
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
+                className="h-12 flex-1 rounded-xl bg-card"
+                disabled={isLoading}
+              />
+              <Button
+                onClick={() => handleSend()}
+                disabled={(!input.trim() && !media) || isLoading}
+                className="h-12 w-12 shrink-0 rounded-xl neon-glow"
+                size="icon"
+                aria-label="Send message"
+              >
+                {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              </Button>
+            </div>
+          </div>
         </Card>
         </div>
 
@@ -561,27 +582,6 @@ Guidelines:
         </div>
       </div>
 
-      <div className="fixed inset-x-0 bottom-[calc(5.15rem+env(safe-area-inset-bottom))] z-40 border-t border-border/70 bg-background/95 px-3 py-2.5 shadow-[0_-14px_38px_oklch(0_0_0_/_0.32)] backdrop-blur-xl sm:px-4 lg:hidden">
-        <div className="mx-auto flex max-w-md gap-2">
-          <Input
-            placeholder={`Ask Coach in ${mode.label} mode...`}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
-            className="h-12 flex-1 rounded-xl bg-card"
-            disabled={isLoading}
-          />
-          <Button
-            onClick={() => handleSend()}
-            disabled={(!input.trim() && !media) || isLoading}
-            className="h-12 w-12 shrink-0 rounded-xl neon-glow"
-            size="icon"
-            aria-label="Send message"
-          >
-            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-          </Button>
-        </div>
-      </div>
     </div>
   );
 }
