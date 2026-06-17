@@ -38,11 +38,12 @@ const AI_COACH_MODEL = configuredGeminiModel || 'gemini-1.5-flash';
 const AI_COACH_TIMEOUT_MS = Number(process.env.AI_COACH_TIMEOUT_MS || 30000);
 const AI_COACH_MAX_TOKENS = Number(process.env.AI_COACH_MAX_TOKENS || 900);
 const AI_COACH_SYSTEM_PROMPT = [
-  'You are Prime Forge AI Coach, a high-performance strength, hypertrophy, conditioning, nutrition, and recovery coach.',
-  'Answer like a real human coach: warm, conversational, concise when the user is just chatting, and decisive when they ask for fitness help.',
+  'You are Prime Forge AI Coach, a GPT-style interactive assistant inside a fitness app. You can answer general questions about any topic, and you are especially strong at strength, hypertrophy, conditioning, nutrition, and recovery.',
+  'Answer like a real human assistant: warm, conversational, concise when the user is just chatting, and decisive when they ask for practical help.',
   'Always answer in the same language as the latest user message. If the user writes Arabic or Moroccan Darija, answer naturally in Arabic/Darija, not English.',
   'If the user mixes languages, mirror the main language and keep exercise names or technical terms in English only when they are clearer.',
   'Behave like a strong GPT-style assistant: understand context, answer the real intent, avoid robotic templates, and keep the conversation natural.',
+  'Do not force every answer back to training. If the user asks about coding, school, business, writing, daily life, translation, ideas, or casual chat, answer that request normally.',
   'If the user says hi, hello, how are you, or similar small talk, reply naturally with a friendly greeting and ask how you can help today.',
   'When details are missing, make reasonable assumptions, give a complete usable plan first, then ask one short follow-up question at the end.',
   'For workouts, include exercises, sets, reps, rest times, intensity target, progression, warm-up, and recovery notes when useful.',
@@ -124,11 +125,41 @@ function isArabicLikeMessage(message: string) {
   return /[\u0600-\u06FF]/.test(message) || darijaTerms.some((term) => lower.includes(term));
 }
 
+function hasFitnessIntent(message: string) {
+  return /workout|training|train|exercise|gym|fitness|muscle|strength|protein|calorie|diet|nutrition|meal|pain|injury|تمرين|تدريب|رياضة|جيم|عضل|قوة|بروتين|كالوري|سعرات|تغذية|ماكلة|أكل|اكل|وجع|ألم|الم|إصابة|اصابة/.test(message);
+}
+
+function getLocalArabicGeneralAssistantResponse(message: string) {
+  if (/هاي|هلا|سلام|السلام|مرحبا|اهلا|أهلا|salam|labas|hello|hi/.test(message)) {
+    return 'هاي، أنا معك. سولني على أي حاجة: شرح، أفكار، كود، دراسة، خدمة، ترجمة، ولا حتى الرياضة.';
+  }
+
+  return [
+    '**أنا معك**',
+    '',
+    'نقدر نجاوبك على أي موضوع، ماشي غير التمرين. سيفط سؤالك عادي وغادي نجاوبك بنفس اللغة وبطريقة واضحة.',
+    '',
+    '**نقدر نعاونك فـ:**',
+    '- شرح أي فكرة أو موضوع',
+    '- كتابة أو ترجمة نص',
+    '- أفكار لمشروع أو محتوى',
+    '- كود ومشاكل تقنية',
+    '- تنظيم الدراسة أو الخدمة',
+    '- تدريب، تغذية، وبرامج رياضية',
+    '',
+    'كتب لي شنو بغيتي بالضبط وغادي نكمل معك.'
+  ].join('\n');
+}
+
 function getLocalArabicCoachResponse(message: string) {
   const lower = message.toLowerCase();
 
+  if (!hasFitnessIntent(lower)) {
+    return getLocalArabicGeneralAssistantResponse(lower);
+  }
+
   if (/سلام|السلام|مرحبا|اهلا|أهلا|labas|salam/.test(lower)) {
-    return 'سلام، أنا معك. شنو بغيتي نعاونك فيه اليوم: تمرين، تغذية، ولا برنامج كامل؟';
+    return 'سلام، أنا معك. شنو بغيتي نعاونك فيه اليوم؟ نقدر نجاوبك على أي موضوع، وإذا بغيتي الرياضة نعطيك خطة واضحة.';
   }
 
   if (/غداء|عشاء|فطور|ماكلة|اكل|أكل|بروتين|كالوري|سعرات|تنشيف|تضخيم|nutrition|protein|calorie/.test(lower)) {
@@ -215,6 +246,29 @@ function getLunchResponse(message: string) {
   ].join('\n');
 }
 
+function getLocalGeneralAssistantResponse(message: string) {
+  if (isGreetingMessage(message)) {
+    return 'Hi, I am here. Ask me about anything: ideas, writing, coding, study, work, translation, daily planning, or fitness.';
+  }
+
+  return [
+    '**I can help with that**',
+    '',
+    'I can answer general questions, not only workout questions. Send me the exact thing you want help with and I will respond clearly in your language.',
+    '',
+    '**You can ask me about:**',
+    '- Explaining a topic',
+    '- Writing or rewriting text',
+    '- Coding and technical problems',
+    '- Study or work planning',
+    '- Project ideas',
+    '- Translation',
+    '- Fitness, nutrition, and training',
+    '',
+    'Tell me what you want to do next.'
+  ].join('\n');
+}
+
 function getLocalCoachResponse(messages: CoachMessage[]) {
   const latestMessage = getLatestUserMessage(messages);
   const latest = latestMessage.toLowerCase();
@@ -225,6 +279,10 @@ function getLocalCoachResponse(messages: CoachMessage[]) {
 
   if (isGreetingMessage(latestMessage)) {
     return 'Hi, how can I help you today?';
+  }
+
+  if (!hasFitnessIntent(latest)) {
+    return getLocalGeneralAssistantResponse(latestMessage);
   }
 
   if (latest.includes('review') || latest.includes('progress') || latest.includes('improve')) {
