@@ -54,6 +54,21 @@ const AI_COACH_SYSTEM_PROMPT = [
   'Do not diagnose injuries or medical conditions. For sharp, worsening, radiating, or unexplained pain, recommend pausing hard training and consulting a qualified professional.',
 ].join(' ');
 
+function getCoachSystemPrompt() {
+  const now = new Date();
+  const isoNow = now.toISOString();
+  const moroccoNow = new Intl.DateTimeFormat('en-GB', {
+    dateStyle: 'full',
+    timeStyle: 'short',
+    timeZone: 'Africa/Casablanca',
+  }).format(now);
+
+  return [
+    AI_COACH_SYSTEM_PROMPT,
+    `Current date and time: ${isoNow}. Morocco local time: ${moroccoNow}. Use this when the user asks about today's date, day, or time.`,
+  ].join(' ');
+}
+
 function getLatestUserMessage(messages: CoachMessage[]) {
   return [...messages].reverse().find((message) => message.role === 'user')?.content || '';
 }
@@ -129,7 +144,40 @@ function hasFitnessIntent(message: string) {
   return /workout|training|train|exercise|gym|fitness|muscle|strength|protein|calorie|diet|nutrition|meal|pain|injury|تمرين|تدريب|رياضة|جيم|عضل|قوة|بروتين|كالوري|سعرات|تغذية|ماكلة|أكل|اكل|وجع|ألم|الم|إصابة|اصابة/.test(message);
 }
 
+function isDateOrTimeQuestion(message: string) {
+  const normalized = normalizeMessage(message);
+
+  return (
+    /\b(today|date|day|time|clock|what day|what date)\b/.test(normalized) ||
+    /(?:تاريخ|اليوم|نهار|الوقت|الساعة|شنو نهار|اش نهار|ماهو تاريخ|ما هو تاريخ|ماهو اليوم|ما هو اليوم)/.test(message)
+  );
+}
+
+function getLocalDateTimeResponse(message: string) {
+  const now = new Date();
+  const locale = isArabicLikeMessage(message) ? 'ar-MA' : 'en-GB';
+  const formatted = new Intl.DateTimeFormat(locale, {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'Africa/Casablanca',
+  }).format(now);
+
+  if (isArabicLikeMessage(message)) {
+    return `اليوم هو **${formatted}** بتوقيت المغرب.`;
+  }
+
+  return `Today is **${formatted}** in Morocco time.`;
+}
+
 function getLocalArabicGeneralAssistantResponse(message: string) {
+  if (isDateOrTimeQuestion(message)) {
+    return getLocalDateTimeResponse(message);
+  }
+
   if (/هاي|هلا|سلام|السلام|مرحبا|اهلا|أهلا|salam|labas|hello|hi/.test(message)) {
     return 'هاي، أنا معك. سولني على أي حاجة: شرح، أفكار، كود، دراسة، خدمة، ترجمة، ولا حتى الرياضة.';
   }
@@ -247,6 +295,10 @@ function getLunchResponse(message: string) {
 }
 
 function getLocalGeneralAssistantResponse(message: string) {
+  if (isDateOrTimeQuestion(message)) {
+    return getLocalDateTimeResponse(message);
+  }
+
   if (isGreetingMessage(message)) {
     return 'Hi, I am here. Ask me about anything: ideas, writing, coding, study, work, translation, daily planning, or fitness.';
   }
@@ -430,7 +482,7 @@ function getLocalCoachResponse(messages: CoachMessage[]) {
 }
 
 function toGeminiContents(messages: CoachMessage[]) {
-  const systemParts = [AI_COACH_SYSTEM_PROMPT];
+  const systemParts = [getCoachSystemPrompt()];
   const conversation = [...messages];
 
   if (conversation[0]?.role === 'assistant') {
@@ -468,7 +520,7 @@ function toOpenAiMessages(messages: CoachMessage[]) {
   return [
     {
       role: 'system',
-      content: AI_COACH_SYSTEM_PROMPT,
+      content: getCoachSystemPrompt(),
     },
     ...messages.map((message) => ({
       role: message.role,
