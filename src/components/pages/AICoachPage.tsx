@@ -72,11 +72,15 @@ const coachModes = [
   { id: 'boost', label: 'Boost', icon: Zap, prompt: 'Act as a motivation coach. Be direct, practical, and action-focused.' },
 ];
 
+const CHAT_STORAGE_KEY = 'prime-forge-coach-chat';
+const MAX_STORED_MESSAGES = 40;
+const MAX_MESSAGES_SENT_TO_API = 24;
+
 function createWelcomeMessage(level: string, goal: string): Message {
   return {
     id: 'welcome',
     role: 'assistant',
-    content: `Hey, I'm your Prime Forge coach. I can help with personalized workout plans, nutrition advice, training tips, form guidance, and motivation.\n\nBased on your profile, you are at an **${level}** level with a goal to **${goal.replace('_', ' ')}**. How can I help you today?`,
+    content: `Hey, I'm your PrimeForge AI Coach. I can help with training plans, nutrition, recovery, exercise technique, and practical fitness decisions.\n\nProfile context: **${level}** level, goal: **${goal.replace('_', ' ')}**.\n\nAsk me what you want to improve and I will give you a specific plan instead of generic advice.`,
     timestamp: new Date(),
   };
 }
@@ -104,6 +108,31 @@ export function AICoachPage() {
   }, [messages]);
 
   useEffect(() => {
+    const savedChat = window.localStorage.getItem(CHAT_STORAGE_KEY);
+    if (!savedChat) return;
+
+    try {
+      const parsed = JSON.parse(savedChat) as Array<Omit<Message, 'timestamp'> & { timestamp: string }>;
+      const restored = parsed
+        .filter((message) => message.role === 'user' || message.role === 'assistant')
+        .filter((message) => typeof message.content === 'string' && message.content.trim())
+        .slice(-MAX_STORED_MESSAGES)
+        .map((message) => ({
+          ...message,
+          timestamp: new Date(message.timestamp),
+        }));
+
+      if (restored.length > 0) setMessages(restored);
+    } catch {
+      window.localStorage.removeItem(CHAT_STORAGE_KEY);
+    }
+  }, []);
+
+  useEffect(() => {
+    window.localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(messages.slice(-MAX_STORED_MESSAGES)));
+  }, [messages]);
+
+  useEffect(() => {
     const savedMemory = window.localStorage.getItem('prime-forge-coach-memory') || '';
     setCoachMemory(savedMemory);
     setMemoryDraft(savedMemory);
@@ -122,7 +151,7 @@ export function AICoachPage() {
       return `${log.date}: ${log.name}, ${log.duration}min, ${exercises || 'training'}, completed: ${Boolean(log.completed)}`;
     });
 
-    return `You are Prime Forge AI Coach, a knowledgeable and encouraging personal fitness trainer and nutrition expert.
+    return `You are PrimeForge AI Coach, an expert personal trainer, nutrition coach, and fitness mentor.
 User Profile:
 - Weight: ${userWeight}kg, Height: ${userHeight}cm
 - Fitness Level: ${userLevel}
@@ -134,12 +163,14 @@ User Profile:
 - Saved coach memory: ${coachMemory || 'No extra notes saved yet'}
 
 Guidelines:
-- Be encouraging but honest and science-based
-- Give specific, actionable advice
+- Provide personalized workout advice, nutrition guidance, recovery recommendations, and exercise technique corrections
+- Always ask for missing information when necessary
+- Give specific sets, reps, rest periods, progression advice, and safety recommendations
+- Avoid generic answers
 - Use markdown formatting for readability
 - Start with a clear recommendation, then give steps
 - Keep responses practical and skimmable
-- When giving workouts, specify sets, reps, and rest times
+- Use the previous chat history and keep context between questions
 - When giving nutrition advice, mention macros when relevant
 - If the user uploads image or video context, provide careful form feedback, likely issues, safety cues, and ask for missing visual details instead of pretending certainty
 - When pain, injury, illness, or medical symptoms are mentioned, recommend professional care and avoid diagnosis
@@ -226,6 +257,9 @@ Guidelines:
       setMedia(null);
     }
     setIsLoading(true);
+    const historyForApi = messages
+      .slice(-MAX_MESSAGES_SENT_TO_API)
+      .map((m) => ({ role: m.role, content: m.content }));
 
     try {
       const response = await fetch('/api/ai-coach', {
@@ -234,7 +268,7 @@ Guidelines:
         body: JSON.stringify({
           messages: [
             { role: 'assistant', content: buildContextPrompt() },
-            ...messages.slice(1).map((m) => ({ role: m.role, content: m.content })),
+            ...historyForApi,
             { role: 'user', content: message },
           ],
         }),
@@ -268,14 +302,9 @@ Guidelines:
   };
 
   const clearChat = () => {
-    setMessages([
-      {
-        id: 'welcome',
-        role: 'assistant',
-        content: 'Chat cleared. I am ready for a new fitness question.',
-        timestamp: new Date(),
-      },
-    ]);
+    const welcome = createWelcomeMessage(userLevel, userGoal);
+    setMessages([welcome]);
+    window.localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify([welcome]));
   };
 
   return (

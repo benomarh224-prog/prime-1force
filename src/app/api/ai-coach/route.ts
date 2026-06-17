@@ -3,494 +3,148 @@ import { aiCoachRequestSchema } from '@/lib/validations';
 import { sanitizeInput } from '@/proxy';
 
 type CoachMessage = { role: 'user' | 'assistant'; content: string };
+type OpenAIMessage = { role: 'system' | 'user' | 'assistant'; content: string };
 
-type GeminiContent = {
-  role: 'user' | 'model';
-  parts: { text: string }[];
-};
-
-type ChatCompletionResponse = {
+type OpenAIChatCompletionResponse = {
+  id?: string;
   choices?: Array<{
     message?: {
       content?: string;
     };
   }>;
   error?: {
+    type?: string;
+    code?: string;
     message?: string;
   };
 };
 
-const OPENAI_API_BASE_URL =
-  process.env.OPENAI_BASE_URL ||
-  process.env.OPENAI_API_BASE_URL ||
-  'https://api.openai.com/v1';
-const configuredOpenAiModel =
-  process.env.OPENAI_AI_COACH_MODEL ||
-  process.env.OPENAI_MODEL ||
-  (process.env.AI_COACH_MODEL && !process.env.AI_COACH_MODEL.toLowerCase().startsWith('gemini')
-    ? process.env.AI_COACH_MODEL
-    : undefined);
-const OPENAI_AI_COACH_MODEL = configuredOpenAiModel || 'gpt-4o';
-const GEMINI_API_BASE_URL = process.env.GEMINI_API_BASE_URL || 'https://generativelanguage.googleapis.com/v1beta';
-const configuredGeminiModel = process.env.GEMINI_MODEL ||
-  (process.env.AI_COACH_MODEL?.toLowerCase().startsWith('gemini') ? process.env.AI_COACH_MODEL : undefined);
-const AI_COACH_MODEL = configuredGeminiModel || 'gemini-1.5-flash';
-const AI_COACH_TIMEOUT_MS = Number(process.env.AI_COACH_TIMEOUT_MS || 30000);
-const AI_COACH_MAX_TOKENS = Number(process.env.AI_COACH_MAX_TOKENS || 900);
-const AI_COACH_SYSTEM_PROMPT = [
-  'You are Prime Forge AI Coach, a GPT-style interactive assistant inside a fitness app. You can answer general questions about any topic, and you are especially strong at strength, hypertrophy, conditioning, nutrition, and recovery.',
-  'Answer like a real human assistant: warm, conversational, concise when the user is just chatting, and decisive when they ask for practical help.',
-  'Always answer in the same language as the latest user message. If the user writes Arabic or Moroccan Darija, answer naturally in Arabic/Darija, not English.',
-  'If the user mixes languages, mirror the main language and keep exercise names or technical terms in English only when they are clearer.',
-  'Behave like a strong GPT-style assistant: understand context, answer the real intent, avoid robotic templates, and keep the conversation natural.',
-  'Do not force every answer back to training. If the user asks about coding, school, business, writing, daily life, translation, ideas, or casual chat, answer that request normally.',
-  'If the user says hi, hello, how are you, or similar small talk, reply naturally with a friendly greeting and ask how you can help today.',
-  'When details are missing, make reasonable assumptions, give a complete usable plan first, then ask one short follow-up question at the end.',
-  'For workouts, include exercises, sets, reps, rest times, intensity target, progression, warm-up, and recovery notes when useful.',
-  'Format answers beautifully for a chat bubble: short intro, clear markdown headings, compact bullet lists, and no markdown tables unless absolutely necessary.',
-  'If you need to show exercises, use bullets like "- Chest press: 3 x 8-10, 90s rest, RPE 8" instead of a table.',
-  'For nutrition, include protein targets, calorie direction, meal timing, and simple food examples when useful.',
-  'Personalize advice from the conversation and keep answers clear, direct, and actionable.',
-  'Do not diagnose injuries or medical conditions. For sharp, worsening, radiating, or unexplained pain, recommend pausing hard training and consulting a qualified professional.',
-].join(' ');
+type GeminiContent = {
+  role: 'user' | 'model';
+  parts: { text: string }[];
+};
 
-function getCoachSystemPrompt() {
+type ProviderResult = {
+  provider: 'openai' | 'gemini' | 'local';
+  model: string;
+  response: string;
+};
+
+const OPENAI_API_BASE_URL = (process.env.OPENAI_BASE_URL || process.env.OPENAI_API_BASE_URL || 'https://api.openai.com/v1').replace(/\/$/, '');
+const OPENAI_AI_COACH_MODEL = process.env.OPENAI_AI_COACH_MODEL || process.env.OPENAI_MODEL || 'gpt-4o';
+const GEMINI_API_BASE_URL = process.env.GEMINI_API_BASE_URL || 'https://generativelanguage.googleapis.com/v1beta';
+const GEMINI_AI_COACH_MODEL =
+  process.env.GEMINI_MODEL ||
+  (process.env.AI_COACH_MODEL?.toLowerCase().startsWith('gemini') ? process.env.AI_COACH_MODEL : undefined) ||
+  'gemini-1.5-flash';
+
+const AI_COACH_TIMEOUT_MS = boundedInteger(process.env.AI_COACH_TIMEOUT_MS, 30000, 1000, 120000);
+const AI_COACH_MAX_TOKENS = 1200;
+const AI_COACH_TEMPERATURE = 0.4;
+const MAX_HISTORY_MESSAGES = 24;
+
+const PRIMEFORGE_SYSTEM_PROMPT = [
+  'You are PrimeForge AI Coach, an expert personal trainer, nutrition coach, and fitness mentor.',
+  'Provide personalized workout advice, nutrition guidance, recovery recommendations, and exercise technique corrections.',
+  'Always ask for missing information when necessary.',
+  'Give specific sets, reps, rest periods, progression advice, and safety recommendations.',
+  'Avoid generic answers.',
+  'Use clear formatting and bullet points.',
+  'Answer in the same language as the latest user message. If the user writes Arabic or Moroccan Darija, answer naturally in Arabic/Darija.',
+  'Use the conversation history and the user profile context when available. Do not ignore previous questions.',
+  'If the user asks something outside fitness, answer briefly and helpfully, then offer to connect it back to training only when useful.',
+  'Never diagnose medical conditions. For severe, sharp, radiating, worsening, or unexplained pain, recommend stopping intense training and consulting a qualified professional.',
+].join('\n');
+
+function boundedInteger(value: string | undefined, fallback: number, min: number, max: number) {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed >= min && parsed <= max ? parsed : fallback;
+}
+
+function getCurrentDateContext() {
   const now = new Date();
-  const isoNow = now.toISOString();
   const moroccoNow = new Intl.DateTimeFormat('en-GB', {
     dateStyle: 'full',
     timeStyle: 'short',
     timeZone: 'Africa/Casablanca',
   }).format(now);
 
-  return [
-    AI_COACH_SYSTEM_PROMPT,
-    `Current date and time: ${isoNow}. Morocco local time: ${moroccoNow}. Use this when the user asks about today's date, day, or time.`,
-  ].join(' ');
+  return `Current date/time: ${now.toISOString()}. Morocco local time: ${moroccoNow}.`;
 }
 
-function getLatestUserMessage(messages: CoachMessage[]) {
-  return [...messages].reverse().find((message) => message.role === 'user')?.content || '';
+function getSystemPrompt(extraContext: string) {
+  return [PRIMEFORGE_SYSTEM_PROMPT, getCurrentDateContext(), extraContext].filter(Boolean).join('\n\n');
 }
 
-function normalizeMessage(message: string) {
-  return message
-    .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
+function logAiCoach(level: 'info' | 'warn' | 'error', event: string, details: Record<string, unknown> = {}) {
+  const payload = {
+    event,
+    ...details,
+  };
+
+  if (level === 'error') {
+    console.error('[AI Coach]', payload);
+  } else if (level === 'warn') {
+    console.warn('[AI Coach]', payload);
+  } else {
+    console.info('[AI Coach]', payload);
+  }
 }
 
-function isGreetingMessage(message: string) {
-  const normalized = normalizeMessage(message);
-  const greetingPatterns = [
-    /^(hi|hey|hello|yo|sup)$/,
-    /^(hi|hey|hello|yo|sup)\s+(coach|there|bro|man|friend)$/,
-    /^(how are you|how r u|how ar u|how are u|how you doing|how is it going|whats up|what s up)$/,
-    /^(hi|hey|hello).*(how are you|how r u|how ar u|how are u)$/,
-  ];
-
-  return greetingPatterns.some((pattern) => pattern.test(normalized));
+function getEnvStatus() {
+  return {
+    hasOpenAiKey: Boolean(process.env.OPENAI_API_KEY),
+    openAiModel: OPENAI_AI_COACH_MODEL,
+    openAiBaseUrl: OPENAI_API_BASE_URL,
+    hasGeminiKey: Boolean(process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GOOGLE_API_KEY),
+    geminiModel: GEMINI_AI_COACH_MODEL,
+    maxTokens: AI_COACH_MAX_TOKENS,
+    temperature: AI_COACH_TEMPERATURE,
+    timeoutMs: AI_COACH_TIMEOUT_MS,
+  };
 }
 
-function isNutritionRequest(message: string) {
-  const normalized = normalizeMessage(message);
-  const nutritionTerms = [
-    'meal',
-    'eat',
-    'food',
-    'nutrition',
-    'protein',
-    'calorie',
-    'calories',
-    'macro',
-    'macros',
-    'breakfast',
-    'lunch',
-    'dinner',
-    'snack',
-    'pre workout',
-    'post workout',
-    'diet',
-  ];
+function normalizeMessages(messages: CoachMessage[]) {
+  const cleanMessages = messages
+    .map((message) => ({
+      role: message.role,
+      content: message.content.trim(),
+    }))
+    .filter((message) => message.content.length > 0);
 
-  return nutritionTerms.some((term) => normalized.includes(term));
-}
-
-function isArabicLikeMessage(message: string) {
-  const lower = message.toLowerCase();
-  const darijaTerms = [
-    'wach',
-    'bghit',
-    'bghiti',
-    'dir',
-    'diri',
-    'chno',
-    'chnu',
-    'kifach',
-    'khassni',
-    'ana',
-    'dyali',
-    'mzyan',
-    'mzyana',
-    'salam',
-    'labas',
-  ];
-
-  return /[\u0600-\u06FF]/.test(message) || darijaTerms.some((term) => lower.includes(term));
-}
-
-function hasFitnessIntent(message: string) {
-  return /workout|training|train|exercise|gym|fitness|muscle|strength|protein|calorie|diet|nutrition|meal|pain|injury|تمرين|تدريب|رياضة|جيم|عضل|قوة|بروتين|كالوري|سعرات|تغذية|ماكلة|أكل|اكل|وجع|ألم|الم|إصابة|اصابة/.test(message);
-}
-
-function isDateOrTimeQuestion(message: string) {
-  const normalized = normalizeMessage(message);
-
-  return (
-    /\b(today|date|day|time|clock|what day|what date)\b/.test(normalized) ||
-    /(?:تاريخ|اليوم|نهار|الوقت|الساعة|شنو نهار|اش نهار|ماهو تاريخ|ما هو تاريخ|ماهو اليوم|ما هو اليوم)/.test(message)
-  );
-}
-
-function getLocalDateTimeResponse(message: string) {
-  const now = new Date();
-  const locale = isArabicLikeMessage(message) ? 'ar-MA' : 'en-GB';
-  const formatted = new Intl.DateTimeFormat(locale, {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    timeZone: 'Africa/Casablanca',
-  }).format(now);
-
-  if (isArabicLikeMessage(message)) {
-    return `اليوم هو **${formatted}** بتوقيت المغرب.`;
-  }
-
-  return `Today is **${formatted}** in Morocco time.`;
-}
-
-function getLocalArabicGeneralAssistantResponse(message: string) {
-  if (isDateOrTimeQuestion(message)) {
-    return getLocalDateTimeResponse(message);
-  }
-
-  if (/هاي|هلا|سلام|السلام|مرحبا|اهلا|أهلا|salam|labas|hello|hi/.test(message)) {
-    return 'هاي، أنا معك. سولني على أي حاجة: شرح، أفكار، كود، دراسة، خدمة، ترجمة، ولا حتى الرياضة.';
-  }
-
-  return [
-    '**أنا معك**',
-    '',
-    'نقدر نجاوبك على أي موضوع، ماشي غير التمرين. سيفط سؤالك عادي وغادي نجاوبك بنفس اللغة وبطريقة واضحة.',
-    '',
-    '**نقدر نعاونك فـ:**',
-    '- شرح أي فكرة أو موضوع',
-    '- كتابة أو ترجمة نص',
-    '- أفكار لمشروع أو محتوى',
-    '- كود ومشاكل تقنية',
-    '- تنظيم الدراسة أو الخدمة',
-    '- تدريب، تغذية، وبرامج رياضية',
-    '',
-    'كتب لي شنو بغيتي بالضبط وغادي نكمل معك.'
-  ].join('\n');
-}
-
-function getLocalArabicCoachResponse(message: string) {
-  const lower = message.toLowerCase();
-
-  if (!hasFitnessIntent(lower)) {
-    return getLocalArabicGeneralAssistantResponse(lower);
-  }
-
-  if (/سلام|السلام|مرحبا|اهلا|أهلا|labas|salam/.test(lower)) {
-    return 'سلام، أنا معك. شنو بغيتي نعاونك فيه اليوم؟ نقدر نجاوبك على أي موضوع، وإذا بغيتي الرياضة نعطيك خطة واضحة.';
-  }
-
-  if (/غداء|عشاء|فطور|ماكلة|اكل|أكل|بروتين|كالوري|سعرات|تنشيف|تضخيم|nutrition|protein|calorie/.test(lower)) {
-    return [
-      '**خطة تغذية بسيطة**',
-      '',
-      'خليك مع قاعدة واضحة: بروتين فكل وجبة، كارب حسب التمرين، خضرة بزاف، ودهون صحية بكمية صغيرة.',
-      '',
-      '**مثال عملي:**',
-      '- بروتين: دجاج، بيض، تونة، لحم خفيف، أو Greek yogurt',
-      '- كارب: رز، بطاطا، شوفان، خبز كامل',
-      '- خضرة: سلطة كبيرة أو خضار مطبوخة',
-      '- دهون: زيت زيتون، أفوكا، مكسرات بكمية قليلة',
-      '',
-      '**الهدف:** إلى بغيتي تنشف، نقص شوية من الكارب والدهون. إلى بغيتي تضخم، زيد الكارب حول التمرين.',
-      '',
-      'عطيني الوزن، الطول، والهدف ديالك ونحسب لك تقدير يومي أدق.'
-    ].join('\n');
-  }
-
-  if (/ألم|الم|اصابة|إصابة|وجع|ظهر|ركبة|كتف|pain|injury/.test(lower)) {
-    return [
-      '**ملاحظة مهمة على الألم**',
-      '',
-      'إلى كان الألم حاد، كيزيد، كينزل للرجل/اليد، أو جا فجأة، وقف التمرين القاسي وشوف مختص.',
-      '',
-      '**دابا دير غير الآمن:**',
-      '- سخونية خفيفة 5-8 دقايق',
-      '- حركات mobility بلا ألم',
-      '- نقص الوزن والحجم فالحصة',
-      '- سجل شنو الحركة اللي كتوجعك',
-      '',
-      'قول لي فين كاين الألم وشنو التمرين اللي وقع فيه باش نعطيك بدائل آمنة.'
-    ].join('\n');
-  }
-
-  return [
-    '**نقدر نعاونك**',
-    '',
-    'باش نعطيك جواب قوي ومفيد، غادي نبني على هدفك ونخلي الخطة واضحة وسهلة التطبيق.',
-    '',
-    '**قاعدة عامة للتدريب:**',
-    '- تمرن 3 حتى 5 مرات فالسيمانة حسب وقتك',
-    '- بدا بسخونية 5-8 دقايق',
-    '- خدم 4 حتى 6 تمارين فالحصة',
-    '- دير 2 حتى 4 sets لكل تمرين',
-    '- زيد الوزن أو reps بشوية ملي الفورمة تبقى نقية',
-    '',
-    'كتب لي الهدف ديالك: تنشيف، تضخيم، قوة، ولا غير تبدأ من الصفر، وزيد شحال من نهار تقدر تتمرن فالسيمانة.'
-  ].join('\n');
-}
-
-function getLunchResponse(message: string) {
-  const wantsWeightLoss = /\b(cut|fat loss|lose weight|weight loss|lean|diet)\b/.test(message);
-  const wantsMuscle = /\b(bulk|gain|muscle|hypertrophy|strength)\b/.test(message);
-
-  const goalNote = wantsWeightLoss
-    ? 'Keep the portion controlled and prioritize lean protein plus vegetables.'
-    : wantsMuscle
-      ? 'Use the larger carb portion so the meal supports training performance and recovery.'
-      : 'This is balanced for energy, fullness, and recovery.';
-
-  return [
-    '**Best simple lunch**',
-    '',
-    'Go with a **chicken rice power bowl**. It is easy to make, high in protein, and works for most fitness goals.',
-    '',
-    '**Plate**',
-    '- Grilled chicken breast or turkey: 150-200g',
-    '- Rice, potatoes, quinoa, or whole-grain bread: 1 fist-sized portion',
-    '- Big salad or vegetables: 2 fists',
-    '- Olive oil, avocado, or nuts: 1 thumb-sized portion',
-    '- Optional: Greek yogurt or fruit if you need more calories',
-    '',
-    '**Target macros**',
-    '- Protein: 35-50g',
-    '- Carbs: 45-75g',
-    '- Fat: 10-20g',
-    '- Calories: about 500-750 depending on portions',
-    '',
-    `**Coach note:** ${goalNote}`,
-    '',
-    '**Next 24 hours:** eat this once, then tell me your goal and body weight so I can tune the portion size.'
-  ].join('\n');
-}
-
-function getLocalGeneralAssistantResponse(message: string) {
-  if (isDateOrTimeQuestion(message)) {
-    return getLocalDateTimeResponse(message);
-  }
-
-  if (isGreetingMessage(message)) {
-    return 'Hi, I am here. Ask me about anything: ideas, writing, coding, study, work, translation, daily planning, or fitness.';
-  }
-
-  return [
-    '**I can help with that**',
-    '',
-    'I can answer general questions, not only workout questions. Send me the exact thing you want help with and I will respond clearly in your language.',
-    '',
-    '**You can ask me about:**',
-    '- Explaining a topic',
-    '- Writing or rewriting text',
-    '- Coding and technical problems',
-    '- Study or work planning',
-    '- Project ideas',
-    '- Translation',
-    '- Fitness, nutrition, and training',
-    '',
-    'Tell me what you want to do next.'
-  ].join('\n');
-}
-
-function getLocalCoachResponse(messages: CoachMessage[]) {
-  const latestMessage = getLatestUserMessage(messages);
-  const latest = latestMessage.toLowerCase();
-
-  if (isArabicLikeMessage(latestMessage)) {
-    return getLocalArabicCoachResponse(latestMessage);
-  }
-
-  if (isGreetingMessage(latestMessage)) {
-    return 'Hi, how can I help you today?';
-  }
-
-  if (!hasFitnessIntent(latest)) {
-    return getLocalGeneralAssistantResponse(latestMessage);
-  }
-
-  if (latest.includes('review') || latest.includes('progress') || latest.includes('improve')) {
-    return [
-      '**Weekly coaching review**',
-      '',
-      'Focus on three signals: completed sessions, progressive overload, and recovery. If you are not logging workouts yet, start there because the best plan is the one we can measure.',
-      '',
-      '**This week:**',
-      '- Keep your main lifts consistent for 2-4 weeks',
-      '- Add 1 rep or 1-2.5kg only when form is clean',
-      '- Track sleep, energy, soreness, and appetite after each workout',
-      '- If performance drops for 2 sessions in a row, reduce volume by 20-30%',
-      '',
-      '**Next 24 hours:** log one workout with exercises, sets, reps, weight, and one note about how it felt.'
-    ].join('\n');
-  }
-
-  if (latest.includes('7-day') || latest.includes('week') || latest.includes('weekly')) {
-    return [
-      '**7-day training plan**',
-      '',
-      '**Day 1 - Push:** chest press machine 4 x 8-10, shoulder press machine 3 x 8-10, cable fly 3 x 12, cable triceps pushdown 3 x 12. Rest 90 sec.',
-      '**Day 2 - Pull:** seated row machine 4 x 8, lat pulldown 3 x 10, rear delt fly 3 x 15, machine curls 3 x 10-12. Rest 75-90 sec.',
-      '**Day 3 - Legs:** leg press 4 x 6-10, leg extension 3 x 12, leg curl 3 x 12, calves 3 x 15.',
-      '**Day 4 - Recovery:** 25-40 min walk, mobility, easy core.',
-      '**Day 5 - Upper:** chest press 3 x 10, cable row 3 x 10, lateral raise 3 x 15, arms 2-3 x 12.',
-      '**Day 6 - Conditioning:** 8-12 intervals or a full-body circuit at moderate intensity.',
-      '**Day 7 - Rest:** sleep, steps, hydration.',
-      '',
-      '**Progression:** add reps first, then weight. Keep 1-2 reps in reserve on most sets.'
-    ].join('\n');
-  }
-
-  if (latest.includes('chest')) {
-    return [
-      '**Machine chest workout**',
-      '',
-      'Use this when you want a strong, simple chest day with clean progression. Keep every set controlled and stop 1-2 reps before form breaks.',
-      '',
-      '**Warm-up**',
-      '- 5 minutes easy cardio',
-      '- Machine chest press: 2 light ramp sets x 12-15 reps',
-      '- Pec deck: 1 light set x 15 reps',
-      '',
-      '**Workout**',
-      '- Machine chest press: 4 x 6-10, 2 min rest, RPE 8-9',
-      '- Incline chest press machine: 3 x 8-12, 90 sec rest',
-      '- Pec deck fly: 3 x 12-15, 75 sec rest, 1 sec squeeze',
-      '- Cable crossover: 2 x 15-20, 60 sec rest',
-      '- Assisted dips or chest press machine: 2 sets close to failure',
-      '',
-      '**Progression**',
-      '- When you hit the top of the rep range on every set, add a small amount of weight next time',
-      '- Keep shoulders down and back, elbows slightly tucked, and control the lowering phase',
-      '',
-      '**Next 24 hours**',
-      'Eat a protein-rich meal, hydrate well, and write down the weights you used so we can beat them next session.'
-    ].join('\n');
-  }
-
-  if (latest.includes('lunch')) {
-    return getLunchResponse(latest);
-  }
-
-  if (isNutritionRequest(latestMessage)) {
-    return [
-      '**Nutrition game plan**',
-      '',
-      'Aim for a simple plate structure: lean protein, slow carbs, colorful vegetables, and a small serving of healthy fats. For most training days, a strong target is **1.6-2.2g protein per kg body weight**, then adjust carbs based on energy and goal.',
-      '',
-      '**Before training:** eat 1-2 hours before if possible: banana + Greek yogurt, oats + whey, rice + chicken, or toast + eggs. Keep fats lower before intense sessions so digestion feels lighter.',
-      '',
-      '**After training:** prioritize protein and carbs within a few hours. Example: chicken/rice, tuna sandwich, protein shake + fruit, or eggs + potatoes.',
-      '',
-      'Small daily consistency beats perfect meal plans. Keep it clean, repeatable, and realistic.'
-    ].join('\n');
-  }
-
-  if (latest.includes('motivat') || latest.includes('discipline') || latest.includes('tough') || latest.includes('lazy')) {
-    return [
-      '**Motivation reset**',
-      '',
-      'Do not wait to feel ready. Start with the smallest useful action: put on training clothes, do a 5-minute warm-up, or complete one easy set. Momentum usually arrives after you begin.',
-      '',
-      '**Today\'s rule:** make the workout so easy you cannot say no. If energy is low, do 3 rounds of squats, rows, chest press, and plank. If energy rises, continue.',
-      '',
-      'Your standard is not intensity every day. Your standard is showing up.'
-    ].join('\n');
-  }
-
-  if (latest.includes('back pain') || latest.includes('lower back') || latest.includes('pain') || latest.includes('injury')) {
-    return [
-      '**Back-friendly training note**',
-      '',
-      'If pain is sharp, radiating, or getting worse, pause hard training and check with a medical professional. For general stiffness, focus on controlled movement and core stability.',
-      '',
-      '**Gentle routine:**',
-      '- Cat-cow: 2 x 8 slow reps',
-      '- Bird dog: 3 x 8 each side',
-      '- Glute bridge: 3 x 12',
-      '- Dead bug: 3 x 8 each side',
-      '- Easy walk: 10-20 minutes',
-      '',
-      'Avoid heavy spinal loading until movement feels clean and pain-free.'
-    ].join('\n');
-  }
-
-  if (latest.includes('beginner') || latest.includes('plan') || latest.includes('workout') || latest.includes('routine')) {
-    return [
-      '**Beginner 4-week workout plan**',
-      '',
-      'Train **3 days per week** with at least one rest day between sessions. Keep 1-2 reps in reserve on every set and focus on clean form.',
-      '',
-      '**Workout A**',
-      '- Squat or leg press: 3 x 8-10',
-      '- Push-ups or chest press: 3 x 8-12',
-      '- Seated row machine: 3 x 10',
-      '- Cable crunch: 3 x 12-15',
-      '',
-      '**Workout B**',
-      '- Romanian deadlift: 3 x 8-10',
-      '- Shoulder press: 3 x 8-10',
-      '- Lat pulldown: 3 x 10-12',
-      '- Walking lunges: 2 x 10 each leg',
-      '',
-      '**Progression:** each week add 1-2 reps or a small amount of weight when form stays strong. Rest 60-90 seconds between sets.'
-    ].join('\n');
-  }
-
-  return [
-    '**Coach answer**',
-    '',
-    'Here is a simple, effective approach: pick one main goal, train consistently 3-5 times per week, and track the basics: exercises, sets, reps, weight, sleep, and energy.',
-    '',
-    '**Training structure:**',
-    '- Start with 5-8 minutes of warm-up',
-    '- Do 4-6 exercises per workout',
-    '- Use 2-4 working sets per exercise',
-    '- Rest 60-120 seconds depending on difficulty',
-    '- Add weight or reps gradually',
-    '',
-    'Ask me for a specific plan by telling me your goal, equipment, level, and days per week.'
-  ].join('\n');
-}
-
-function toGeminiContents(messages: CoachMessage[]) {
-  const systemParts = [getCoachSystemPrompt()];
-  const conversation = [...messages];
+  let extraContext = '';
+  const conversation = [...cleanMessages];
 
   if (conversation[0]?.role === 'assistant') {
-    systemParts.push(conversation.shift()?.content || '');
+    extraContext = conversation.shift()?.content || '';
   }
 
   return {
-    systemInstruction: systemParts.filter(Boolean).join('\n\n'),
+    extraContext,
+    conversation: conversation.slice(-MAX_HISTORY_MESSAGES),
+  };
+}
+
+function toOpenAiMessages(messages: CoachMessage[]): OpenAIMessage[] {
+  const { extraContext, conversation } = normalizeMessages(messages);
+
+  return [
+    {
+      role: 'system',
+      content: getSystemPrompt(extraContext),
+    },
+    ...conversation.map((message): OpenAIMessage => ({
+      role: message.role,
+      content: message.content,
+    })),
+  ];
+}
+
+function toGeminiPayload(messages: CoachMessage[]) {
+  const { extraContext, conversation } = normalizeMessages(messages);
+
+  return {
+    systemInstruction: getSystemPrompt(extraContext),
     contents: conversation.map((message): GeminiContent => ({
       role: message.role === 'assistant' ? 'model' : 'user',
       parts: [{ text: message.content }],
@@ -513,121 +167,288 @@ function extractGeminiText(payload: unknown) {
     .join('\n')
     .trim();
 
-  return text.length > 0 ? text : undefined;
+  return text || undefined;
 }
 
-function toOpenAiMessages(messages: CoachMessage[]) {
+function getLatestUserMessage(messages: CoachMessage[]) {
+  return [...messages].reverse().find((message) => message.role === 'user')?.content || '';
+}
+
+function isArabicLikeMessage(message: string) {
+  const lower = message.toLowerCase();
+  return /[\u0600-\u06FF]/.test(message) || ['wach', 'bghit', 'chno', 'kifach', 'salam', 'labas'].some((term) => lower.includes(term));
+}
+
+function isDateOrTimeQuestion(message: string) {
+  const normalized = message.toLowerCase().replace(/[^a-z0-9\s]/g, ' ');
+  return (
+    /\b(what is today'?s date|today'?s date|date today|current date|current time|what day is it|what date is it|what time is it|time now)\b/.test(normalized) ||
+    /(?:تاريخ اليوم|ماهو تاريخ|ما هو تاريخ|ماهو اليوم|ما هو اليوم|شنو تاريخ|اش تاريخ|شنو نهار|اش نهار|الوقت دابا|شحال فالساعة|كم الساعة)/.test(message)
+  );
+}
+
+function getLocalDateTimeResponse(message: string) {
+  const locale = isArabicLikeMessage(message) ? 'ar-MA' : 'en-GB';
+  const formatted = new Intl.DateTimeFormat(locale, {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'Africa/Casablanca',
+  }).format(new Date());
+
+  return isArabicLikeMessage(message)
+    ? `اليوم هو **${formatted}** بتوقيت المغرب.`
+    : `Today is **${formatted}** in Morocco time.`;
+}
+
+function getLocalCoachResponse(messages: CoachMessage[]) {
+  const latest = getLatestUserMessage(messages);
+  const lowerLatest = latest.toLowerCase();
+
+  if (isDateOrTimeQuestion(latest)) {
+    return getLocalDateTimeResponse(latest);
+  }
+
+  if (/chest|bench|push|workout|training|تمرين|صدر|بنش|دفع/.test(lowerLatest)) {
+    return [
+      '**Fallback chest session**',
+      '',
+      'The external AI provider is unavailable right now, but here is a usable session based on your request.',
+      '',
+      '**Warm-up**',
+      '- 5 minutes light cardio',
+      '- Band pull-aparts: 2 x 15',
+      '- Push-ups or light chest press: 2 x 10',
+      '',
+      '**Workout**',
+      '- Bench press or chest press machine: 4 x 6-8, rest 2 min',
+      '- Incline dumbbell press: 3 x 8-10, rest 90 sec',
+      '- Cable fly or pec deck: 3 x 12-15, rest 60-75 sec',
+      '- Push-ups: 2 sets near failure, stop before form breaks',
+      '',
+      '**Progression**',
+      '- When you hit the top reps on all sets, add 1-2.5kg next time',
+      '- Keep shoulders back, control the lowering, and avoid bouncing reps',
+    ].join('\n');
+  }
+
+  if (isArabicLikeMessage(latest)) {
+    return [
+      '**نقدر نعاونك، ولكن AI الخارجي ما جاوبش دابا.**',
+      '',
+      'باش نعطيك جواب رياضي مفيد، عطيني هاد المعلومات:',
+      '- الهدف ديالك: تنشيف، تضخيم، قوة، ولا صحة عامة',
+      '- المستوى: مبتدئ، متوسط، ولا متقدم',
+      '- شحال من نهار كتقدر تتمرن فالسيمانة',
+      '- واش كتتمرن فالجيم ولا فالدار',
+      '',
+      'إلى بغيتي جواب عام خارج الرياضة، سيفط السؤال مباشرة وغادي نعطيك جواب مختصر وواضح.',
+    ].join('\n');
+  }
+
   return [
-    {
-      role: 'system',
-      content: getCoachSystemPrompt(),
-    },
-    ...messages.map((message) => ({
-      role: message.role,
-      content: message.content,
-    })),
-  ];
+    '**AI Coach fallback response**',
+    '',
+    'The external AI provider did not return a response. For a high-quality coaching answer, send:',
+    '- Your goal',
+    '- Training level',
+    '- Available equipment',
+    '- Days per week',
+    '- Any pain or limitations',
+    '',
+    'I can still give a basic plan, but production should use `OPENAI_API_KEY` with `OPENAI_AI_COACH_MODEL=gpt-4o` for best results.',
+  ].join('\n');
 }
 
-async function getOpenAiCoachResponse(messages: CoachMessage[], apiKey: string) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), AI_COACH_TIMEOUT_MS);
-
-  const response = await fetch(`${OPENAI_API_BASE_URL.replace(/\/$/, '')}/chat/completions`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: OPENAI_AI_COACH_MODEL,
-      messages: toOpenAiMessages(messages),
-      max_tokens: AI_COACH_MAX_TOKENS,
-      temperature: 0.65,
-      top_p: 0.9,
-    }),
-    cache: 'no-store',
-    signal: controller.signal,
-  }).finally(() => clearTimeout(timeout));
-
-  const payload = (await response.json().catch(() => null)) as ChatCompletionResponse | null;
-
-  if (!response.ok) {
-    throw new Error(payload?.error?.message || `OpenAI request failed with status ${response.status}`);
-  }
-
-  const text = payload?.choices?.[0]?.message?.content?.trim();
-  if (!text) {
-    throw new Error('OpenAI response did not include text.');
-  }
-
-  return text;
+function getOpenAiErrorMessage(payload: OpenAIChatCompletionResponse | null, status: number) {
+  return payload?.error?.message || `OpenAI request failed with status ${status}`;
 }
 
-async function getGeminiCoachResponse(messages: CoachMessage[]) {
-  const apiKey = process.env.GEMINI_API_KEY ||
-    process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
-    process.env.GOOGLE_API_KEY;
+async function getOpenAiCoachResponse(messages: CoachMessage[]): Promise<ProviderResult> {
+  const apiKey = process.env.OPENAI_API_KEY;
 
   if (!apiKey) {
-    throw new Error('GEMINI_API_KEY is not configured.');
+    logAiCoach('error', 'missing_openai_api_key', getEnvStatus());
+    throw new Error('OPENAI_API_KEY is not configured.');
+  }
+
+  if (!OPENAI_AI_COACH_MODEL.trim()) {
+    logAiCoach('error', 'invalid_openai_model', getEnvStatus());
+    throw new Error('OPENAI_AI_COACH_MODEL is empty.');
   }
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), AI_COACH_TIMEOUT_MS);
-  const geminiPayload = toGeminiContents(messages);
+  const startedAt = Date.now();
 
-  const response = await fetch(`${GEMINI_API_BASE_URL}/models/${AI_COACH_MODEL}:generateContent?key=${encodeURIComponent(apiKey)}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      systemInstruction: {
-        parts: [{ text: geminiPayload.systemInstruction }],
+  try {
+    const response = await fetch(`${OPENAI_API_BASE_URL}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
       },
-      contents: geminiPayload.contents,
-      generationConfig: {
-        maxOutputTokens: AI_COACH_MAX_TOKENS,
-        temperature: 0.65,
-        topP: 0.9,
-      },
-    }),
-    cache: 'no-store',
-    signal: controller.signal,
-  }).finally(() => clearTimeout(timeout));
+      body: JSON.stringify({
+        model: OPENAI_AI_COACH_MODEL,
+        messages: toOpenAiMessages(messages),
+        temperature: AI_COACH_TEMPERATURE,
+        max_tokens: AI_COACH_MAX_TOKENS,
+      }),
+      cache: 'no-store',
+      signal: controller.signal,
+    });
 
-  const payload = (await response.json().catch(() => null)) as unknown;
+    const payload = (await response.json().catch(() => null)) as OpenAIChatCompletionResponse | null;
 
-  if (!response.ok) {
-    const errorMessage =
-      payload && typeof payload === 'object'
-        ? (payload as { error?: { message?: string } }).error?.message
-        : undefined;
-    throw new Error(errorMessage || `Gemini request failed with status ${response.status}`);
+    if (!response.ok) {
+      logAiCoach('error', 'openai_request_failed', {
+        status: response.status,
+        model: OPENAI_AI_COACH_MODEL,
+        errorType: payload?.error?.type,
+        errorCode: payload?.error?.code,
+        errorMessage: payload?.error?.message,
+        durationMs: Date.now() - startedAt,
+      });
+      throw new Error(getOpenAiErrorMessage(payload, response.status));
+    }
+
+    const text = payload?.choices?.[0]?.message?.content?.trim();
+    if (!text) {
+      logAiCoach('error', 'openai_empty_response', {
+        model: OPENAI_AI_COACH_MODEL,
+        responseId: payload?.id,
+        durationMs: Date.now() - startedAt,
+      });
+      throw new Error('OpenAI response did not include text.');
+    }
+
+    logAiCoach('info', 'openai_request_succeeded', {
+      model: OPENAI_AI_COACH_MODEL,
+      durationMs: Date.now() - startedAt,
+    });
+
+    return { provider: 'openai', model: OPENAI_AI_COACH_MODEL, response: text };
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      logAiCoach('error', 'openai_timeout', {
+        model: OPENAI_AI_COACH_MODEL,
+        timeoutMs: AI_COACH_TIMEOUT_MS,
+      });
+      throw new Error(`OpenAI request timed out after ${AI_COACH_TIMEOUT_MS}ms.`);
+    }
+
+    throw error;
+  } finally {
+    clearTimeout(timeout);
   }
-
-  const text = extractGeminiText(payload);
-  if (!text) {
-    throw new Error('Gemini response did not include text.');
-  }
-
-  return text;
 }
 
-async function getAiCoachResponse(messages: CoachMessage[]) {
-  const openAiKey = process.env.OPENAI_API_KEY;
+async function getGeminiCoachResponse(messages: CoachMessage[]): Promise<ProviderResult> {
+  const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GOOGLE_API_KEY;
 
-  if (openAiKey) {
-    return getOpenAiCoachResponse(messages, openAiKey);
+  if (!apiKey) {
+    logAiCoach('warn', 'missing_gemini_api_key', getEnvStatus());
+    throw new Error('Gemini API key is not configured.');
   }
 
-  return getGeminiCoachResponse(messages);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), AI_COACH_TIMEOUT_MS);
+  const startedAt = Date.now();
+  const geminiPayload = toGeminiPayload(messages);
+
+  try {
+    const response = await fetch(`${GEMINI_API_BASE_URL}/models/${GEMINI_AI_COACH_MODEL}:generateContent?key=${encodeURIComponent(apiKey)}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        systemInstruction: {
+          parts: [{ text: geminiPayload.systemInstruction }],
+        },
+        contents: geminiPayload.contents,
+        generationConfig: {
+          maxOutputTokens: AI_COACH_MAX_TOKENS,
+          temperature: AI_COACH_TEMPERATURE,
+          topP: 0.9,
+        },
+      }),
+      cache: 'no-store',
+      signal: controller.signal,
+    });
+
+    const payload = (await response.json().catch(() => null)) as unknown;
+
+    if (!response.ok) {
+      const errorMessage =
+        payload && typeof payload === 'object'
+          ? (payload as { error?: { message?: string } }).error?.message
+          : undefined;
+      logAiCoach('error', 'gemini_request_failed', {
+        status: response.status,
+        model: GEMINI_AI_COACH_MODEL,
+        errorMessage,
+        durationMs: Date.now() - startedAt,
+      });
+      throw new Error(errorMessage || `Gemini request failed with status ${response.status}`);
+    }
+
+    const text = extractGeminiText(payload);
+    if (!text) {
+      logAiCoach('error', 'gemini_empty_response', {
+        model: GEMINI_AI_COACH_MODEL,
+        durationMs: Date.now() - startedAt,
+      });
+      throw new Error('Gemini response did not include text.');
+    }
+
+    return { provider: 'gemini', model: GEMINI_AI_COACH_MODEL, response: text };
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      logAiCoach('error', 'gemini_timeout', {
+        model: GEMINI_AI_COACH_MODEL,
+        timeoutMs: AI_COACH_TIMEOUT_MS,
+      });
+      throw new Error(`Gemini request timed out after ${AI_COACH_TIMEOUT_MS}ms.`);
+    }
+
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function getAiCoachResponse(messages: CoachMessage[]): Promise<ProviderResult> {
+  logAiCoach('info', 'request_started', getEnvStatus());
+
+  try {
+    return await getOpenAiCoachResponse(messages);
+  } catch (openAiError) {
+    logAiCoach('warn', 'openai_provider_unavailable', {
+      message: openAiError instanceof Error ? openAiError.message : 'Unknown OpenAI error',
+    });
+  }
+
+  try {
+    return await getGeminiCoachResponse(messages);
+  } catch (geminiError) {
+    logAiCoach('warn', 'gemini_provider_unavailable', {
+      message: geminiError instanceof Error ? geminiError.message : 'Unknown Gemini error',
+    });
+  }
+
+  return {
+    provider: 'local',
+    model: 'local-fallback',
+    response: getLocalCoachResponse(messages),
+  };
 }
 
 export async function POST(request: Request) {
   try {
-    // Parse and validate input
     const body = await request.json();
     const sanitized = sanitizeInput(body) as Record<string, unknown>;
     const result = aiCoachRequestSchema.safeParse(sanitized);
@@ -637,42 +458,30 @@ export async function POST(request: Request) {
         field: issue.path.join('.'),
         message: issue.message,
       }));
+      logAiCoach('warn', 'validation_failed', { errors });
       return NextResponse.json(
         { success: false, error: 'Validation failed', details: errors },
         { status: 400 }
       );
     }
 
-    const { messages } = result.data;
+    const resultData = await getAiCoachResponse(result.data.messages);
 
-    let response: string | undefined;
-
-    try {
-      response = await getAiCoachResponse(messages);
-    } catch (error) {
-      console.warn('[AI Coach] Falling back to local coach response:', error instanceof Error ? error.message : 'Unknown error');
-      response = getLocalCoachResponse(messages);
-    }
-
-    if (!response) {
-      response = getLocalCoachResponse(messages);
-    }
-
-    return NextResponse.json({ success: true, response });
+    return NextResponse.json({
+      success: true,
+      response: resultData.response,
+      provider: resultData.provider,
+      model: resultData.model,
+    });
   } catch (error: unknown) {
-    // Hide sensitive errors in production
-    if (process.env.NODE_ENV === 'production') {
-      console.error('[AI Coach] Error:', error instanceof Error ? error.message : 'Unknown error');
-      return NextResponse.json(
-        { success: false, error: 'AI service temporarily unavailable. Please try again later.' },
-        { status: 503 }
-      );
-    }
+    logAiCoach('error', 'unhandled_route_error', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: process.env.NODE_ENV === 'production' ? undefined : error instanceof Error ? error.stack : undefined,
+    });
 
-    const message = error instanceof Error ? error.message : 'An unexpected error occurred';
     return NextResponse.json(
-      { success: false, error: message },
-      { status: 500 }
+      { success: false, error: 'AI service temporarily unavailable. Please try again later.' },
+      { status: 503 }
     );
   }
 }
