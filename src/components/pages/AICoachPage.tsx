@@ -34,7 +34,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAppStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
 import { FutureShell, GlassPanel } from '@/components/future/FutureUI';
-import { FutureScene } from '@/components/future/FutureScene';
 
 interface Message {
   id: string;
@@ -310,322 +309,284 @@ Guidelines:
 
   return (
     <FutureShell className="min-h-screen">
-      <FutureScene variant="ambient" className="fixed opacity-24" />
-      <div className="relative z-10 flex h-[100svh] min-h-0 w-full flex-col overflow-hidden pt-[4.75rem] lg:min-h-screen lg:overflow-visible lg:pb-12 lg:pt-20">
-      <div className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col px-3 sm:px-6 lg:px-8">
-        <motion.div
-          className="mb-4 hidden flex-col justify-between gap-3 lg:flex lg:flex-row lg:items-end"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <div>
-            <Badge variant="secondary" className="mb-2 gap-1.5 border-cyan-200/20 bg-cyan-200/10 text-cyan-100">
-              <Sparkles className="h-3 w-3" />
-              Holographic personal coaching
-            </Badge>
-            <h1 className="holo-text flex items-center gap-3 text-3xl font-black tracking-tight">
-              <span className="future-icon-glass flex h-10 w-10 shrink-0 items-center justify-center rounded-xl">
-                <Bot className="h-5 w-5 text-cyan-100" />
-              </span>
-              AI <span className="gradient-text">Coach</span>
-            </h1>
-            <p className="mt-2 max-w-2xl text-sm text-white/58 sm:ml-[52px] sm:text-base">
-              Plans, form checks, food strategy, weekly reviews, and motivation based on your profile.
-            </p>
-          </div>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:min-w-[420px]">
-            {coachModes.map((coachMode) => (
-              <button
-                key={coachMode.id}
-                onClick={() => setMode(coachMode)}
-                className={cn(
-                  'flex min-h-11 items-center justify-center gap-2 rounded-lg border px-2 text-[11px] font-bold uppercase transition-colors sm:min-h-12 sm:px-3 sm:text-xs',
-                  mode.id === coachMode.id
-                    ? 'border-cyan-200/40 bg-cyan-200/15 text-cyan-50 shadow-[0_0_28px_rgba(0,194,255,0.18)]'
-                    : 'border-white/10 bg-white/[0.045] text-white/64 hover:border-cyan-200/30 hover:text-cyan-100'
-                )}
-              >
-                <coachMode.icon className="h-4 w-4" />
-                {coachMode.label}
-              </button>
-            ))}
-          </div>
-        </motion.div>
-
-        <GlassPanel className="mb-3 hidden p-3 lg:block">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-start gap-3">
-              <div className="future-icon-glass flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-cyan-100">
-                <Camera className="h-4 w-4" />
-              </div>
-              <div>
-                <p className="text-sm font-black uppercase">Form analysis upload</p>
-                <p className="hidden text-sm text-white/56 sm:block">
-                  Add a short image or video, then ask for cues. The coach will combine it with your progress memory.
-                </p>
-              </div>
-            </div>
-            <div className="grid w-full gap-2 min-[420px]:grid-cols-3 lg:flex lg:w-auto lg:flex-wrap">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*,video/*"
-                onChange={handleMediaChange}
-                className="hidden"
-              />
-              <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="w-full rounded-lg gap-2 lg:w-auto">
-                <Upload className="h-4 w-4" />
-                Upload media
-              </Button>
-              <Button variant="outline" onClick={startVoiceInput} className="w-full rounded-lg gap-2 lg:w-auto">
-                <Mic className={cn('h-4 w-4', listening && 'text-primary')} />
-                {listening ? 'Listening' : 'Voice note'}
-              </Button>
-              <Button variant="outline" onClick={speakLastCoachMessage} className="w-full rounded-lg gap-2 lg:w-auto">
-                <Volume2 className="h-4 w-4" />
-                Read feedback
-              </Button>
-            </div>
-          </div>
-          <div className="mt-4 flex items-center gap-2">
-            {[0, 1, 2, 3, 4, 5, 6].map((bar) => (
-              <span
-                key={bar}
-                className={cn('future-orbit block h-8 w-1 rounded-full bg-cyan-200/60', listening && 'bg-orange-300/80')}
-                style={{ animationDelay: `${bar * 80}ms` }}
-              />
-            ))}
-            <span className="ml-2 text-xs font-black uppercase tracking-[0.18em] text-white/42">
-              {listening ? 'Voice stream active' : 'AI signal stable'}
-            </span>
-          </div>
-          {media && (
-            <div className="mt-4 grid gap-3 rounded-lg border bg-muted/25 p-3 sm:grid-cols-[160px_1fr_auto] sm:items-center">
-              <div className="relative aspect-video overflow-hidden rounded-lg bg-background">
-                {media.type.startsWith('video') ? (
-                  <video src={media.previewUrl} className="h-full w-full object-cover" muted controls />
-                ) : (
-                  <img src={media.previewUrl} alt="Uploaded form check" className="h-full w-full object-cover" />
-                )}
-              </div>
+      <div className="relative z-10 flex h-[100svh] min-h-0 w-full flex-col px-3 pb-3 pt-[4.75rem] sm:px-5 lg:px-8 lg:pb-6 lg:pt-20">
+        <div className="mx-auto flex h-full min-h-0 w-full max-w-6xl flex-col gap-3">
+          <motion.header
+            className="shrink-0"
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35 }}
+          >
+            <div className="flex items-center justify-between gap-3">
               <div className="min-w-0">
-                <p className="flex items-center gap-2 truncate text-sm font-semibold">
-                  {media.type.startsWith('video') ? <FileVideo className="h-4 w-4 text-primary" /> : <ImageIcon className="h-4 w-4 text-primary" />}
-                  {media.name}
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Ask for a form check, depth review, bar path notes, posture cues, or rep-by-rep feedback.
-                </p>
+                <Badge variant="secondary" className="mb-2 gap-1.5 border-cyan-200/20 bg-cyan-200/10 text-cyan-100">
+                  <Sparkles className="h-3 w-3" />
+                  AI Coach
+                </Badge>
+                <h1 className="holo-text truncate text-2xl font-black tracking-tight sm:text-3xl">
+                  Prime Coach
+                </h1>
               </div>
-              <Button variant="ghost" size="icon" onClick={() => setMedia(null)} className="rounded-lg">
-                <Trash2 className="h-4 w-4" />
-              </Button>
+              <div className="hidden items-center gap-2 sm:flex">
+                <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="rounded-lg gap-2">
+                  <Upload className="h-4 w-4" />
+                  Upload
+                </Button>
+                <Button variant="outline" onClick={startVoiceInput} className="rounded-lg gap-2">
+                  <Mic className={cn('h-4 w-4', listening && 'text-primary')} />
+                  {listening ? 'Listening' : 'Voice'}
+                </Button>
+                <Button variant="outline" onClick={speakLastCoachMessage} className="rounded-lg gap-2">
+                  <Volume2 className="h-4 w-4" />
+                  Read
+                </Button>
+              </div>
             </div>
-          )}
-        </GlassPanel>
+            <div className="mt-3 grid grid-cols-4 gap-2">
+              {coachModes.map((coachMode) => (
+                <button
+                  key={coachMode.id}
+                  type="button"
+                  onClick={() => setMode(coachMode)}
+                  className={cn(
+                    'flex h-10 min-w-0 items-center justify-center gap-1.5 rounded-lg border px-2 text-[11px] font-black uppercase transition-colors sm:h-11 sm:gap-2 sm:text-xs',
+                    mode.id === coachMode.id
+                      ? 'border-cyan-200/40 bg-cyan-200/15 text-cyan-50'
+                      : 'border-white/10 bg-white/[0.045] text-white/64 hover:border-cyan-200/30 hover:text-cyan-100'
+                  )}
+                >
+                  <coachMode.icon className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
+                  <span className="truncate">{coachMode.label}</span>
+                </button>
+              ))}
+            </div>
+          </motion.header>
 
-        <div className="grid min-h-0 flex-1 gap-4 lg:mb-3 lg:grid-cols-[250px_1fr]">
-          <div className="hidden space-y-4 lg:block">
-            <GlassPanel className="p-4">
-              <div className="mb-3 flex items-center gap-2 text-sm font-black uppercase">
-                <MessageCircle className="h-4 w-4 text-primary" />
-                Coach Memory
-              </div>
-              <div className="space-y-3 text-sm text-white/56">
-                <p><span className="font-semibold text-foreground">Goal:</span> {userGoal.replace('_', ' ')}</p>
-                <p><span className="font-semibold text-foreground">Level:</span> {userLevel}</p>
-                <p><span className="font-semibold text-foreground">Workouts:</span> {workoutLogs.length} logged</p>
-                <p><span className="font-semibold text-foreground">Weekly target:</span> {weeklyGoal} sessions</p>
-              </div>
-              <div className="mt-4 space-y-2">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*,video/*"
+            onChange={handleMediaChange}
+            className="hidden"
+          />
+
+          <div className="grid min-h-0 flex-1 gap-3 lg:grid-cols-[16rem_minmax(0,1fr)]">
+            <aside className="hidden min-h-0 space-y-3 lg:block">
+              <GlassPanel className="p-4">
+                <div className="mb-3 flex items-center gap-2 text-sm font-black uppercase">
+                  <MessageCircle className="h-4 w-4 text-primary" />
+                  Memory
+                </div>
+                <div className="space-y-2 text-sm text-white/56">
+                  <p><span className="font-semibold text-foreground">Goal:</span> {userGoal.replace('_', ' ')}</p>
+                  <p><span className="font-semibold text-foreground">Level:</span> {userLevel}</p>
+                  <p><span className="font-semibold text-foreground">Workouts:</span> {workoutLogs.length}</p>
+                  <p><span className="font-semibold text-foreground">Target:</span> {weeklyGoal}/week</p>
+                </div>
                 <Textarea
                   value={memoryDraft}
                   onChange={(event) => setMemoryDraft(event.target.value)}
-                  placeholder="Remember injuries, cues, PRs, or preferences..."
-                  className="min-h-24 resize-none rounded-lg text-xs"
+                  placeholder="Injuries, preferences, PRs..."
+                  className="mt-4 min-h-24 resize-none rounded-lg text-xs"
                 />
-                <Button onClick={saveMemory} size="sm" className="w-full rounded-lg">
+                <Button onClick={saveMemory} size="sm" className="mt-2 w-full rounded-lg">
                   Save Memory
                 </Button>
-              </div>
-            </GlassPanel>
-            <GlassPanel className="p-4">
-              <div className="mb-3 text-sm font-black uppercase">Ask Faster</div>
-              <div className="space-y-2">
-                {quickPrompts.map((prompt) => (
-                  <button
-                    key={prompt.text}
-                    onClick={() => handleSend(prompt.text)}
-                    className="flex w-full items-start gap-2 rounded-lg border border-white/10 bg-white/[0.045] p-3 text-left text-xs leading-5 text-white/68 transition-colors hover:border-cyan-200/30 hover:bg-cyan-200/10 hover:text-cyan-50"
-                  >
-                    <span className="mt-0.5 text-cyan-100">{prompt.icon}</span>
-                    <span>{prompt.text}</span>
-                  </button>
-                ))}
-              </div>
-            </GlassPanel>
-          </div>
+              </GlassPanel>
 
-        <GlassPanel className="flex min-h-0 flex-1 flex-col overflow-hidden p-0 sm:min-h-[520px]" intensity="strong">
-          <div className="flex shrink-0 items-center justify-between border-b px-3 py-2.5 sm:px-6 sm:py-3">
-            <div className="flex items-center gap-2">
-              <div className="future-icon-glass flex h-9 w-9 items-center justify-center rounded-lg">
-                <Bot className="h-4 w-4 text-cyan-100" />
+              <GlassPanel className="p-4">
+                <div className="mb-3 text-sm font-black uppercase">Ask Faster</div>
+                <div className="space-y-2">
+                  {quickPrompts.map((prompt) => (
+                    <button
+                      key={prompt.text}
+                      type="button"
+                      onClick={() => handleSend(prompt.text)}
+                      className="flex w-full items-start gap-2 rounded-lg border border-white/10 bg-white/[0.045] p-3 text-left text-xs leading-5 text-white/68 transition-colors hover:border-cyan-200/30 hover:bg-cyan-200/10 hover:text-cyan-50"
+                    >
+                      <span className="mt-0.5 text-cyan-100">{prompt.icon}</span>
+                      <span>{prompt.text}</span>
+                    </button>
+                  ))}
+                </div>
+              </GlassPanel>
+            </aside>
+
+            <GlassPanel className="flex min-h-0 flex-col overflow-hidden p-0" intensity="strong">
+              <div className="flex shrink-0 items-center justify-between border-b border-white/10 px-3 py-2.5 sm:px-5">
+                <div className="flex min-w-0 items-center gap-2">
+                  <div className="future-icon-glass flex h-9 w-9 shrink-0 items-center justify-center rounded-lg">
+                    <Bot className="h-4 w-4 text-cyan-100" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-black uppercase">Chat</p>
+                    <p className="truncate text-xs text-white/48">{mode.label} mode</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Button variant="ghost" size="icon" onClick={() => fileInputRef.current?.click()} className="rounded-lg sm:hidden" aria-label="Upload media">
+                    <Paperclip className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={startVoiceInput} className="rounded-lg sm:hidden" aria-label="Voice input">
+                    <Mic className={cn('h-4 w-4', listening && 'text-primary')} />
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={clearChat} className="rounded-lg" aria-label="Clear chat">
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
-              <div>
-                 <p className="text-sm font-black uppercase">Prime Coach</p>
-                 <p className="text-xs text-muted-foreground">Ask anything</p>
-              </div>
-            </div>
-            <Button variant="ghost" size="icon" onClick={clearChat} className="rounded-xl" title="Clear chat">
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </div>
-            <ScrollArea className="min-h-0 flex-1 p-3 sm:p-4" ref={scrollRef}>
-             <div className="space-y-4">
-              <AnimatePresence>
-                {messages.map((msg) => (
-                  <motion.div
-                    key={msg.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className={cn('flex min-w-0 gap-2 sm:gap-3', msg.role === 'user' ? 'justify-end' : 'justify-start')}
-                  >
-                    {msg.role === 'assistant' && (
+
+              <ScrollArea className="min-h-0 flex-1 p-3 sm:p-4" ref={scrollRef}>
+                <div className="space-y-4 pb-2">
+                  <AnimatePresence>
+                    {messages.map((msg) => (
+                      <motion.div
+                        key={msg.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.25 }}
+                        className={cn('flex min-w-0 gap-2 sm:gap-3', msg.role === 'user' ? 'justify-end' : 'justify-start')}
+                      >
+                        {msg.role === 'assistant' && (
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                            <Bot className="h-4 w-4 text-primary" />
+                          </div>
+                        )}
+                        <div
+                          className={cn(
+                            'max-w-[calc(100%-2.5rem)] overflow-hidden break-words rounded-2xl px-3.5 py-3 text-sm leading-relaxed sm:max-w-[78%] sm:px-4',
+                            msg.role === 'user'
+                              ? 'rounded-br-md border border-orange-200/20 bg-orange-300/16 text-white'
+                              : 'rounded-bl-md border border-cyan-200/14 bg-cyan-200/10 text-white'
+                          )}
+                        >
+                          <ReactMarkdown
+                            components={{
+                              h1: ({ children }) => <h2 className="mb-3 text-base font-black leading-snug">{children}</h2>,
+                              h2: ({ children }) => <h3 className="mb-2 mt-4 text-sm font-black leading-snug first:mt-0">{children}</h3>,
+                              h3: ({ children }) => <h4 className="mb-2 mt-4 text-sm font-black leading-snug first:mt-0">{children}</h4>,
+                              p: ({ children }) => <p className="mb-3 last:mb-0">{children}</p>,
+                              strong: ({ children }) => <strong className="font-black">{children}</strong>,
+                              ul: ({ children }) => <ul className="my-3 space-y-2 pl-0">{children}</ul>,
+                              ol: ({ children }) => <ol className="my-3 list-decimal space-y-2 pl-5">{children}</ol>,
+                              li: ({ children }) => (
+                                <li className="relative list-none pl-4 before:absolute before:left-0 before:top-[0.7em] before:h-1.5 before:w-1.5 before:-translate-y-1/2 before:rounded-full before:bg-primary">
+                                  {children}
+                                </li>
+                              ),
+                              hr: () => <div className="my-4 h-px bg-border/70" />,
+                              table: ({ children }) => (
+                                <div className="my-4 overflow-x-auto rounded-xl border border-border/70 bg-background/40">
+                                  <table className="min-w-full text-left text-xs">{children}</table>
+                                </div>
+                              ),
+                              thead: ({ children }) => <thead className="bg-primary/10 text-primary">{children}</thead>,
+                              th: ({ children }) => <th className="whitespace-nowrap px-3 py-2 font-black">{children}</th>,
+                              td: ({ children }) => <td className="border-t border-border/60 px-3 py-2 align-top">{children}</td>,
+                              code: ({ children }) => (
+                                <code className="rounded bg-background/60 px-1.5 py-0.5 text-[0.92em]">{children}</code>
+                              ),
+                            }}
+                          >
+                            {msg.content}
+                          </ReactMarkdown>
+                        </div>
+                        {msg.role === 'user' && (
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-secondary">
+                            <User className="h-4 w-4" />
+                          </div>
+                        )}
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+
+                  {isLoading && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-start gap-3">
                       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
                         <Bot className="h-4 w-4 text-primary" />
                       </div>
-                    )}
-                    <div
-                      className={cn(
-                        'max-w-[calc(100%-2.5rem)] overflow-hidden break-words rounded-2xl px-3.5 py-3 text-sm leading-relaxed sm:max-w-[78%] sm:px-4',
-                        msg.role === 'user'
-                          ? 'rounded-br-md border border-orange-200/20 bg-orange-300/16 text-white shadow-[0_0_24px_rgba(255,122,26,0.12)] backdrop-blur-xl'
-                          : 'rounded-bl-md border border-cyan-200/14 bg-cyan-200/10 text-white shadow-[0_0_24px_rgba(0,194,255,0.11)] backdrop-blur-xl'
-                      )}
-                    >
-                      <ReactMarkdown
-                        components={{
-                          h1: ({ children }) => <h2 className="mb-3 text-base font-black leading-snug">{children}</h2>,
-                          h2: ({ children }) => <h3 className="mb-2 mt-4 text-sm font-black leading-snug first:mt-0">{children}</h3>,
-                          h3: ({ children }) => <h4 className="mb-2 mt-4 text-sm font-black leading-snug first:mt-0">{children}</h4>,
-                          p: ({ children }) => <p className="mb-3 last:mb-0">{children}</p>,
-                          strong: ({ children }) => <strong className="font-black">{children}</strong>,
-                          ul: ({ children }) => <ul className="my-3 space-y-2 pl-0">{children}</ul>,
-                          ol: ({ children }) => <ol className="my-3 list-decimal space-y-2 pl-5">{children}</ol>,
-                          li: ({ children }) => (
-                            <li className="relative list-none pl-4 before:absolute before:left-0 before:top-[0.7em] before:h-1.5 before:w-1.5 before:-translate-y-1/2 before:rounded-full before:bg-primary">
-                              {children}
-                            </li>
-                          ),
-                          hr: () => <div className="my-4 h-px bg-border/70" />,
-                          table: ({ children }) => (
-                            <div className="my-4 overflow-x-auto rounded-xl border border-border/70 bg-background/40">
-                              <table className="min-w-full text-left text-xs">{children}</table>
-                            </div>
-                          ),
-                          thead: ({ children }) => <thead className="bg-primary/10 text-primary">{children}</thead>,
-                          th: ({ children }) => <th className="whitespace-nowrap px-3 py-2 font-black">{children}</th>,
-                          td: ({ children }) => <td className="border-t border-border/60 px-3 py-2 align-top">{children}</td>,
-                          code: ({ children }) => (
-                            <code className="rounded bg-background/60 px-1.5 py-0.5 text-[0.92em]">{children}</code>
-                          ),
-                        }}
-                      >
-                        {msg.content}
-                      </ReactMarkdown>
-                    </div>
-                    {msg.role === 'user' && (
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-secondary">
-                        <User className="h-4 w-4" />
+                      <div className="rounded-2xl rounded-bl-md border border-cyan-200/14 bg-cyan-200/10 px-4 py-3">
+                        <div className="flex items-center gap-2 text-sm text-cyan-100/80">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Thinking...
+                        </div>
                       </div>
-                    )}
-                  </motion.div>
-                ))}
-              </AnimatePresence>
+                    </motion.div>
+                  )}
+                </div>
+              </ScrollArea>
 
-              {isLoading && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-start gap-3">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                    <Bot className="h-4 w-4 text-primary" />
-                  </div>
-                  <div className="rounded-2xl rounded-bl-md border border-cyan-200/14 bg-cyan-200/10 px-4 py-3 backdrop-blur-xl">
-                    <div className="flex items-center gap-2 text-sm text-cyan-100/80">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Thinking...
+              {media && (
+                <div className="shrink-0 border-t border-white/10 px-3 py-2 sm:px-4">
+                  <div className="flex items-center gap-3 rounded-lg border border-white/10 bg-white/[0.045] p-2">
+                    <div className="relative h-12 w-16 shrink-0 overflow-hidden rounded-md bg-background">
+                      {media.type.startsWith('video') ? (
+                        <video src={media.previewUrl} className="h-full w-full object-cover" muted />
+                      ) : (
+                        <img src={media.previewUrl} alt="Uploaded form check" className="h-full w-full object-cover" />
+                      )}
                     </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="flex items-center gap-2 truncate text-xs font-semibold">
+                        {media.type.startsWith('video') ? <FileVideo className="h-3.5 w-3.5 text-primary" /> : <ImageIcon className="h-3.5 w-3.5 text-primary" />}
+                        {media.name}
+                      </p>
+                      <p className="text-[11px] text-white/44">Attached to your next message</p>
+                    </div>
+                    <Button variant="ghost" size="icon" onClick={() => setMedia(null)} className="h-8 w-8 rounded-lg">
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
                   </div>
-                </motion.div>
+                </div>
               )}
-            </div>
-          </ScrollArea>
 
-          {messages.length <= 2 && (
-            <div className="hidden shrink-0 px-4 pb-3 sm:px-6 lg:block">
-              <p className="mb-2 flex items-center gap-1 text-xs text-muted-foreground">
-                <Sparkles className="h-3 w-3" />
-                Quick suggestions
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {quickPrompts.map((prompt) => (
-                  <button
-                    key={prompt.text}
-                    onClick={() => handleSend(prompt.text)}
-                    className="flex items-center gap-1.5 rounded-full border border-primary/10 bg-primary/5 px-3 py-1.5 text-xs text-primary transition-colors hover:bg-primary/10"
-                  >
-                    {prompt.icon}
-                    {prompt.text.length > 40 ? `${prompt.text.slice(0, 40)}...` : prompt.text}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-          <div className="shrink-0 border-t border-border/70 bg-background/95 px-3 py-2.5 sm:px-4 lg:hidden">
-            <div className="mx-auto flex max-w-md gap-2">
-              <Input
-                placeholder="Ask Coach anything..."
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
-                className="h-12 flex-1 rounded-xl bg-card"
-                disabled={isLoading}
-              />
-              <Button
-                onClick={() => handleSend()}
-                disabled={(!input.trim() && !media) || isLoading}
-                className="h-12 w-12 shrink-0 rounded-xl neon-glow"
-                size="icon"
-                aria-label="Send message"
+              {messages.length <= 2 && (
+                <div className="hidden shrink-0 px-3 pb-2 sm:block sm:px-4">
+                  <div className="flex flex-wrap gap-2">
+                    {quickPrompts.map((prompt) => (
+                      <button
+                        key={prompt.text}
+                        type="button"
+                        onClick={() => handleSend(prompt.text)}
+                        className="flex items-center gap-1.5 rounded-full border border-primary/10 bg-primary/5 px-3 py-1.5 text-xs text-primary transition-colors hover:bg-primary/10"
+                      >
+                        {prompt.icon}
+                        {prompt.text.length > 40 ? `${prompt.text.slice(0, 40)}...` : prompt.text}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <form
+                className="shrink-0 border-t border-white/10 bg-background/90 px-3 py-3 sm:px-4"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  handleSend();
+                }}
               >
-                {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-              </Button>
-            </div>
+                <div className="flex min-w-0 gap-2">
+                  <Input
+                    placeholder="Ask Coach anything..."
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    className="h-12 min-w-0 flex-1 rounded-lg bg-card"
+                    disabled={isLoading}
+                  />
+                  <Button
+                    type="submit"
+                    disabled={(!input.trim() && !media) || isLoading}
+                    className="h-12 w-12 shrink-0 rounded-lg neon-glow"
+                    size="icon"
+                    aria-label="Send message"
+                  >
+                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </form>
+            </GlassPanel>
           </div>
-        </GlassPanel>
         </div>
-
-        <div className="hidden gap-2 lg:flex">
-          <Input
-            placeholder="Ask your AI Coach anything..."
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
-            className="h-12 flex-1 rounded-xl bg-card"
-            disabled={isLoading}
-          />
-          <Button
-            onClick={() => handleSend()}
-            disabled={(!input.trim() && !media) || isLoading}
-            className="h-12 w-12 shrink-0 rounded-xl neon-glow"
-            size="icon"
-          >
-            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-          </Button>
-        </div>
-      </div>
-
       </div>
     </FutureShell>
   );
