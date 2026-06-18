@@ -14,10 +14,8 @@ import {
   HeartPulse,
   Play,
   ShieldCheck,
-  Sparkles,
   Target,
   Timer,
-  TrendingUp,
   Utensils,
   Zap,
 } from 'lucide-react';
@@ -101,32 +99,32 @@ export function HomePage() {
 
   return (
     <FutureShell>
-      <section className="relative min-h-[calc(100svh-4.75rem)] overflow-hidden pt-20 text-white sm:min-h-[96svh] lg:pt-24">
-        <FutureScene variant="hero" className="opacity-95" />
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_56%_34%,transparent_0%,rgba(3,5,9,0.12)_34%,rgba(3,5,9,0.88)_100%)]" />
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-background to-transparent" />
+      <section className="relative overflow-hidden pt-20 text-white sm:pt-24">
+        <FutureScene variant="hero" className="opacity-80" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_60%_28%,rgba(0,194,255,0.08)_0%,rgba(3,5,9,0.20)_38%,rgba(3,5,9,0.92)_100%)]" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-52 bg-gradient-to-t from-background via-background/72 to-transparent" />
 
-        <div className="relative z-10 mx-auto grid min-h-[calc(100svh-5rem)] w-full max-w-[1440px] items-center gap-10 px-4 pb-20 sm:px-8 lg:grid-cols-[1.02fr_0.98fr] lg:px-10">
+        <div className="relative z-10 mx-auto grid min-h-[calc(100svh-5rem)] w-full max-w-[1440px] items-center gap-8 px-4 pb-14 sm:px-8 sm:pb-18 lg:grid-cols-[1.02fr_0.98fr] lg:px-10">
           <motion.div
             initial={{ opacity: 0, y: 26 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.75, ease: 'easeOut' }}
-            className="max-w-5xl"
+            className="max-w-4xl"
           >
-            <Badge className="mb-5 border-cyan-200/20 bg-cyan-200/10 px-3 py-1.5 text-cyan-100 backdrop-blur-xl">
+            <Badge className="mb-4 border-cyan-200/20 bg-cyan-200/10 px-3 py-1.5 text-cyan-100 backdrop-blur-xl">
               <ShieldCheck className="h-3.5 w-3.5" />
-              Vision-grade strength operating system
+              Premium fitness command system
             </Badge>
-            <h1 className="holo-text max-w-5xl text-[3.25rem] font-black uppercase leading-[0.9] tracking-normal min-[420px]:text-[4rem] sm:text-[6.6rem] lg:text-[7.4rem]">
-              Train inside the future.
+            <h1 className="holo-text max-w-5xl text-[3.45rem] font-black uppercase leading-[0.86] tracking-normal min-[420px]:text-[4.35rem] sm:text-[7rem] lg:text-[8.6rem]">
+              PrimeForge
             </h1>
-            <p className="mt-6 max-w-2xl text-base leading-8 text-white/66 sm:text-xl sm:leading-9">
-              PrimeForge blends immersive 3D training, AI coaching, precision metrics, and premium fitness workflows into
-              one living command center.
+            <p className="mt-5 max-w-2xl text-base leading-7 text-white/70 sm:text-xl sm:leading-9">
+              An immersive AI fitness platform for training plans, live sessions, nutrition signals, and progress that feels
+              sharp instead of noisy.
             </p>
 
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Button onClick={startToday} size="lg" className="h-13 rounded-lg px-7 font-black uppercase shadow-[0_0_34px_rgba(0,194,255,0.24)]">
+            <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+              <Button onClick={startToday} size="lg" className="h-12 rounded-lg px-7 font-black uppercase shadow-[0_0_34px_rgba(0,194,255,0.24)]">
                 Start Training
                 <ArrowRight className="h-4 w-4" />
               </Button>
@@ -134,21 +132,21 @@ export function HomePage() {
                 onClick={() => navigate('ai-coach')}
                 size="lg"
                 variant="outline"
-                className="h-13 rounded-lg border-white/15 bg-white/[0.06] px-7 font-black uppercase text-white backdrop-blur-xl hover:bg-white/10 hover:text-white"
+                className="h-12 rounded-lg border-white/15 bg-white/[0.06] px-7 font-black uppercase text-white backdrop-blur-xl hover:bg-white/10 hover:text-white"
               >
                 <Bot className="h-4 w-4" />
                 Talk to Coach
               </Button>
             </div>
 
-            <div className="mt-9 grid max-w-3xl grid-cols-3 gap-2 sm:gap-3">
+            <div className="mt-8 grid max-w-2xl grid-cols-3 gap-2 sm:gap-3">
               {[
                 ['3D', 'Live interface'],
                 ['AI', 'Adaptive coach'],
                 ['60fps', 'Fast motion'],
               ].map(([value, label]) => (
-                <GlassPanel key={label} className="px-3 py-4 text-center sm:px-5 sm:text-left">
-                  <p className="text-2xl font-black text-white sm:text-4xl">{value}</p>
+                <GlassPanel key={label} className="px-3 py-3 text-center sm:px-5 sm:py-4 sm:text-left">
+                  <p className="text-xl font-black text-white sm:text-4xl">{value}</p>
                   <p className="mt-1 text-[10px] font-black uppercase tracking-[0.14em] text-white/42 sm:text-xs">{label}</p>
                 </GlassPanel>
               ))}
@@ -159,25 +157,25 @@ export function HomePage() {
             initial={{ opacity: 0, x: 32, rotateY: -8 }}
             animate={{ opacity: 1, x: 0, rotateY: 0 }}
             transition={{ delay: 0.18, duration: 0.85, ease: 'easeOut' }}
-            className="hidden lg:block"
+            className="mx-auto w-full max-w-xl lg:block"
           >
-            <GlassPanel intensity="strong" className="future-depth p-5">
-              <div className="flex items-center justify-between border-b border-white/10 pb-4">
+            <GlassPanel intensity="strong" className="future-depth p-4 sm:p-5">
+              <div className="flex items-center justify-between gap-4 border-b border-white/10 pb-4">
                 <div>
                   <p className="text-xs font-black uppercase tracking-[0.22em] text-cyan-100/58">Today protocol</p>
-                  <h2 className="mt-2 text-2xl font-black">Upper Strength</h2>
+                  <h2 className="mt-2 text-xl font-black sm:text-2xl">Upper Strength</h2>
                 </div>
-                <ProgressRing value={84} label="ready" size={112} />
+                <ProgressRing value={84} label="ready" size={96} />
               </div>
-              <div className="grid gap-3 py-5">
+              <div className="grid gap-3 py-4 sm:py-5">
                 {[
                   ['Neural warmup', '8 min mobility and ramp sets', Timer],
                   ['Primary lift', 'Bench press 4 x 6 @ RPE 7', Dumbbell],
-                  ['AI cue', 'Keep wrists stacked over elbows', Sparkles],
+                  ['Coach cue', 'Keep wrists stacked over elbows', Target],
                 ].map(([title, detail, Icon]) => {
                   const LucideIcon = Icon as typeof Dumbbell;
                   return (
-                    <div key={title as string} className="rounded-xl border border-white/10 bg-white/[0.045] p-4">
+                    <div key={title as string} className="rounded-xl border border-white/10 bg-white/[0.045] p-3.5 sm:p-4">
                       <div className="flex items-center gap-3">
                         <span className="future-icon-glass grid h-10 w-10 place-items-center rounded-xl text-cyan-100">
                           <LucideIcon className="h-4 w-4" />
@@ -190,6 +188,18 @@ export function HomePage() {
                     </div>
                   );
                 })}
+              </div>
+              <div className="mb-4 grid grid-cols-3 gap-2">
+                {[
+                  ['4', 'lifts'],
+                  ['90s', 'rest'],
+                  ['31g', 'protein'],
+                ].map(([value, label]) => (
+                  <div key={label} className="rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-center">
+                    <p className="text-lg font-black text-white">{value}</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.14em] text-white/42">{label}</p>
+                  </div>
+                ))}
               </div>
               <Button onClick={startToday} className="h-12 w-full rounded-lg font-black uppercase">
                 Launch Session
