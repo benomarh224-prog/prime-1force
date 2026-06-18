@@ -28,12 +28,13 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { useAppStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
+import { FutureShell, GlassPanel } from '@/components/future/FutureUI';
+import { FutureScene } from '@/components/future/FutureScene';
 
 interface Message {
   id: string;
@@ -308,7 +309,9 @@ Guidelines:
   };
 
   return (
-    <div className="flex h-[100svh] min-h-0 w-full flex-col overflow-hidden pt-[4.75rem] lg:min-h-screen lg:overflow-visible lg:pb-12 lg:pt-20">
+    <FutureShell className="min-h-screen">
+      <FutureScene variant="ambient" className="fixed opacity-24" />
+      <div className="relative z-10 flex h-[100svh] min-h-0 w-full flex-col overflow-hidden pt-[4.75rem] lg:min-h-screen lg:overflow-visible lg:pb-12 lg:pt-20">
       <div className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col px-3 sm:px-6 lg:px-8">
         <motion.div
           className="mb-4 hidden flex-col justify-between gap-3 lg:flex lg:flex-row lg:items-end"
@@ -317,17 +320,17 @@ Guidelines:
           transition={{ duration: 0.5 }}
         >
           <div>
-            <Badge variant="secondary" className="mb-2 gap-1.5">
+            <Badge variant="secondary" className="mb-2 gap-1.5 border-cyan-200/20 bg-cyan-200/10 text-cyan-100">
               <Sparkles className="h-3 w-3" />
-              Smarter personal coaching
+              Holographic personal coaching
             </Badge>
-            <h1 className="flex items-center gap-3 text-3xl font-black tracking-tight">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
-                <Bot className="h-5 w-5 text-primary" />
+            <h1 className="holo-text flex items-center gap-3 text-3xl font-black tracking-tight">
+              <span className="future-icon-glass flex h-10 w-10 shrink-0 items-center justify-center rounded-xl">
+                <Bot className="h-5 w-5 text-cyan-100" />
               </span>
               AI <span className="gradient-text">Coach</span>
             </h1>
-            <p className="mt-2 max-w-2xl text-sm text-muted-foreground sm:ml-[52px] sm:text-base">
+            <p className="mt-2 max-w-2xl text-sm text-white/58 sm:ml-[52px] sm:text-base">
               Plans, form checks, food strategy, weekly reviews, and motivation based on your profile.
             </p>
           </div>
@@ -339,8 +342,8 @@ Guidelines:
                 className={cn(
                   'flex min-h-11 items-center justify-center gap-2 rounded-lg border px-2 text-[11px] font-bold uppercase transition-colors sm:min-h-12 sm:px-3 sm:text-xs',
                   mode.id === coachMode.id
-                    ? 'border-primary/50 bg-primary text-primary-foreground'
-                    : 'border-border/60 bg-card hover:border-primary/40 hover:text-primary'
+                    ? 'border-cyan-200/40 bg-cyan-200/15 text-cyan-50 shadow-[0_0_28px_rgba(0,194,255,0.18)]'
+                    : 'border-white/10 bg-white/[0.045] text-white/64 hover:border-cyan-200/30 hover:text-cyan-100'
                 )}
               >
                 <coachMode.icon className="h-4 w-4" />
@@ -350,15 +353,15 @@ Guidelines:
           </div>
         </motion.div>
 
-        <Card className="mb-3 hidden border-white/[0.08] p-3 lg:block">
+        <GlassPanel className="mb-3 hidden p-3 lg:block">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <div className="future-icon-glass flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-cyan-100">
                 <Camera className="h-4 w-4" />
               </div>
               <div>
                 <p className="text-sm font-black uppercase">Form analysis upload</p>
-                <p className="hidden text-sm text-muted-foreground sm:block">
+                <p className="hidden text-sm text-white/56 sm:block">
                   Add a short image or video, then ask for cues. The coach will combine it with your progress memory.
                 </p>
               </div>
@@ -385,6 +388,18 @@ Guidelines:
               </Button>
             </div>
           </div>
+          <div className="mt-4 flex items-center gap-2">
+            {[0, 1, 2, 3, 4, 5, 6].map((bar) => (
+              <span
+                key={bar}
+                className={cn('future-orbit block h-8 w-1 rounded-full bg-cyan-200/60', listening && 'bg-orange-300/80')}
+                style={{ animationDelay: `${bar * 80}ms` }}
+              />
+            ))}
+            <span className="ml-2 text-xs font-black uppercase tracking-[0.18em] text-white/42">
+              {listening ? 'Voice stream active' : 'AI signal stable'}
+            </span>
+          </div>
           {media && (
             <div className="mt-4 grid gap-3 rounded-lg border bg-muted/25 p-3 sm:grid-cols-[160px_1fr_auto] sm:items-center">
               <div className="relative aspect-video overflow-hidden rounded-lg bg-background">
@@ -408,16 +423,16 @@ Guidelines:
               </Button>
             </div>
           )}
-        </Card>
+        </GlassPanel>
 
         <div className="grid min-h-0 flex-1 gap-4 lg:mb-3 lg:grid-cols-[250px_1fr]">
           <div className="hidden space-y-4 lg:block">
-            <Card className="border-border/50 p-4">
+            <GlassPanel className="p-4">
               <div className="mb-3 flex items-center gap-2 text-sm font-black uppercase">
                 <MessageCircle className="h-4 w-4 text-primary" />
                 Coach Memory
               </div>
-              <div className="space-y-3 text-sm text-muted-foreground">
+              <div className="space-y-3 text-sm text-white/56">
                 <p><span className="font-semibold text-foreground">Goal:</span> {userGoal.replace('_', ' ')}</p>
                 <p><span className="font-semibold text-foreground">Level:</span> {userLevel}</p>
                 <p><span className="font-semibold text-foreground">Workouts:</span> {workoutLogs.length} logged</p>
@@ -434,29 +449,29 @@ Guidelines:
                   Save Memory
                 </Button>
               </div>
-            </Card>
-            <Card className="border-border/50 p-4">
+            </GlassPanel>
+            <GlassPanel className="p-4">
               <div className="mb-3 text-sm font-black uppercase">Ask Faster</div>
               <div className="space-y-2">
                 {quickPrompts.map((prompt) => (
                   <button
                     key={prompt.text}
                     onClick={() => handleSend(prompt.text)}
-                    className="flex w-full items-start gap-2 rounded-lg border border-border/60 bg-muted/20 p-3 text-left text-xs leading-5 transition-colors hover:border-primary/40 hover:bg-primary/10"
+                    className="flex w-full items-start gap-2 rounded-lg border border-white/10 bg-white/[0.045] p-3 text-left text-xs leading-5 text-white/68 transition-colors hover:border-cyan-200/30 hover:bg-cyan-200/10 hover:text-cyan-50"
                   >
-                    <span className="mt-0.5 text-primary">{prompt.icon}</span>
+                    <span className="mt-0.5 text-cyan-100">{prompt.icon}</span>
                     <span>{prompt.text}</span>
                   </button>
                 ))}
               </div>
-            </Card>
+            </GlassPanel>
           </div>
 
-        <Card className="flex min-h-0 flex-1 flex-col overflow-hidden border-white/[0.08] py-0 sm:min-h-[520px]">
+        <GlassPanel className="flex min-h-0 flex-1 flex-col overflow-hidden p-0 sm:min-h-[520px]" intensity="strong">
           <div className="flex shrink-0 items-center justify-between border-b px-3 py-2.5 sm:px-6 sm:py-3">
             <div className="flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
-                <Bot className="h-4 w-4 text-primary" />
+              <div className="future-icon-glass flex h-9 w-9 items-center justify-center rounded-lg">
+                <Bot className="h-4 w-4 text-cyan-100" />
               </div>
               <div>
                  <p className="text-sm font-black uppercase">Prime Coach</p>
@@ -487,8 +502,8 @@ Guidelines:
                       className={cn(
                         'max-w-[calc(100%-2.5rem)] overflow-hidden break-words rounded-2xl px-3.5 py-3 text-sm leading-relaxed sm:max-w-[78%] sm:px-4',
                         msg.role === 'user'
-                          ? 'rounded-br-md bg-primary text-primary-foreground'
-                          : 'rounded-bl-md bg-muted'
+                          ? 'rounded-br-md border border-orange-200/20 bg-orange-300/16 text-white shadow-[0_0_24px_rgba(255,122,26,0.12)] backdrop-blur-xl'
+                          : 'rounded-bl-md border border-cyan-200/14 bg-cyan-200/10 text-white shadow-[0_0_24px_rgba(0,194,255,0.11)] backdrop-blur-xl'
                       )}
                     >
                       <ReactMarkdown
@@ -536,8 +551,8 @@ Guidelines:
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
                     <Bot className="h-4 w-4 text-primary" />
                   </div>
-                  <div className="rounded-2xl rounded-bl-md bg-muted px-4 py-3">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <div className="rounded-2xl rounded-bl-md border border-cyan-200/14 bg-cyan-200/10 px-4 py-3 backdrop-blur-xl">
+                    <div className="flex items-center gap-2 text-sm text-cyan-100/80">
                       <Loader2 className="h-4 w-4 animate-spin" />
                       Thinking...
                     </div>
@@ -588,7 +603,7 @@ Guidelines:
               </Button>
             </div>
           </div>
-        </Card>
+        </GlassPanel>
         </div>
 
         <div className="hidden gap-2 lg:flex">
@@ -611,6 +626,7 @@ Guidelines:
         </div>
       </div>
 
-    </div>
+      </div>
+    </FutureShell>
   );
 }

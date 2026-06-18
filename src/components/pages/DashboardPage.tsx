@@ -41,6 +41,8 @@ import {
   Tooltip, ResponsiveContainer, BarChart, Bar,
 } from 'recharts';
 import { useSession } from 'next-auth/react';
+import { FutureShell, GlassPanel, MetricCard, ProgressRing } from '@/components/future/FutureUI';
+import { FutureScene } from '@/components/future/FutureScene';
 
 // ─── Avatar Options ────────────────────────────────────────────────────
 const avatarOptions = [
@@ -767,11 +769,13 @@ export function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen pb-16 pt-20 sm:pt-24">
+    <FutureShell className="min-h-screen">
+      <FutureScene variant="ambient" className="fixed opacity-30" />
+      <div className="relative z-10 min-h-screen pb-16 pt-20 sm:pt-24">
       <div className="mx-auto grid max-w-7xl grid-cols-12 gap-5 px-4 sm:px-6 lg:gap-6 lg:px-8">
         {/* Header */}
         <motion.div
-          className="col-span-12 flex flex-col gap-4 rounded-2xl border border-white/[0.08] bg-[linear-gradient(135deg,oklch(0.15_0.025_25_/_0.92),oklch(0.08_0.012_25_/_0.96))] p-5 shadow-[0_24px_70px_oklch(0_0_0_/_0.24)] sm:flex-row sm:items-center sm:justify-between sm:p-6"
+          className="future-glass col-span-12 flex flex-col gap-4 overflow-hidden rounded-xl border border-white/[0.12] bg-white/[0.06] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.34)] backdrop-blur-2xl sm:flex-row sm:items-center sm:justify-between sm:p-6"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -785,7 +789,7 @@ export function DashboardPage() {
             </div>
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <p className="text-xs font-black uppercase tracking-[0.16em] text-primary">Command center</p>
+                <p className="text-xs font-black uppercase tracking-[0.2em] text-cyan-200/70">Holographic command center</p>
                 <Badge variant="outline" className="rounded-md border-white/10 bg-white/[0.04] text-[10px]">
                   {levelLabels[store.userLevel] || store.userLevel}
                 </Badge>
@@ -793,16 +797,16 @@ export function DashboardPage() {
               <h1 className="mt-1 truncate text-2xl font-black tracking-tight sm:text-3xl">
                 {store.userName ? `Welcome back, ${displayName}` : 'Your training dashboard'}
               </h1>
-              <p className="mt-1 text-sm text-muted-foreground">
-                One view for training, recovery, nutrition, and progress.
+              <p className="mt-1 text-sm text-white/58">
+                Live training, recovery, nutrition, and progress telemetry.
               </p>
             </div>
           </div>
           <motion.div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto" initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }}>
-            <Button onClick={startEditing} variant="outline" className="rounded-xl border-white/10 bg-white/[0.04] gap-2">
+            <Button onClick={startEditing} variant="outline" className="rounded-lg border-white/15 bg-white/[0.05] gap-2 text-white hover:bg-white/10">
               <Edit3 className="h-4 w-4" /> Edit Profile
             </Button>
-            <Button onClick={openWorkoutDialog} className="rounded-xl gap-2 shadow-lg shadow-primary/20">
+            <Button onClick={openWorkoutDialog} className="rounded-lg gap-2 shadow-lg shadow-cyan-400/20">
               <Plus className="h-4 w-4" /> Log Workout
             </Button>
           </motion.div>
@@ -822,10 +826,10 @@ export function DashboardPage() {
         {/* Stats Cards Row */}
         <div className="col-span-12 grid grid-cols-2 gap-3 lg:grid-cols-4">
           {[
-            { icon: <Flame className="h-5 w-5" />, label: 'Calories Burned', value: totalCaloriesBurned.toLocaleString(), sub: 'This week', color: 'text-orange-500', bg: 'bg-orange-500/10' },
-            { icon: <Dumbbell className="h-5 w-5" />, label: 'Workouts', value: `${totalWorkouts}/${store.weeklyGoal}`, sub: 'Weekly goal', color: 'text-primary', bg: 'bg-primary/10' },
-            { icon: <Trophy className="h-5 w-5" />, label: 'Streak', value: `${currentStreak}d`, sub: 'Keep going!', color: 'text-amber-500', bg: 'bg-amber-500/10' },
-            { icon: <TrendingDown className="h-5 w-5" />, label: 'Weight', value: `${store.userWeight}kg`, sub: `BMI: ${bmi}`, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+            { icon: <Flame className="h-5 w-5" />, label: 'Calories', value: totalCaloriesBurned.toLocaleString(), detail: 'Burned this week', tone: 'orange' as const },
+            { icon: <Dumbbell className="h-5 w-5" />, label: 'Workouts', value: `${totalWorkouts}/${store.weeklyGoal}`, detail: 'Weekly target', tone: 'cyan' as const },
+            { icon: <Trophy className="h-5 w-5" />, label: 'Streak', value: `${currentStreak}d`, detail: 'Momentum signal', tone: 'orange' as const },
+            { icon: <TrendingDown className="h-5 w-5" />, label: 'Weight', value: `${store.userWeight}kg`, detail: `BMI ${bmi}`, tone: 'green' as const },
           ].map((stat, i) => (
             <motion.div
               key={stat.label}
@@ -833,18 +837,7 @@ export function DashboardPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: i * 0.05 }}
             >
-              <Card className="group h-full overflow-hidden border-white/[0.08] bg-card/65 transition-all duration-300 hover:-translate-y-1 hover:border-primary/25 hover:shadow-xl hover:shadow-primary/5">
-                <CardContent className="flex items-center gap-3 p-4">
-                  <div className={cn('flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition-transform duration-300 group-hover:scale-110', stat.bg, stat.color)}>
-                    {stat.icon}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xl font-black tabular-nums sm:text-2xl">{stat.value}</p>
-                    <p className="truncate text-xs font-semibold text-muted-foreground">{stat.label}</p>
-                    <p className="truncate text-[10px] text-muted-foreground/60">{stat.sub}</p>
-                  </div>
-                </CardContent>
-              </Card>
+              <MetricCard label={stat.label} value={stat.value} detail={stat.detail} tone={stat.tone} icon={stat.icon} />
             </motion.div>
           ))}
         </div>
@@ -856,37 +849,28 @@ export function DashboardPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.08 }}
         >
-          <Card className="overflow-hidden border-primary/20 bg-[radial-gradient(circle_at_10%_10%,oklch(0.62_0.24_27_/_0.18),transparent_42%),oklch(0.11_0.012_25_/_0.94)]">
+          <GlassPanel className="overflow-hidden p-0" intensity="strong">
             <CardContent className="grid gap-5 p-5 sm:p-6 md:grid-cols-[170px_1fr] md:items-center">
-              <div className="relative mx-auto flex h-36 w-36 items-center justify-center rounded-full border border-primary/25 bg-background/70 shadow-2xl shadow-primary/10">
-                <div
-                  className="absolute inset-3 rounded-full"
-                  style={{
-                    background: `conic-gradient(oklch(0.62 0.24 27) ${forgeScore * 3.6}deg, oklch(1 0 0 / 10%) 0deg)`,
-                  }}
-                />
-                <div className="relative flex h-24 w-24 flex-col items-center justify-center rounded-full bg-background">
-                  <p className="text-4xl font-black tabular-nums">{forgeScore}</p>
-                  <p className="text-[10px] font-black uppercase tracking-wide text-primary">Forge Score</p>
-                </div>
+              <div className="mx-auto">
+                <ProgressRing value={forgeScore} label="forge" size={150} />
               </div>
 
               <div className="min-w-0">
-                <Badge className="mb-3 rounded-md border-primary/25 bg-background/80 text-primary">
+                <Badge className="mb-3 rounded-md border-cyan-200/25 bg-cyan-200/10 text-cyan-100">
                   {forgeRank}
                 </Badge>
-                <h2 className="text-2xl font-black tracking-tight sm:text-3xl">
+                <h2 className="holo-text text-2xl font-black tracking-tight sm:text-3xl">
                   Your training signal.
                 </h2>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                <p className="mt-2 text-sm leading-6 text-white/58">
                   A single score blending consistency, streak, strength volume, and personal records.
                 </p>
                 <div className="mt-4 grid grid-cols-2 gap-2 xl:grid-cols-4">
                   {forgeScoreFactors.map((factor) => (
-                    <div key={factor.label} className="rounded-xl border border-white/[0.08] bg-background/55 p-3">
+                    <div key={factor.label} className="rounded-xl border border-white/[0.10] bg-white/[0.045] p-3">
                       <div className="mb-2 flex items-center justify-between gap-2 text-sm">
                         <span className="font-bold">{factor.label}</span>
-                        <span className="font-black text-primary">{factor.value}%</span>
+                        <span className="font-black text-cyan-100">{factor.value}%</span>
                       </div>
                       <Progress value={factor.value} className="h-1.5" />
                       <p className="mt-2 text-xs text-muted-foreground">{factor.detail}</p>
@@ -895,9 +879,9 @@ export function DashboardPage() {
                 </div>
               </div>
             </CardContent>
-          </Card>
+          </GlassPanel>
 
-          <Card className="border-white/[0.08] bg-card/65">
+          <GlassPanel className="p-0">
             <CardContent className="flex h-full flex-col justify-between gap-4 p-5 sm:p-6">
               <div>
                 <p className="text-xs font-black uppercase tracking-wide text-muted-foreground">Coach review</p>
@@ -931,7 +915,7 @@ export function DashboardPage() {
                 )}
               </div>
             </CardContent>
-          </Card>
+          </GlassPanel>
         </motion.div>
 
         {/* Achievements */}
@@ -1676,6 +1660,7 @@ export function DashboardPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+      </div>
+    </FutureShell>
   );
 }

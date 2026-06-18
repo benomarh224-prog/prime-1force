@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -37,6 +37,8 @@ import {
 import { cn } from '@/lib/utils';
 import type { Exercise } from '@/lib/data';
 import type { WorkoutLog } from '@/lib/store';
+import { FutureShell, GlassPanel, MetricCard, SectionHeading, TiltCard } from '@/components/future/FutureUI';
+import { FutureScene } from '@/components/future/FutureScene';
 
 type QuickSet = {
   reps: number;
@@ -840,7 +842,9 @@ export function WorkoutsPage() {
   };
 
   return (
-    <div className="min-h-screen pb-10 pt-20 sm:pt-24 lg:pb-16">
+    <FutureShell className="min-h-screen">
+      <FutureScene variant="ambient" className="fixed opacity-28" />
+      <div className="relative z-10 min-h-screen pb-10 pt-20 sm:pt-24 lg:pb-16">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Page Header */}
         <motion.div
@@ -849,24 +853,25 @@ export function WorkoutsPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <h1 className="mb-2 text-3xl font-black tracking-tight sm:text-4xl">
-            Workout <span className="gradient-text">Library</span>
-          </h1>
-          <p className="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-            Browse {exercises.length}+ exercises, log sets, and track your progress
-          </p>
+          <SectionHeading
+            eyebrow="3D Exercise Lab"
+            title="Workout library, rebuilt as a futuristic training cockpit."
+            copy={`Browse ${exercises.length}+ exercises, preview movement patterns, launch sessions, and track every set without losing flow.`}
+          />
         </motion.div>
 
         <motion.div
-          className="mb-6 overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm sm:mb-8"
+          className="mb-6 overflow-hidden rounded-xl border border-white/[0.12] bg-white/[0.055] shadow-[0_28px_80px_rgba(0,0,0,0.34)] backdrop-blur-2xl sm:mb-8"
           initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.03 }}
         >
           <div className="grid gap-0 lg:grid-cols-[1.1fr_0.9fr]">
-            <div className="p-4 sm:p-6">
+            <div className="relative p-4 sm:p-6">
+              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,rgba(0,194,255,0.16),transparent_34%)]" />
+              <div className="relative">
               <div className="mb-4 flex flex-wrap items-center gap-2">
-                <Badge className="rounded-md bg-primary/10 text-primary hover:bg-primary/10">
+                <Badge className="rounded-md bg-cyan-200/10 text-cyan-100 hover:bg-cyan-200/10">
                   {formatDate(todayDateKey)}
                 </Badge>
                 <Badge
@@ -884,11 +889,11 @@ export function WorkoutsPage() {
 
               <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div className="min-w-0">
-                  <p className="text-xs font-black uppercase tracking-wide text-muted-foreground">Today&apos;s workout</p>
-                  <h2 className="mt-2 break-words text-2xl font-black uppercase sm:text-3xl">
+                  <p className="text-xs font-black uppercase tracking-[0.2em] text-cyan-100/60">Today&apos;s protocol</p>
+                  <h2 className="holo-text mt-2 break-words text-2xl font-black uppercase sm:text-3xl">
                     {scheduleLoading ? 'Loading plan...' : todayPlan?.splitTitle || 'No plan selected'}
                   </h2>
-                  <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-white/58">
                     {todayPlan?.isRestDay
                       ? todayPlan.notes || 'Recovery is part of the program. Keep it easy and come back fresh.'
                       : todayPlan?.exercises?.length
@@ -912,7 +917,7 @@ export function WorkoutsPage() {
                     onClick={() => setTodayCompletion(!todayPlan?.completed)}
                     disabled={scheduleLoading || syncingCompletion || !todayPlan || todayPlan.isRestDay}
                     variant={todayPlan?.completed ? 'secondary' : 'default'}
-                    className="h-11 rounded-lg font-bold"
+                    className="h-11 rounded-lg font-bold shadow-[0_0_28px_rgba(0,194,255,0.2)]"
                   >
                     {syncingCompletion ? <Loader2 className="h-4 w-4 animate-spin" /> : todayPlan?.isRestDay ? <CirclePause className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
                     {todayPlan?.isRestDay ? 'Rest Day' : todayPlan?.completed ? 'Reopen' : 'Complete'}
@@ -927,25 +932,26 @@ export function WorkoutsPage() {
                   </Button>
                 </div>
               </div>
+              </div>
             </div>
 
-            <div className="border-t bg-muted/25 p-4 sm:p-6 lg:border-l lg:border-t-0">
+            <div className="border-t border-white/10 bg-black/20 p-4 sm:p-6 lg:border-l lg:border-t-0">
               <div className="grid h-full gap-3 sm:grid-cols-3 lg:grid-cols-1">
-                <div className="rounded-lg border bg-background/70 p-3">
+                <div className="rounded-lg border border-white/10 bg-white/[0.045] p-3">
                   <div className="flex items-center gap-2 text-xs font-black uppercase text-muted-foreground">
                     <CalendarCheck2 className="h-4 w-4 text-primary" />
                     Schedule
                   </div>
                   <p className="mt-2 text-xl font-black">{todayPlan?.isRestDay ? 'Rest' : todayPlan?.completed ? 'Done' : 'Open'}</p>
                 </div>
-                <div className="rounded-lg border bg-background/70 p-3">
+                <div className="rounded-lg border border-white/10 bg-white/[0.045] p-3">
                   <div className="flex items-center gap-2 text-xs font-black uppercase text-muted-foreground">
                     <Dumbbell className="h-4 w-4 text-primary" />
                     Logged today
                   </div>
                   <p className="mt-2 text-xl font-black">{todayLogged ? 'Yes' : 'No'}</p>
                 </div>
-                <div className="rounded-lg border bg-background/70 p-3">
+                <div className="rounded-lg border border-white/10 bg-white/[0.045] p-3">
                   <div className="flex items-center gap-2 text-xs font-black uppercase text-muted-foreground">
                     <ListChecks className="h-4 w-4 text-primary" />
                     Exercises
@@ -965,31 +971,18 @@ export function WorkoutsPage() {
           transition={{ duration: 0.5, delay: 0.05 }}
         >
           {[
-            { icon: <Calendar className="h-4 w-4" />, label: 'This Week', value: `${weeklyLogs.length}`, sub: 'tracked workouts' },
-            { icon: <Clock className="h-4 w-4" />, label: 'Minutes', value: `${weeklyMinutes}`, sub: 'last 7 days' },
-            { icon: <ListChecks className="h-4 w-4" />, label: 'Sets', value: `${totalSets}`, sub: 'all time' },
-            { icon: <BarChart3 className="h-4 w-4" />, label: 'Volume', value: `${Math.round(totalVolume).toLocaleString()}kg`, sub: 'all time' },
+            { icon: <Calendar className="h-4 w-4" />, label: 'This Week', value: `${weeklyLogs.length}`, detail: 'tracked workouts', tone: 'cyan' as const },
+            { icon: <Clock className="h-4 w-4" />, label: 'Minutes', value: `${weeklyMinutes}`, detail: 'last 7 days', tone: 'orange' as const },
+            { icon: <ListChecks className="h-4 w-4" />, label: 'Sets', value: `${totalSets}`, detail: 'all time', tone: 'green' as const },
+            { icon: <BarChart3 className="h-4 w-4" />, label: 'Volume', value: `${Math.round(totalVolume).toLocaleString()}kg`, detail: 'all time', tone: 'cyan' as const },
           ].map((stat) => (
-            <Card key={stat.label} className="border-border/50">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
-                    {stat.icon}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xl font-bold leading-tight">{stat.value}</p>
-                    <p className="text-xs text-muted-foreground">{stat.label}</p>
-                    <p className="text-[11px] text-muted-foreground/70">{stat.sub}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <MetricCard key={stat.label} label={stat.label} value={stat.value} detail={stat.detail} tone={stat.tone} icon={stat.icon} />
           ))}
         </motion.div>
 
         {recentLogs.length > 0 && (
           <motion.div
-            className="mb-8 rounded-xl border border-border/50 bg-card/60 p-4"
+            className="future-glass mb-8 rounded-xl border border-white/[0.12] bg-white/[0.055] p-4 backdrop-blur-2xl"
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.08 }}
@@ -1211,11 +1204,12 @@ export function WorkoutsPage() {
                   const media = getExerciseMedia(exercise, Boolean(playingMediaIds[exercise.id]));
 
                   return (
-                <Card className="group overflow-hidden border-border/50 transition-all duration-300 hover:-translate-y-1 hover:border-primary/25 hover:shadow-xl hover:shadow-black/25">
+                <TiltCard>
+                <GlassPanel className="group h-full overflow-hidden p-0">
                   <div
                     role="button"
                     tabIndex={0}
-                    className="relative block aspect-[4/3] w-full overflow-hidden bg-[radial-gradient(circle_at_50%_20%,oklch(0.23_0.014_95),oklch(0.11_0.01_95)_62%)] p-3 text-left sm:aspect-[16/13]"
+                    className="relative block aspect-[4/3] w-full overflow-hidden bg-[radial-gradient(circle_at_50%_20%,rgba(0,194,255,0.16),rgba(5,9,15,0.92)_62%)] p-3 text-left sm:aspect-[16/13]"
                     onClick={() => setExerciseId(exercise.id)}
                     onKeyDown={(event) => {
                       if (event.key === 'Enter' || event.key === ' ') {
@@ -1370,7 +1364,8 @@ export function WorkoutsPage() {
                       {favorites.includes(exercise.id) ? 'Saved workout' : 'Save workout'}
                     </Button>
                   </CardContent>
-                </Card>
+                </GlassPanel>
+                </TiltCard>
                   );
                 })()}
               </motion.div>
@@ -1953,6 +1948,7 @@ export function WorkoutsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+      </div>
+    </FutureShell>
   );
 }

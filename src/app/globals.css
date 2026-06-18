@@ -55,39 +55,39 @@
   --font-geist-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-geist-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
   --radius: 0.5rem;
-  --background: oklch(0.075 0.008 25);
-  --foreground: oklch(0.965 0.012 24);
-  --card: oklch(0.13 0.012 25);
-  --card-foreground: oklch(0.965 0.012 24);
-  --popover: oklch(0.115 0.012 25);
-  --popover-foreground: oklch(0.965 0.012 24);
-  --primary: oklch(0.62 0.24 27);
+  --background: oklch(0.045 0.012 250);
+  --foreground: oklch(0.965 0.012 240);
+  --card: oklch(0.10 0.018 250);
+  --card-foreground: oklch(0.965 0.012 240);
+  --popover: oklch(0.08 0.018 250);
+  --popover-foreground: oklch(0.965 0.012 240);
+  --primary: oklch(0.72 0.17 210);
   --primary-foreground: oklch(0.985 0.006 24);
-  --secondary: oklch(0.18 0.014 25);
+  --secondary: oklch(0.16 0.025 245);
   --secondary-foreground: oklch(0.94 0.012 24);
-  --muted: oklch(0.19 0.012 25);
-  --muted-foreground: oklch(0.72 0.025 24);
-  --accent: oklch(0.25 0.065 27);
+  --muted: oklch(0.15 0.018 245);
+  --muted-foreground: oklch(0.73 0.03 240);
+  --accent: oklch(0.62 0.18 45);
   --accent-foreground: oklch(0.96 0.012 24);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.30 0.025 25 / 76%);
-  --input: oklch(0.22 0.018 25);
-  --ring: oklch(0.62 0.24 27);
-  --chart-1: oklch(0.62 0.24 27);
-  --chart-2: oklch(0.72 0.19 35);
+  --border: oklch(0.38 0.035 235 / 58%);
+  --input: oklch(0.16 0.022 245);
+  --ring: oklch(0.72 0.17 210);
+  --chart-1: oklch(0.72 0.17 210);
+  --chart-2: oklch(0.72 0.19 45);
   --chart-3: oklch(0.66 0.12 250);
   --chart-4: oklch(0.73 0.12 25);
   --chart-5: oklch(0.76 0.09 320);
-  --sidebar: oklch(0.105 0.012 25);
+  --sidebar: oklch(0.07 0.018 250);
   --sidebar-foreground: oklch(0.965 0.012 24);
-  --sidebar-primary: oklch(0.62 0.24 27);
+  --sidebar-primary: oklch(0.72 0.17 210);
   --sidebar-primary-foreground: oklch(0.985 0.006 24);
-  --sidebar-accent: oklch(0.20 0.045 27);
+  --sidebar-accent: oklch(0.17 0.045 235);
   --sidebar-accent-foreground: oklch(0.965 0.012 24);
-  --sidebar-border: oklch(0.30 0.025 25 / 76%);
-  --sidebar-ring: oklch(0.62 0.24 27);
-  --neon: oklch(0.62 0.24 27);
-  --neon-dim: oklch(0.62 0.20 27 / 24%);
+  --sidebar-border: oklch(0.38 0.035 235 / 58%);
+  --sidebar-ring: oklch(0.72 0.17 210);
+  --neon: oklch(0.72 0.17 210);
+  --neon-dim: oklch(0.72 0.17 210 / 24%);
 }
 
 .dark {
@@ -109,8 +109,9 @@
     min-width: 320px;
     overflow-x: hidden;
     background:
-      radial-gradient(1200px 520px at 50% -18%, oklch(0.30 0.095 27 / 42%), transparent 62%),
-      linear-gradient(180deg, oklch(0.11 0.018 25) 0%, oklch(0.075 0.008 25) 34%, oklch(0.045 0.012 25) 100%);
+      radial-gradient(1100px 540px at 18% -12%, rgba(0, 194, 255, 0.16), transparent 62%),
+      radial-gradient(900px 520px at 86% 8%, rgba(255, 122, 26, 0.13), transparent 58%),
+      linear-gradient(180deg, #06080d 0%, #080c13 38%, #030406 100%);
     text-rendering: optimizeLegibility;
     font-feature-settings: "ss01" 1, "cv05" 1;
     -webkit-font-smoothing: antialiased;
@@ -130,7 +131,7 @@
   }
 
   ::selection {
-    background: oklch(0.62 0.24 27 / 32%);
+    background: oklch(0.72 0.17 210 / 32%);
     color: var(--foreground);
   }
 }
@@ -169,15 +170,15 @@
 
 /* Glass morphism */
 .glass {
-  background: linear-gradient(180deg, oklch(0.12 0.012 25 / 90%), oklch(0.065 0.01 25 / 86%));
+  background: linear-gradient(180deg, rgba(10, 16, 24, 0.86), rgba(5, 8, 12, 0.74));
   backdrop-filter: blur(18px) saturate(140%);
   -webkit-backdrop-filter: blur(18px) saturate(140%);
-  border-bottom: 1px solid oklch(0.62 0.24 27 / 20%);
+  border-bottom: 1px solid rgba(132, 232, 255, 0.18);
 }
 
 .dark .glass {
-  background: linear-gradient(180deg, oklch(0.12 0.012 25 / 90%), oklch(0.065 0.01 25 / 86%));
-  border-bottom: 1px solid oklch(0.62 0.24 27 / 20%);
+  background: linear-gradient(180deg, rgba(10, 16, 24, 0.86), rgba(5, 8, 12, 0.74));
+  border-bottom: 1px solid rgba(132, 232, 255, 0.18);
 }
 
 /* Hero gradient overlay */
@@ -201,7 +202,7 @@
 
 /* Gradient text */
 .gradient-text {
-  background: linear-gradient(135deg, oklch(0.98 0.01 24), oklch(0.72 0.24 27), oklch(0.48 0.22 27));
+  background: linear-gradient(135deg, #ffffff, #a7f3ff 42%, #ff9c4a 78%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -209,9 +210,61 @@
 
 .luxury-surface {
   background:
-    linear-gradient(180deg, oklch(0.14 0.014 25 / 92%), oklch(0.075 0.012 25 / 96%));
-  border: 1px solid oklch(0.62 0.24 27 / 20%);
+    linear-gradient(180deg, rgba(16, 24, 35, 0.92), rgba(4, 7, 11, 0.96));
+  border: 1px solid rgba(132, 232, 255, 0.18);
   box-shadow: 0 18px 44px oklch(0 0 0 / 34%), inset 0 1px 0 oklch(1 0 0 / 8%);
+}
+
+.future-shell {
+  isolation: isolate;
+}
+
+.future-grid {
+  background-image:
+    linear-gradient(rgba(130, 232, 255, 0.11) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(130, 232, 255, 0.09) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: linear-gradient(to bottom, transparent, black 18%, black 72%, transparent);
+}
+
+.future-glass {
+  background-image:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.035) 34%, rgba(255, 255, 255, 0.02)),
+    radial-gradient(circle at 12% 0%, rgba(0, 194, 255, 0.15), transparent 36%),
+    radial-gradient(circle at 100% 12%, rgba(255, 122, 26, 0.11), transparent 30%);
+  box-shadow:
+    0 28px 80px rgba(0, 0, 0, 0.36),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.future-icon-glass {
+  background: linear-gradient(145deg, rgba(0, 194, 255, 0.18), rgba(255, 122, 26, 0.12));
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 12px 34px rgba(0, 194, 255, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+.future-ring {
+  background:
+    conic-gradient(from -90deg, #00c2ff var(--ring-value), rgba(255, 122, 26, 0.28) var(--ring-value), rgba(255, 255, 255, 0.08) 360deg);
+  box-shadow: 0 0 42px rgba(0, 194, 255, 0.16), inset 0 0 32px rgba(0, 0, 0, 0.34);
+}
+
+.holo-text {
+  color: #e9fbff;
+  text-shadow: 0 0 18px rgba(0, 194, 255, 0.34);
+}
+
+.future-depth {
+  transform-style: preserve-3d;
+}
+
+.future-depth > * {
+  transform: translateZ(18px);
+}
+
+.premium-scroll-fade {
+  mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
 }
 
 @supports (text-wrap: balance) {

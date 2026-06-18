@@ -212,7 +212,7 @@ function getLocalCoachResponse(messages: CoachMessage[]) {
     return getLocalDateTimeResponse(latest);
   }
 
-  if (/chest|bench|push|workout|training|تمرين|صدر|بنش|دفع/.test(lowerLatest)) {
+  if (/chest|bench|push|صدر|بنش|دفع/.test(lowerLatest)) {
     return [
       '**Fallback chest session**',
       '',
@@ -232,6 +232,38 @@ function getLocalCoachResponse(messages: CoachMessage[]) {
       '**Progression**',
       '- When you hit the top reps on all sets, add 1-2.5kg next time',
       '- Keep shoulders back, control the lowering, and avoid bouncing reps',
+    ].join('\n');
+  }
+
+  if (/workout|training|routine|program|plan|split|exercise|gym|strength|muscle|تمرين|برنامج|رياضة/.test(lowerLatest)) {
+    return [
+      '**Fallback 3-day training plan**',
+      '',
+      'The external AI provider is unavailable right now, but here is a balanced plan you can use today.',
+      '',
+      '**Day 1 - Full body strength**',
+      '- Squat or leg press: 3 x 6-8, rest 2 min',
+      '- Bench press or chest press: 3 x 6-10, rest 2 min',
+      '- Seated row or lat pulldown: 3 x 8-12, rest 90 sec',
+      '- Plank: 3 x 30-45 sec',
+      '',
+      '**Day 2 - Muscle builder**',
+      '- Romanian deadlift: 3 x 8-10, rest 2 min',
+      '- Shoulder press: 3 x 8-10, rest 90 sec',
+      '- Cable row or dumbbell row: 3 x 10-12, rest 90 sec',
+      '- Biceps curl + triceps pushdown: 2 x 12-15 each',
+      '',
+      '**Day 3 - Technique and volume**',
+      '- Goblet squat or split squat: 3 x 10 each side',
+      '- Incline press or push-ups: 3 x 8-12',
+      '- Lat pulldown: 3 x 10-12',
+      '- Lateral raises: 2 x 15',
+      '- Easy cardio: 10-15 minutes',
+      '',
+      '**Progression**',
+      '- Keep 1-2 reps in reserve on most sets',
+      '- Add reps first, then add small weight when all sets feel clean',
+      '- Take at least one rest day between sessions',
     ].join('\n');
   }
 

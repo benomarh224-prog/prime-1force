@@ -2,16 +2,13 @@
 
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import type { Variants } from 'framer-motion';
 import { useSession } from 'next-auth/react';
 import {
-  Apple,
   ArrowRight,
   BarChart3,
-  BookOpen,
   Bot,
+  Brain,
   CalendarCheck2,
-  CheckCircle2,
   Dumbbell,
   Flame,
   HeartPulse,
@@ -27,167 +24,71 @@ import {
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { TodayDashboard } from '@/components/pages/TodayDashboard';
+import { FutureShell, GlassPanel, MetricCard, ProgressRing, SectionHeading, TiltCard } from '@/components/future/FutureUI';
+import { FutureScene } from '@/components/future/FutureScene';
 import { openAuthDialog } from '@/lib/auth-dialog';
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/lib/store';
 
-const fadeUp: Variants = {
-  hidden: { opacity: 0, y: 24 },
-  visible: (i = 0) => ({
-    opacity: 1,
-    y: 0,
-    transition: { delay: i * 0.08, duration: 0.55, ease: 'easeOut' },
-  }),
-};
+const heroMetrics = [
+  { label: 'Readiness', value: '94%', detail: 'AI-calibrated recovery', tone: 'cyan' as const, icon: <HeartPulse className="h-5 w-5" /> },
+  { label: 'Power Output', value: '12.8k', detail: 'kg volume this week', tone: 'orange' as const, icon: <Flame className="h-5 w-5" /> },
+  { label: 'Consistency', value: '6/7', detail: 'sessions on rhythm', tone: 'green' as const, icon: <CalendarCheck2 className="h-5 w-5" /> },
+];
 
-const sectionIntro: Variants = {
-  hidden: { opacity: 0, y: 18 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.55, ease: 'easeOut' } },
-};
-
-const strengthPillars = [
+const systemPillars = [
   {
-    icon: BookOpen,
-    title: 'Learn the basics',
-    text: 'Understand form, tempo, progressive overload, rest, and how each muscle group works.',
-    accent: 'text-sky-300 bg-sky-400/10 border-sky-300/20',
+    icon: Brain,
+    title: 'Adaptive intelligence',
+    copy: 'PrimeForge turns training history, goals, and recovery signals into next-session decisions.',
   },
   {
     icon: Dumbbell,
-    title: 'Train with purpose',
-    text: 'Follow clear workouts for gym or home, with exercise details that make every set count.',
-    accent: 'text-primary bg-primary/10 border-primary/20',
+    title: 'Precision workouts',
+    copy: 'Exercise cards, form cues, rest timing, and progressive overload live in one fast interface.',
   },
   {
     icon: Utensils,
-    title: 'Eat for strength',
-    text: 'Use simple nutrition guidance so your body has the protein, calories, and habits to grow.',
-    accent: 'text-emerald-300 bg-emerald-400/10 border-emerald-300/20',
+    title: 'Nutrition signal',
+    copy: 'Meal guidance and macro context connect daily food choices to strength outcomes.',
   },
   {
-    icon: HeartPulse,
-    title: 'Recover like an athlete',
-    text: 'Build consistency with smart scheduling, sleep, mobility, and weekly progress tracking.',
-    accent: 'text-amber-300 bg-amber-400/10 border-amber-300/20',
+    icon: BarChart3,
+    title: 'Holographic progress',
+    copy: 'Performance rings, streaks, PRs, and volume trends make progress instantly visible.',
   },
-];
-
-const learningPath = [
-  'Choose your goal and experience',
-  'Learn proper form before adding weight',
-  'Follow short, easy workouts',
-  'Track simple progress every week',
-  'Ask the coach whenever you need help',
 ];
 
 const programCards = [
   {
-    title: 'Beginner Strength',
-    level: 'Start here',
-    image: '/images/workout-barbell-squat.webp',
-    stats: '3 days/week - full body',
-    goal: 'Form first',
-    cadence: '3 sessions',
-    accent: 'from-primary to-amber-400',
-  },
-  {
-    title: 'Muscle Builder',
-    level: 'Hypertrophy',
+    title: 'Neural Strength',
+    label: 'Beginner to intermediate',
     image: '/images/workout-bench-press.jpeg',
-    stats: '4 days/week - upper/lower',
-    goal: 'Volume work',
-    cadence: '4 sessions',
-    accent: 'from-sky-400 to-primary',
+    progress: 78,
+    detail: 'Upper power, clean technique, repeatable progression.',
   },
   {
-    title: 'Home Discipline',
-    level: 'No equipment',
+    title: 'Hypertrophy Drive',
+    label: 'Muscle architecture',
+    image: '/images/workout-strength-luxe.jpg',
+    progress: 86,
+    detail: 'High-quality volume with AI-managed fatigue windows.',
+  },
+  {
+    title: 'Mobility Engine',
+    label: 'Recovery protocol',
     image: '/images/workout-no-equip.png',
-    stats: '30 min - bodyweight',
-    goal: 'Daily habit',
-    cadence: '30 minutes',
-    accent: 'from-emerald-300 to-primary',
+    progress: 64,
+    detail: 'Joint prep, breath control, and habit reinforcement.',
   },
 ];
 
-const weeklyPlan = [
-  { day: 'Mon', focus: 'Push strength', detail: 'Chest, shoulders, triceps', icon: Dumbbell },
-  { day: 'Tue', focus: 'Learn and recover', detail: 'Mobility, form videos, walking', icon: BookOpen },
-  { day: 'Wed', focus: 'Leg power', detail: 'Squat pattern, hamstrings, calves', icon: Flame },
-  { day: 'Fri', focus: 'Pull and posture', detail: 'Back, biceps, rear delts', icon: Target },
+const coachingSignals = [
+  ['Form scan', 'Bar path looks stable. Add 2.5kg next week.'],
+  ['Recovery', 'Sleep trend supports one heavier top set today.'],
+  ['Nutrition', 'Protein target needs 31g before evening session.'],
 ];
-
-const stats = [
-  { value: '100+', label: 'exercises' },
-  { value: '5', label: 'connected tools' },
-  { value: '1', label: 'clear plan' },
-];
-
-function StarterPlanPreview() {
-  const steps = [
-    {
-      icon: Target,
-      title: 'Set your direction',
-      text: 'Choose your goal, experience, equipment, and available training days.',
-    },
-    {
-      icon: CalendarCheck2,
-      title: 'Get your first week',
-      text: 'Turn those answers into a realistic schedule with clear sessions and recovery.',
-    },
-    {
-      icon: TrendingUp,
-      title: 'Train and adapt',
-      text: 'Log your work, review progress, and use the coach when the plan needs adjusting.',
-    },
-  ];
-
-  return (
-    <section className="relative overflow-hidden border-y border-primary/10 bg-muted/20 py-10 sm:py-20">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_0%,oklch(0.62_0.24_27_/_0.15),transparent_36%)]" />
-      <div className="relative mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:px-8">
-        <div>
-          <Badge className="mb-4 border-primary/25 bg-primary/10 text-primary">
-            <Sparkles className="h-3.5 w-3.5" />
-              Easy beginner start
-            </Badge>
-            <h2 className="text-3xl font-black tracking-normal sm:text-5xl">
-              <span className="sm:hidden">Your first week made easy.</span>
-              <span className="hidden sm:inline">Get a simple, beginner-friendly training week you can follow.</span>
-            </h2>
-            <p className="mt-5 hidden max-w-xl text-base leading-8 text-muted-foreground sm:block">
-              Prime Forge gives you one easy starter plan with clear sessions, recovery cues, and progress tracking so
-              strength training feels simple from day one.
-            </p>
-            <Button onClick={() => openAuthDialog('signup')} className="mt-5 h-11 rounded-lg px-6 font-black uppercase sm:mt-7 sm:h-12">
-              Start Your Plan
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          </div>
-
-          <div className="grid gap-3">
-            {steps.map((step, index) => {
-            const Icon = step.icon;
-            return (
-              <div key={step.title} className="flex gap-3 rounded-lg border border-white/[0.08] bg-card/80 p-4 sm:gap-4 sm:p-5">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                  <Icon className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-xs font-black uppercase tracking-wide text-primary">Step {index + 1}</p>
-                  <h3 className="mt-1 text-lg font-black">{step.title}</h3>
-                  <p className="mt-2 hidden text-sm leading-6 text-muted-foreground sm:block">{step.text}</p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </section>
-  );
-}
 
 export function HomePage() {
   const { navigate, requestStartTodayWorkout } = useAppStore();
@@ -199,488 +100,236 @@ export function HomePage() {
   };
 
   return (
-    <div className="overflow-hidden bg-background">
-      <section className="relative min-h-[calc(100svh-4.75rem)] overflow-hidden bg-black text-white sm:min-h-[92svh]">
-        <Image
-          src="/images/hero-primeforge-mobile.webp"
-          alt="Focused athlete training strength in a gym"
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover object-center sm:hidden"
-        />
-        <Image
-          src="/images/hero-primeforge.webp"
-          alt="Focused athlete training strength in a gym"
-          fill
-          priority
-          sizes="100vw"
-          className="hidden object-cover object-[62%_center] sm:block lg:object-[58%_center]"
-        />
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.42)_0%,rgba(0,0,0,0.16)_34%,rgba(0,0,0,0.58)_74%,rgba(0,0,0,0.92)_100%)] sm:bg-[linear-gradient(90deg,rgba(0,0,0,0.96)_0%,rgba(0,0,0,0.80)_42%,rgba(0,0,0,0.34)_72%,rgba(0,0,0,0.72)_100%)]" />
-        <div className="absolute inset-y-0 left-0 w-[78%] bg-gradient-to-r from-black/78 via-black/24 to-transparent sm:hidden" />
-        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-background to-transparent" />
+    <FutureShell>
+      <section className="relative min-h-[calc(100svh-4.75rem)] overflow-hidden pt-20 text-white sm:min-h-[96svh] lg:pt-24">
+        <FutureScene variant="hero" className="opacity-95" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_56%_34%,transparent_0%,rgba(3,5,9,0.12)_34%,rgba(3,5,9,0.88)_100%)]" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-background to-transparent" />
 
-        <div className="relative z-10 mx-auto flex min-h-[calc(100svh-4.75rem)] w-full max-w-[1400px] items-start px-4 pb-24 pt-[5.5rem] sm:min-h-[92svh] sm:items-center sm:px-8 sm:pb-20 sm:pt-28 lg:px-10">
-          <div className="grid w-full items-center gap-10 lg:grid-cols-[minmax(0,1fr)_26rem]">
-            <motion.div initial={false} animate="visible" className="hero-copy-frame min-w-0 max-w-4xl">
-              <motion.div variants={fadeUp} custom={0}>
-                <Badge className="mb-4 border-white/15 bg-black/35 px-3 py-1.5 text-white backdrop-blur-sm sm:mb-6 sm:bg-white/[0.08]">
-                  <ShieldCheck className="h-3.5 w-3.5" />
-                  <span className="sm:hidden">Easy strength.</span>
-                  <span className="hidden sm:inline">Easy strength. Easy learning. Clear progress.</span>
-                </Badge>
-              </motion.div>
+        <div className="relative z-10 mx-auto grid min-h-[calc(100svh-5rem)] w-full max-w-[1440px] items-center gap-10 px-4 pb-20 sm:px-8 lg:grid-cols-[1.02fr_0.98fr] lg:px-10">
+          <motion.div
+            initial={{ opacity: 0, y: 26 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.75, ease: 'easeOut' }}
+            className="max-w-5xl"
+          >
+            <Badge className="mb-5 border-cyan-200/20 bg-cyan-200/10 px-3 py-1.5 text-cyan-100 backdrop-blur-xl">
+              <ShieldCheck className="h-3.5 w-3.5" />
+              Vision-grade strength operating system
+            </Badge>
+            <h1 className="holo-text max-w-5xl text-[3.25rem] font-black uppercase leading-[0.9] tracking-normal min-[420px]:text-[4rem] sm:text-[6.6rem] lg:text-[7.4rem]">
+              Train inside the future.
+            </h1>
+            <p className="mt-6 max-w-2xl text-base leading-8 text-white/66 sm:text-xl sm:leading-9">
+              PrimeForge blends immersive 3D training, AI coaching, precision metrics, and premium fitness workflows into
+              one living command center.
+            </p>
 
-              <motion.h1
-                variants={fadeUp}
-                custom={1}
-                className="max-w-[20rem] text-[2.5rem] font-black uppercase leading-[0.92] tracking-normal min-[380px]:text-[2.9rem] sm:max-w-5xl sm:text-7xl lg:text-[7.25rem]"
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <Button onClick={startToday} size="lg" className="h-13 rounded-lg px-7 font-black uppercase shadow-[0_0_34px_rgba(0,194,255,0.24)]">
+                Start Training
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+              <Button
+                onClick={() => navigate('ai-coach')}
+                size="lg"
+                variant="outline"
+                className="h-13 rounded-lg border-white/15 bg-white/[0.06] px-7 font-black uppercase text-white backdrop-blur-xl hover:bg-white/10 hover:text-white"
               >
-                <span className="block sm:hidden">Strength</span>
-                <span className="block sm:hidden">Made Simple</span>
-                <span className="hidden sm:block">Strength Made</span>
-                <span className="hidden sm:block">Simple</span>
-              </motion.h1>
+                <Bot className="h-4 w-4" />
+                Talk to Coach
+              </Button>
+            </div>
 
-              <motion.p
-                variants={fadeUp}
-                custom={2}
-                className="hero-subcopy mt-4 max-w-[17rem] text-sm leading-6 text-white/78 sm:mt-6 sm:max-w-2xl sm:text-xl sm:leading-8"
-              >
-                <span className="sm:hidden">Simple workouts, clear steps, real progress.</span>
-                <span className="hidden sm:inline">
-                  Learn strength with easy-to-follow workouts, practical nutrition cues, and step-by-step progress so you
-                  feel more confident every time you train.
-                </span>
-              </motion.p>
+            <div className="mt-9 grid max-w-3xl grid-cols-3 gap-2 sm:gap-3">
+              {[
+                ['3D', 'Live interface'],
+                ['AI', 'Adaptive coach'],
+                ['60fps', 'Fast motion'],
+              ].map(([value, label]) => (
+                <GlassPanel key={label} className="px-3 py-4 text-center sm:px-5 sm:text-left">
+                  <p className="text-2xl font-black text-white sm:text-4xl">{value}</p>
+                  <p className="mt-1 text-[10px] font-black uppercase tracking-[0.14em] text-white/42 sm:text-xs">{label}</p>
+                </GlassPanel>
+              ))}
+            </div>
+          </motion.div>
 
-              <motion.div
-                variants={fadeUp}
-                custom={3}
-                className="mt-6 grid w-full max-w-[22rem] grid-cols-[1fr_auto] gap-2 sm:mt-9 sm:flex sm:w-auto sm:max-w-none sm:flex-row sm:gap-3"
-              >
-                <Button
-                  size="lg"
-                  onClick={startToday}
-                  className="h-12 w-full rounded-lg px-5 text-sm font-black uppercase sm:h-[3.15rem] sm:w-auto sm:px-8"
-                >
-                  <span className="sm:hidden">Start</span>
-                  <span className="hidden sm:inline">Start Beginner Plan</span>
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  onClick={() => navigate('ai-coach')}
-                  className="h-12 w-auto rounded-lg border-white/20 bg-black/45 px-4 text-sm font-black uppercase text-white backdrop-blur-sm hover:bg-white/10 hover:text-white sm:h-[3.15rem] sm:px-8"
-                >
-                  <Bot className="h-4 w-4" />
-                  <span className="sm:hidden">Help</span>
-                  <span className="hidden sm:inline">Get Coaching Help</span>
-                </Button>
-              </motion.div>
-
-              <motion.div
-                variants={fadeUp}
-                custom={4}
-                className="mt-8 grid w-full max-w-[22rem] grid-cols-3 overflow-hidden rounded-xl border border-white/[0.12] bg-black/55 backdrop-blur-md sm:mt-10 sm:max-w-2xl sm:bg-black/40"
-              >
-                {stats.map((item) => (
-                  <div key={item.label} className="border-r border-white/10 p-3 text-center last:border-r-0 sm:p-5 sm:text-left">
-                    <p className="text-xl font-black text-primary sm:text-3xl">{item.value}</p>
-                    <p className="mt-1 text-[11px] font-semibold uppercase text-white/58 sm:text-xs">{item.label}</p>
-                  </div>
-                ))}
-              </motion.div>
-            </motion.div>
-
-            <motion.aside
-              initial={{ opacity: 0, y: 24, scale: 0.97 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ delay: 0.35, duration: 0.65, ease: 'easeOut' }}
-              className="hidden border border-white/[0.12] bg-black/[0.48] p-5 shadow-2xl shadow-black/40 backdrop-blur-xl lg:block"
-            >
+          <motion.div
+            initial={{ opacity: 0, x: 32, rotateY: -8 }}
+            animate={{ opacity: 1, x: 0, rotateY: 0 }}
+            transition={{ delay: 0.18, duration: 0.85, ease: 'easeOut' }}
+            className="hidden lg:block"
+          >
+            <GlassPanel intensity="strong" className="future-depth p-5">
               <div className="flex items-center justify-between border-b border-white/10 pb-4">
                 <div>
-                  <p className="text-xs font-semibold uppercase text-white/45">Today&apos;s mission</p>
-                  <h2 className="mt-1 text-xl font-black">Upper Strength</h2>
+                  <p className="text-xs font-black uppercase tracking-[0.22em] text-cyan-100/58">Today protocol</p>
+                  <h2 className="mt-2 text-2xl font-black">Upper Strength</h2>
                 </div>
-                <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                  <Dumbbell className="h-5 w-5" />
-                </div>
+                <ProgressRing value={84} label="ready" size={112} />
               </div>
-
-              <div className="space-y-3 py-5">
+              <div className="grid gap-3 py-5">
                 {[
-                  ['Warm up', '8 min mobility'],
-                  ['Main lift', 'Bench press 4 x 6'],
-                  ['Skill', 'Controlled pulling tempo'],
-                  ['Nutrition', '145g protein target'],
-                ].map(([label, detail]) => (
-                  <div key={label} className="flex items-center gap-3 rounded-lg bg-white/6 p-3">
-                    <CheckCircle2 className="h-5 w-5 text-emerald-300" />
-                    <div className="min-w-0">
-                      <p className="text-sm font-bold">{label}</p>
-                      <p className="truncate text-xs text-white/56">{detail}</p>
+                  ['Neural warmup', '8 min mobility and ramp sets', Timer],
+                  ['Primary lift', 'Bench press 4 x 6 @ RPE 7', Dumbbell],
+                  ['AI cue', 'Keep wrists stacked over elbows', Sparkles],
+                ].map(([title, detail, Icon]) => {
+                  const LucideIcon = Icon as typeof Dumbbell;
+                  return (
+                    <div key={title as string} className="rounded-xl border border-white/10 bg-white/[0.045] p-4">
+                      <div className="flex items-center gap-3">
+                        <span className="future-icon-glass grid h-10 w-10 place-items-center rounded-xl text-cyan-100">
+                          <LucideIcon className="h-4 w-4" />
+                        </span>
+                        <div>
+                          <p className="font-black">{title as string}</p>
+                          <p className="text-sm text-white/52">{detail as string}</p>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
-
               <Button onClick={startToday} className="h-12 w-full rounded-lg font-black uppercase">
-                Begin Today
+                Launch Session
                 <Play className="h-4 w-4 fill-current" />
               </Button>
-            </motion.aside>
-          </div>
+            </GlassPanel>
+          </motion.div>
         </div>
       </section>
 
-      {status === 'authenticated' ? <TodayDashboard /> : <StarterPlanPreview />}
+      {status === 'authenticated' ? (
+        <div className="relative z-10">
+          <TodayDashboard />
+        </div>
+      ) : (
+        <section className="relative z-10 border-y border-white/10 bg-white/[0.025] py-12 sm:py-18">
+          <div className="mx-auto grid max-w-7xl gap-6 px-4 sm:px-6 lg:grid-cols-[0.86fr_1.14fr] lg:items-center lg:px-8">
+            <SectionHeading
+              eyebrow="PrimeForge OS"
+              title="A premium command center for every decision before, during, and after training."
+              copy="Built for clarity first: immersive where it helps, restrained where you need to act fast."
+            />
+            <div className="grid gap-3 sm:grid-cols-3">
+              {heroMetrics.map((metric) => (
+                <MetricCard key={metric.label} {...metric} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
-      <section className="py-10 sm:py-14">
+      <section className="relative z-10 py-14 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: '-80px' }}
-            variants={sectionIntro}
-            className="max-w-2xl"
-          >
-            <Badge variant="secondary" className="mb-4">
-              <BookOpen className="h-3.5 w-3.5" />
-              Strength school
-            </Badge>
-            <h2 className="text-3xl font-black tracking-normal sm:text-4xl">
-              <span className="sm:hidden">Learn how to get stronger.</span>
-              <span className="hidden sm:inline">Everything a beginner needs to learn strength clearly and confidently.</span>
-            </h2>
-            <p className="mt-5 hidden text-base leading-8 text-muted-foreground sm:block sm:text-lg">
-              Start with the basics, follow a simple path, and build strength in a way that feels easy to understand
-              and easy to repeat.
-            </p>
-          </motion.div>
+          <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
+            <SectionHeading
+              eyebrow="Advanced 3D UI"
+              title="Floating glass modules with usable depth."
+              copy="Every panel is designed to feel alive while staying readable under pressure."
+            />
+            <Button onClick={() => navigate('dashboard')} variant="outline" className="h-11 rounded-lg border-white/15 bg-white/[0.04] font-bold text-white hover:bg-white/10">
+              View Dashboard
+              <BarChart3 className="h-4 w-4" />
+            </Button>
+          </div>
 
-          <div className="mt-6 grid grid-cols-2 gap-3 sm:mt-8 lg:grid-cols-4">
-            {strengthPillars.map((pillar, index) => {
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {systemPillars.map((pillar, index) => {
               const Icon = pillar.icon;
               return (
-                <motion.div
-                  key={pillar.title}
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true, margin: '-60px' }}
-                  variants={fadeUp}
-                  custom={index}
-                >
-                  <Card className="h-full py-0 transition-transform duration-300 hover:-translate-y-1">
-                    <CardContent className="p-4 sm:p-6">
-                      <div className={cn('mb-4 flex h-11 w-11 items-center justify-center rounded-lg border sm:mb-5 sm:h-12 sm:w-12', pillar.accent)}>
-                        <Icon className="h-5 w-5" />
-                      </div>
-                      <h3 className="text-base font-black sm:text-lg">{pillar.title}</h3>
-                      <p className="mt-3 hidden text-sm leading-7 text-muted-foreground sm:block">{pillar.text}</p>
-                    </CardContent>
-                  </Card>
-                </motion.div>
+                <TiltCard key={pillar.title}>
+                  <GlassPanel className="h-full p-5">
+                    <div className={cn('future-orbit mb-5 grid h-12 w-12 place-items-center rounded-xl', index % 2 ? 'bg-orange-300/12 text-orange-200' : 'bg-cyan-300/12 text-cyan-100')}>
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <h3 className="text-lg font-black text-white">{pillar.title}</h3>
+                    <p className="mt-3 text-sm leading-7 text-white/56">{pillar.copy}</p>
+                  </GlassPanel>
+                </TiltCard>
               );
             })}
           </div>
         </div>
       </section>
 
-      <section className="hidden">
-        <div className="mx-auto grid max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-[0.92fr_1.08fr] lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, x: -24 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: '-80px' }}
-            transition={{ duration: 0.6, ease: 'easeOut' }}
-            className="relative min-h-[30rem] overflow-hidden rounded-lg"
-          >
-            <Image
-              src="/images/trainer.png"
-              alt="Trainer coaching exercise form"
-              fill
-              sizes="(min-width: 1024px) 45vw, 100vw"
-              className="object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/[0.82] via-black/[0.18] to-transparent" />
-            <div className="absolute bottom-0 p-6 sm:p-8">
-              <Badge className="mb-4 border-white/15 bg-white/10 text-white">Coach mindset</Badge>
-              <h2 className="max-w-md text-3xl font-black text-white sm:text-4xl">Train hard, but train smart first.</h2>
-              <p className="mt-4 hidden max-w-md text-sm leading-7 text-white/72 sm:block">
-                Better form, patient progression, and honest tracking beat motivation that lasts only one week.
-              </p>
-            </div>
-          </motion.div>
-
-          <div className="flex flex-col justify-center">
-            <motion.div
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, margin: '-80px' }}
-              variants={sectionIntro}
-            >
-              <Badge variant="secondary" className="mb-4">
-                <Target className="h-3.5 w-3.5" />
-                Your path
-              </Badge>
-              <h2 className="text-3xl font-black tracking-normal sm:text-5xl">A clear system for real progress.</h2>
-            </motion.div>
-
-            <div className="mt-8 space-y-3">
-              {learningPath.map((item, index) => (
-                <motion.div
-                  key={item}
-                  initial={{ opacity: 0, x: 18 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.06, duration: 0.45 }}
-                  className={cn(
-                    'items-center gap-4 rounded-lg border border-white/[0.08] bg-card/70 p-4',
-                    index > 2 ? 'hidden sm:flex' : 'flex'
-                  )}
-                >
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/[0.12] text-sm font-black text-primary">
-                    {index + 1}
-                  </span>
-                  <p className="font-semibold">{item}</p>
-                </motion.div>
-              ))}
-            </div>
-
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Button onClick={() => navigate('workouts')} className="h-12 rounded-lg font-bold">
-                Explore Workouts
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-              <Button onClick={() => navigate('nutrition')} variant="outline" className="h-12 rounded-lg font-bold">
-                Learn Nutrition
-                <Apple className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="py-10 sm:py-14">
+      <section className="relative z-10 py-14 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: '-80px' }}
-            variants={sectionIntro}
-            className="flex flex-col justify-between gap-5 md:flex-row md:items-end"
-          >
-            <div className="max-w-3xl">
-              <Badge variant="secondary" className="mb-4">
-                <Zap className="h-3.5 w-3.5" />
-                Training plans
-              </Badge>
-              <h2 className="text-3xl font-black tracking-normal sm:text-4xl">
-                <span className="sm:hidden">Pick your program.</span>
-                <span className="hidden sm:inline">Choose a program and know what to do next.</span>
-              </h2>
-            </div>
-            <Button onClick={() => navigate('workouts')} variant="outline" className="h-10 rounded-lg font-bold">
-              View all programs
+          <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
+            <SectionHeading eyebrow="Workout engine" title="3D exercise cards tuned for action." />
+            <Button onClick={() => navigate('workouts')} className="h-11 rounded-lg font-black uppercase">
+              Explore Workouts
               <ArrowRight className="h-4 w-4" />
             </Button>
-          </motion.div>
+          </div>
 
-          <div className="mobile-card-scroller -mx-4 mt-6 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:mt-8 sm:px-0 md:grid md:grid-cols-3 md:overflow-visible md:pb-0">
-            {programCards.map((program, index) => (
-              <motion.article
-                key={program.title}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true, margin: '-60px' }}
-                variants={fadeUp}
-                custom={index}
-                whileHover={{ y: -6 }}
-                transition={{ type: 'spring', stiffness: 260, damping: 22 }}
-                className="group relative min-w-[82vw] snap-start overflow-hidden rounded-lg border border-white/10 bg-card shadow-[0_16px_38px_oklch(0_0_0_/_0.20)] md:min-w-0"
-              >
-                <motion.div
-                  className={cn(
-                    'pointer-events-none absolute inset-x-0 top-0 z-20 h-1 bg-gradient-to-r opacity-80',
-                    program.accent
-                  )}
-                  initial={{ scaleX: 0, transformOrigin: 'left' }}
-                  whileInView={{ scaleX: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.25 + index * 0.12, duration: 0.7, ease: 'easeOut' }}
-                />
-                <div className="relative aspect-[16/10] overflow-hidden">
-                  <Image
-                    src={program.image}
-                    alt={program.title}
-                    fill
-                    sizes="(min-width: 768px) 33vw, 100vw"
-                    className="object-cover transition duration-700 group-hover:scale-110 group-hover:brightness-110"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/[0.86] via-black/[0.18] to-transparent" />
-                  <motion.div
-                    className="absolute -inset-y-8 -left-24 w-16 rotate-12 bg-white/20 blur-md"
-                    initial={{ x: -120 }}
-                    whileHover={{ x: 560 }}
-                    transition={{ duration: 0.9, ease: 'easeOut' }}
-                  />
-                  <Badge className="absolute left-4 top-4 border-white/15 bg-black/45 text-white backdrop-blur-sm">{program.level}</Badge>
-                  <motion.div className="absolute bottom-4 right-4 rounded-lg border border-white/15 bg-black/50 px-3 py-2 text-right text-white backdrop-blur-md">
-                    <p className="text-[10px] font-bold uppercase text-white/55">Goal</p>
-                    <p className="text-xs font-black">{program.goal}</p>
-                  </motion.div>
-                </div>
-                <div className="p-4">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <h3 className="text-xl font-black">{program.title}</h3>
-                      <p className="mt-2 text-sm text-muted-foreground">{program.stats}</p>
-                    </div>
-                    <div className="rounded-lg bg-primary/[0.10] px-2.5 py-1 text-xs font-black text-primary">
-                      {program.cadence}
-                    </div>
+          <div className="mobile-card-scroller -mx-4 mt-8 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-0 md:grid md:grid-cols-3 md:overflow-visible">
+            {programCards.map((program) => (
+              <TiltCard key={program.title} className="min-w-[82vw] snap-start md:min-w-0">
+                <GlassPanel className="group h-full overflow-hidden">
+                  <div className="relative aspect-[16/10] overflow-hidden">
+                    <Image src={program.image} alt={program.title} fill sizes="(min-width: 768px) 33vw, 100vw" className="object-cover transition duration-700 group-hover:scale-110" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/88 via-black/18 to-transparent" />
+                    <Badge className="absolute left-4 top-4 border-white/15 bg-black/40 text-white backdrop-blur-xl">{program.label}</Badge>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => navigate('workouts')}
-                    className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-primary transition-colors hover:text-primary/80"
-                  >
-                    Start this path
-                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                  </button>
-                </div>
-              </motion.article>
+                  <div className="p-5">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <h3 className="text-2xl font-black text-white">{program.title}</h3>
+                        <p className="mt-2 text-sm leading-6 text-white/56">{program.detail}</p>
+                      </div>
+                      <ProgressRing value={program.progress} label="load" size={86} />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => navigate('workouts')}
+                      className="mt-5 inline-flex items-center gap-2 text-sm font-black uppercase text-cyan-100 transition hover:text-orange-200"
+                    >
+                      Open protocol
+                      <ArrowRight className="h-4 w-4" />
+                    </button>
+                  </div>
+                </GlassPanel>
+              </TiltCard>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="hidden">
-        <div className="mx-auto grid max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-[1fr_1fr] lg:px-8">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: '-80px' }}
-            variants={sectionIntro}
-            className="hidden sm:block"
-          >
-            <Badge variant="secondary" className="mb-4">
-              <CalendarCheck2 className="h-3.5 w-3.5" />
-              Weekly structure
-            </Badge>
-            <h2 className="text-3xl font-black tracking-normal sm:text-5xl">Consistency gets easier when the week is already planned.</h2>
-            <p className="mt-5 hidden max-w-2xl text-base leading-8 text-muted-foreground sm:block">
-              The schedule page helps users stop guessing. They can see what to train, when to recover,
-              and how every session connects to their bigger strength goal.
-            </p>
-
-            <div className="mt-8 grid gap-4 sm:grid-cols-2">
-              {[
-                { icon: Timer, title: 'Short sessions', text: 'Plans fit real days, not fantasy calendars.' },
-                { icon: TrendingUp, title: 'Progressive goals', text: 'Small weekly wins add up to visible strength.' },
-                { icon: BarChart3, title: 'Honest tracking', text: 'Use the dashboard to see what is working.' },
-                { icon: Bot, title: 'Coach support', text: 'Ask for swaps, explanations, and motivation.' },
-              ].map((item) => {
-                const Icon = item.icon;
-                return (
-                  <div key={item.title} className="rounded-lg border border-white/[0.08] bg-card/70 p-4">
-                    <Icon className="h-5 w-5 text-primary" />
-                    <h3 className="mt-3 font-black">{item.title}</h3>
-                    <p className="mt-2 hidden text-sm leading-6 text-muted-foreground sm:block">{item.text}</p>
-                  </div>
-                );
-              })}
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-80px' }}
-            transition={{ duration: 0.6, ease: 'easeOut' }}
-            className="self-center rounded-lg border border-white/10 bg-card p-5 shadow-[0_16px_38px_oklch(0_0_0_/_0.22)]"
-          >
-            <div className="mb-5 flex items-center justify-between">
+      <section className="relative z-10 overflow-hidden py-14 sm:py-20">
+        <FutureScene variant="compact" className="left-auto right-0 w-full opacity-45 lg:w-1/2" />
+        <div className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 lg:grid-cols-[0.95fr_1.05fr] lg:items-center lg:px-8">
+          <SectionHeading
+            eyebrow="AI Coach"
+            title="A holographic coach that understands your training state."
+            copy="Ask for swaps, form cues, nutrition targets, motivation, or a full weekly plan without losing context."
+          />
+          <GlassPanel intensity="strong" className="p-4 sm:p-5">
+            <div className="mb-5 flex items-center gap-3">
+              <span className="future-icon-glass grid h-12 w-12 place-items-center rounded-xl text-cyan-100">
+                <Bot className="h-5 w-5" />
+              </span>
               <div>
-                <p className="text-xs font-semibold uppercase text-muted-foreground">Sample week</p>
-                <h3 className="text-2xl font-black">Foundation Builder</h3>
+                <p className="text-xs font-black uppercase tracking-[0.2em] text-cyan-100/58">Coach stream</p>
+                <h3 className="text-xl font-black text-white">Live recommendations</h3>
               </div>
-              <Badge className="bg-emerald-400/[0.12] text-emerald-200">Balanced</Badge>
             </div>
             <div className="space-y-3">
-              {weeklyPlan.map((session) => {
-                const Icon = session.icon;
-                return (
-                  <div key={session.day} className="grid grid-cols-[3.25rem_1fr_auto] items-center gap-3 rounded-lg bg-muted/35 p-3">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-background font-black text-primary">
-                      {session.day}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="font-bold">{session.focus}</p>
-                      <p className="truncate text-sm text-muted-foreground">{session.detail}</p>
-                    </div>
-                    <Icon className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                );
-              })}
+              {coachingSignals.map(([label, text]) => (
+                <div key={label} className="rounded-xl border border-white/10 bg-white/[0.045] p-4">
+                  <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-200/70">{label}</p>
+                  <p className="mt-2 text-sm leading-6 text-white/70">{text}</p>
+                </div>
+              ))}
             </div>
-            <Button onClick={() => navigate('schedule')} className="mt-5 h-12 w-full rounded-lg font-bold">
-              Build My Week
-              <CalendarCheck2 className="h-4 w-4" />
+            <Button onClick={() => navigate('ai-coach')} className="mt-5 h-12 w-full rounded-lg font-black uppercase">
+              Enter AI Coach
+              <Zap className="h-4 w-4" />
             </Button>
-          </motion.div>
+          </GlassPanel>
         </div>
       </section>
-
-      <section className="relative overflow-hidden py-10 sm:py-14">
-        <Image
-          src="/images/workout-gym-luxe.jpg"
-          alt="Gym training environment"
-          fill
-          sizes="100vw"
-          className="object-cover opacity-[0.16]"
-        />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,oklch(0.07_0.01_25_/_0.98),oklch(0.10_0.014_25_/_0.90),oklch(0.07_0.01_25_/_0.98))]" />
-        <div className="relative z-10 mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-80px' }}
-            transition={{ duration: 0.55 }}
-          >
-            <Badge className="mb-5 border-white/15 bg-white/[0.08] text-white">
-              <Flame className="h-3.5 w-3.5" />
-              Start before you feel ready
-            </Badge>
-            <h2 className="text-3xl font-black tracking-normal text-white sm:text-4xl">
-              <span className="sm:hidden">Start with one honest session.</span>
-              <span className="hidden sm:inline">The strongest version of you is built one honest session at a time.</span>
-            </h2>
-            <p className="mx-auto mt-5 hidden max-w-2xl text-base leading-8 text-white/66 sm:block sm:text-lg">
-              Open the workouts, ask the coach what you do not understand, and let the dashboard show your progress.
-            </p>
-            <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
-              <Button onClick={startToday} size="lg" className="h-[3.25rem] rounded-lg px-8 font-black uppercase">
-                Start Today
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-              <Button
-                onClick={() => navigate('dashboard')}
-                size="lg"
-                variant="outline"
-                className="h-[3.25rem] rounded-lg border-white/20 bg-black/30 px-8 font-black uppercase text-white hover:bg-white/10 hover:text-white"
-              >
-                See Progress
-                <BarChart3 className="h-4 w-4" />
-              </Button>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-    </div>
+    </FutureShell>
   );
 }
