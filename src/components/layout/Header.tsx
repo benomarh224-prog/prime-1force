@@ -188,37 +188,49 @@ export function Header() {
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[min(92vw,21rem)] rounded-l-xl p-0 luxury-surface">
+              <SheetContent
+                side="right"
+                className="right-2 top-2 bottom-2 h-auto w-[min(calc(100vw-1rem),22rem)] overflow-hidden rounded-2xl border border-cyan-200/15 bg-[#071019]/[0.98] p-0 shadow-[0_24px_80px_rgba(0,0,0,0.62),0_0_36px_rgba(0,194,255,0.10)] backdrop-blur-2xl sm:right-3 sm:top-3 sm:bottom-3"
+              >
                 <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
                 <div className="flex min-h-full flex-col">
-                  <div className="flex shrink-0 items-center justify-between border-b p-4 pr-12">
+                  <div className="relative shrink-0 border-b border-white/10 px-4 py-4 pr-12">
                     <span className="block">
-                      <Image src="/logo-wordmark.png" alt="Prime Forge" width={182} height={28} className="h-7 w-auto" />
+                      <Image src="/logo-wordmark.png" alt="Prime Forge" width={182} height={28} className="h-6 w-auto" />
                     </span>
+                    <p className="mt-2 text-[11px] font-black uppercase tracking-[0.18em] text-cyan-100/42">
+                      Training cockpit
+                    </p>
                   </div>
-                  <nav className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto p-3">
+                  <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-3 py-4">
                     {navItems.map((item) => (
-                      <Button
+                      <button
+                        type="button"
                         key={item.page}
-                        variant={currentPage === item.page ? 'secondary' : 'ghost'}
-                        className={`h-12 justify-start gap-3 rounded-lg text-[0.95rem] ${
+                        className={`group flex h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-[0.94rem] font-bold transition-all ${
                           currentPage === item.page
-                            ? 'bg-primary/10 text-primary ring-1 ring-primary/20 font-semibold'
-                            : 'text-muted-foreground'
+                            ? 'border border-cyan-200/20 bg-cyan-200/12 text-cyan-100 shadow-[0_0_24px_rgba(0,194,255,0.08)]'
+                            : 'border border-transparent text-white/62 hover:border-white/10 hover:bg-white/[0.055] hover:text-white'
                         }`}
                         onClick={() => navigateFromMobile(item.page)}
                       >
-                        {item.icon}
-                        {item.label}
-                      </Button>
+                        <span
+                          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
+                            currentPage === item.page ? 'bg-cyan-200/10 text-cyan-100' : 'bg-white/[0.045] text-white/48 group-hover:text-white'
+                          }`}
+                        >
+                          {item.icon}
+                        </span>
+                        <span className="min-w-0 truncate">{item.label}</span>
+                      </button>
                     ))}
                   </nav>
-                  <div className="shrink-0 space-y-2 border-t p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+                  <div className="shrink-0 space-y-2 border-t border-white/10 bg-black/20 p-3 pb-[max(0.85rem,env(safe-area-inset-bottom))]">
                     {status === 'authenticated' ? (
                       <>
                         <Button
                           onClick={() => navigateFromMobile('dashboard')}
-                          className="w-full gap-2 rounded-lg neon-glow font-semibold"
+                          className="h-11 w-full gap-2 rounded-xl bg-cyan-400 text-black font-black shadow-[0_0_28px_rgba(0,194,255,0.24)] hover:bg-cyan-300"
                         >
                           <UserCircle className="h-4 w-4" />
                           Dashboard
@@ -229,7 +241,7 @@ export function Header() {
                             setMobileMenuOpen(false);
                             signOut({ redirect: false });
                           }}
-                          className="w-full gap-2 rounded-lg border-primary/20"
+                          className="h-11 w-full gap-2 rounded-xl border-white/10 bg-white/[0.035] text-white hover:bg-white/[0.07] hover:text-white"
                         >
                           <LogOut className="h-4 w-4" />
                           Sign out
@@ -239,7 +251,7 @@ export function Header() {
                       <>
                         <Button
                           onClick={() => openAuthFromMobile('signup')}
-                          className="w-full gap-2 rounded-lg neon-glow font-semibold"
+                          className="h-11 w-full gap-2 rounded-xl bg-cyan-400 text-black font-black shadow-[0_0_28px_rgba(0,194,255,0.24)] hover:bg-cyan-300"
                         >
                           Sign Up
                           <ArrowRight className="h-4 w-4" />
@@ -247,7 +259,7 @@ export function Header() {
                         <Button
                           variant="outline"
                           onClick={() => openAuthFromMobile('login')}
-                          className="w-full gap-2 rounded-lg border-primary/20"
+                          className="h-11 w-full gap-2 rounded-xl border-white/10 bg-white/[0.035] text-white hover:bg-white/[0.07] hover:text-white"
                         >
                           <UserCircle className="h-4 w-4" />
                           Login
@@ -257,7 +269,7 @@ export function Header() {
                     <Button
                       variant="outline"
                       onClick={() => navigateFromMobile('ai-coach')}
-                      className="w-full gap-2 rounded-lg border-primary/20"
+                      className="h-11 w-full gap-2 rounded-xl border-cyan-200/15 bg-transparent text-white hover:bg-cyan-200/10 hover:text-cyan-50"
                     >
                       <Bot className="h-4 w-4" />
                       Talk to AI Coach
