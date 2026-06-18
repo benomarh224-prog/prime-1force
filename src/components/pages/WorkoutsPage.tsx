@@ -32,7 +32,7 @@ import {
   Flame, Heart, X, Plus, Save, Trash2, ListChecks,
   Calendar, BarChart3, Trophy, NotebookPen, PlayCircle,
   ArrowDownAZ, Filter, Star, CheckCircle2, CalendarCheck2,
-  CirclePause, Loader2, RefreshCw, Target,
+  CirclePause, Loader2, RefreshCw, Target, Flag,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Exercise } from '@/lib/data';
@@ -1552,6 +1552,41 @@ export function WorkoutsPage() {
                 <span>{estimatedRemainingMinutes} min est.</span>
               </div>
             </div>
+
+            <div className="mt-4 rounded-xl border border-primary/25 bg-primary/10 p-3 shadow-[0_18px_50px_rgba(0,229,255,0.10)]">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                  <p className="text-[10px] font-black uppercase tracking-wide text-primary">Current lift</p>
+                  <p className="mt-1 truncate text-base font-black">
+                    {activeSessionExercise?.exerciseName || 'Ready to train'}
+                  </p>
+                  <p className="mt-1 truncate text-xs text-muted-foreground">
+                    {activeSessionExercise
+                      ? `${activeSessionExercise.sets.filter((set) => set.done).length}/${activeSessionExercise.sets.length} sets done${activeSessionSetIndex >= 0 ? ` - set ${activeSessionSetIndex + 1} next` : ''}`
+                      : 'Add an exercise to begin.'}
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-2 sm:flex sm:shrink-0">
+                  <Button
+                    onClick={completeNextSessionSet}
+                    disabled={activeSessionExerciseIndex < 0 || activeSessionSetIndex < 0}
+                    className="h-11 rounded-lg font-bold"
+                  >
+                    <CheckCircle2 className="h-4 w-4" />
+                    Next Set
+                  </Button>
+                  <Button
+                    onClick={finishSession}
+                    disabled={sessionSaving || sessionExercises.length === 0}
+                    variant="outline"
+                    className="h-11 rounded-lg border-primary/30 bg-background/45 font-bold hover:bg-primary/10"
+                  >
+                    {sessionSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Flag className="h-4 w-4" />}
+                    Finish
+                  </Button>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div className="space-y-5 p-4 sm:p-5">
@@ -1647,7 +1682,7 @@ export function WorkoutsPage() {
                 </div>
               </div>
 
-              <div className="rounded-lg border border-primary/25 bg-primary/10 p-4">
+              <div className="hidden rounded-lg border border-primary/25 bg-primary/10 p-4 sm:block">
                 <div className="mb-3 flex items-center justify-between gap-3">
                   <div>
                     <p className="text-xs font-black uppercase tracking-wide text-primary">Live lift</p>
@@ -1678,7 +1713,7 @@ export function WorkoutsPage() {
                 </Button>
               </div>
 
-              <div className="rounded-lg border bg-muted/20 p-4">
+              <div className="hidden rounded-lg border bg-muted/20 p-4 sm:block">
                 <p className="text-xs font-black uppercase tracking-wide text-muted-foreground">Finish flow</p>
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">
                   Finish saves the session to history{sessionShouldCompleteToday ? ' and marks today complete.' : '.'}
@@ -1760,7 +1795,7 @@ export function WorkoutsPage() {
                       <div
                         key={`${exercise.exerciseId}-set-${setIndex}`}
                         className={cn(
-                          'grid grid-cols-[2.5rem_1fr_1fr_2.5rem_2.5rem] items-center gap-2 rounded-lg border p-2',
+                          'grid grid-cols-[2.25rem_minmax(0,1fr)_minmax(0,1fr)] items-center gap-2 rounded-lg border p-2 sm:grid-cols-[2.5rem_1fr_1fr_2.5rem_2.5rem]',
                           set.done ? 'border-primary/40 bg-primary/10' : 'bg-muted/20'
                         )}
                       >
@@ -1800,7 +1835,7 @@ export function WorkoutsPage() {
                         <Button
                           variant={set.done ? 'secondary' : 'outline'}
                           size="icon"
-                          className="h-9 w-9 rounded-lg"
+                          className="hidden h-9 w-9 rounded-lg sm:inline-flex"
                           onClick={() => toggleSessionSet(exerciseIndex, setIndex)}
                           aria-label="Mark set done"
                         >
@@ -1809,7 +1844,7 @@ export function WorkoutsPage() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-9 w-9 rounded-lg text-muted-foreground hover:text-red-400"
+                          className="hidden h-9 w-9 rounded-lg text-muted-foreground hover:text-red-400 sm:inline-flex"
                           disabled={exercise.sets.length === 1}
                           onClick={() => removeSessionSet(exerciseIndex, setIndex)}
                           aria-label="Remove set"

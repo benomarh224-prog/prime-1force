@@ -775,34 +775,34 @@ export function DashboardPage() {
       <div className="mx-auto grid max-w-7xl grid-cols-12 gap-5 px-4 sm:px-6 lg:gap-6 lg:px-8">
         {/* Header */}
         <motion.div
-          className="future-glass col-span-12 flex flex-col gap-4 overflow-hidden rounded-xl border border-white/[0.12] bg-white/[0.06] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.34)] backdrop-blur-2xl sm:flex-row sm:items-center sm:justify-between sm:p-6"
+          className="future-glass order-1 col-span-12 flex flex-col gap-3 overflow-hidden rounded-xl border border-white/[0.12] bg-white/[0.06] p-4 shadow-[0_24px_80px_rgba(0,0,0,0.34)] backdrop-blur-2xl sm:flex-row sm:items-center sm:justify-between sm:p-6"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <div className="flex min-w-0 items-center gap-4">
+          <div className="flex min-w-0 items-center gap-3 sm:gap-4">
             <div className={cn(
-              'flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br text-lg font-black ring-1 ring-white/15',
+              'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br text-base font-black ring-1 ring-white/15 sm:h-14 sm:w-14 sm:rounded-2xl sm:text-lg',
               avatar.gradient,
             )}>
               {store.userName ? getInitials(store.userName) : avatar.emoji}
             </div>
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <p className="text-xs font-black uppercase tracking-[0.2em] text-cyan-200/70">Holographic command center</p>
+                <p className="hidden text-xs font-black uppercase tracking-[0.2em] text-cyan-200/70 sm:block">Holographic command center</p>
                 <Badge variant="outline" className="rounded-md border-white/10 bg-white/[0.04] text-[10px]">
                   {levelLabels[store.userLevel] || store.userLevel}
                 </Badge>
               </div>
-              <h1 className="mt-1 truncate text-2xl font-black tracking-tight sm:text-3xl">
+              <h1 className="mt-1 truncate text-xl font-black tracking-tight sm:text-3xl">
                 {store.userName ? `Welcome back, ${displayName}` : 'Your training dashboard'}
               </h1>
-              <p className="mt-1 text-sm text-white/58">
+              <p className="mt-1 hidden text-sm text-white/58 sm:block">
                 Live training, recovery, nutrition, and progress telemetry.
               </p>
             </div>
           </div>
-          <motion.div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto" initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }}>
+          <motion.div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto [&_button]:h-10" initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }}>
             <Button onClick={startEditing} variant="outline" className="rounded-lg border-white/15 bg-white/[0.05] gap-2 text-white hover:bg-white/10">
               <Edit3 className="h-4 w-4" /> Edit Profile
             </Button>
@@ -824,7 +824,7 @@ export function DashboardPage() {
         )}
 
         {/* Stats Cards Row */}
-        <div className="col-span-12 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div className="order-3 col-span-12 grid grid-cols-2 gap-2 sm:gap-3 lg:order-2 lg:grid-cols-4">
           {[
             { icon: <Flame className="h-5 w-5" />, label: 'Calories', value: totalCaloriesBurned.toLocaleString(), detail: 'Burned this week', tone: 'orange' as const },
             { icon: <Dumbbell className="h-5 w-5" />, label: 'Workouts', value: `${totalWorkouts}/${store.weeklyGoal}`, detail: 'Weekly target', tone: 'cyan' as const },
@@ -844,15 +844,15 @@ export function DashboardPage() {
 
         {/* Forge Score */}
         <motion.div
-          className="col-span-12 grid gap-5 lg:grid-cols-[1.15fr_0.85fr]"
+          className="order-2 col-span-12 grid gap-4 lg:order-3 lg:grid-cols-[1.15fr_0.85fr] lg:gap-5"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.08 }}
         >
           <GlassPanel className="overflow-hidden p-0" intensity="strong">
-            <CardContent className="grid gap-5 p-5 sm:p-6 md:grid-cols-[170px_1fr] md:items-center">
+            <CardContent className="grid gap-4 p-4 sm:gap-5 sm:p-6 md:grid-cols-[170px_1fr] md:items-center">
               <div className="mx-auto">
-                <ProgressRing value={forgeScore} label="forge" size={150} />
+                <ProgressRing value={forgeScore} label="forge" size={132} />
               </div>
 
               <div className="min-w-0">
@@ -867,7 +867,7 @@ export function DashboardPage() {
                 </p>
                 <div className="mt-4 grid grid-cols-2 gap-2 xl:grid-cols-4">
                   {forgeScoreFactors.map((factor) => (
-                    <div key={factor.label} className="rounded-xl border border-white/[0.10] bg-white/[0.045] p-3">
+                    <div key={factor.label} className="rounded-xl border border-white/[0.10] bg-white/[0.045] p-2.5 sm:p-3">
                       <div className="mb-2 flex items-center justify-between gap-2 text-sm">
                         <span className="font-bold">{factor.label}</span>
                         <span className="font-black text-cyan-100">{factor.value}%</span>
