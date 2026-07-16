@@ -33,7 +33,7 @@ import {
   Dumbbell, Trophy, Edit3, Save, X, Check,
   Camera,
   Plus, Trash2, Clock, ClipboardList, ListChecks, Award, Shield, BarChart3,
-  CheckCircle2, Loader2,
+  CheckCircle2, Loader2, Activity, Target, Zap,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -296,9 +296,10 @@ export function DashboardPage() {
   const startOfWeek = new Date();
   startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
   startOfWeek.setHours(0, 0, 0, 0);
-  const completedWorkoutsThisWeek = completedLogs.filter(
+  const completedLogsThisWeek = completedLogs.filter(
     (log) => getWorkoutDate(log.date) >= startOfWeek
-  ).length;
+  );
+  const completedWorkoutsThisWeek = completedLogsThisWeek.length;
   const scheduledWorkoutsDone = weeklySchedule.filter((d) => d.done).length;
   const totalWorkouts = Math.max(completedWorkoutsThisWeek, scheduledWorkoutsDone);
   const bmi = store.userHeight > 0 ? (store.userWeight / (store.userHeight / 100) ** 2).toFixed(1) : '—';
@@ -323,6 +324,18 @@ export function DashboardPage() {
       ),
     0
   );
+  const thisWeekVolume = completedLogsThisWeek.reduce(
+    (sum, log) =>
+      sum +
+      log.exercises.reduce(
+        (exerciseSum, ex) => exerciseSum + ex.sets.reduce((setSum, set) => setSum + set.weight * set.reps, 0),
+        0
+      ),
+    0
+  );
+  const avgSessionMinutes = completedLogsThisWeek.length > 0
+    ? Math.round(completedLogsThisWeek.reduce((sum, log) => sum + (log.duration || 0), 0) / completedLogsThisWeek.length)
+    : 0;
   const macroData = [
     { name: 'Protein', value: dailyCalorieData.reduce((s, d) => s + d.protein, 0) / 7, fill: 'oklch(0.62 0.24 27)' },
     { name: 'Carbs', value: dailyCalorieData.reduce((s, d) => s + d.carbs, 0) / 7, fill: 'oklch(0.75 0.12 60)' },
@@ -484,6 +497,46 @@ export function DashboardPage() {
       : totalWorkouts > 0
         ? 'You have momentum. Add one focused session and keep the week from becoming random.'
         : 'This week is still empty. Pick a short session and make the first mark on the board.';
+  const todayKey = toDateKey(new Date());
+  const todayLogged = completedDateKeys.has(todayKey);
+  const nextScheduledWorkout = weeklySchedule.find((day) => !day.done && day.duration > 0);
+  const remainingWorkouts = Math.max(store.weeklyGoal - totalWorkouts, 0);
+  const paceLabel =
+    remainingWorkouts === 0
+      ? 'Goal secured'
+      : `${remainingWorkouts} session${remainingWorkouts === 1 ? '' : 's'} left`;
+  const sevenDayPulse = Array.from({ length: 7 }, (_, index) => {
+    const date = new Date();
+    date.setDate(date.getDate() - (6 - index));
+    const key = toDateKey(date);
+    return {
+      key,
+      label: date.toLocaleDateString('en-US', { weekday: 'short' }).slice(0, 1),
+      dateLabel: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      completed: completedDateKeys.has(key),
+      today: key === todayKey,
+    };
+  });
+  const trendTiles = [
+    {
+      icon: <Target className="h-4 w-4" />,
+      label: 'Weekly pace',
+      value: paceLabel,
+      detail: `${Math.min(Math.round(weeklyProgress), 100)}% complete`,
+    },
+    {
+      icon: <Activity className="h-4 w-4" />,
+      label: 'Volume',
+      value: `${Math.round(thisWeekVolume).toLocaleString()}kg`,
+      detail: 'Moved this week',
+    },
+    {
+      icon: <Zap className="h-4 w-4" />,
+      label: 'Session length',
+      value: avgSessionMinutes ? `${avgSessionMinutes}m` : '--',
+      detail: avgSessionMinutes ? 'Average completed' : 'Log a session',
+    },
+  ];
 
   const displayName = store.userName || 'Set Your Name';
   const avatar = getAvatarOption(store.userAvatar || 'emerald');
@@ -822,6 +875,91 @@ export function DashboardPage() {
             <span className="font-semibold">Profile saved successfully.</span>
           </motion.div>
         )}
+
+        {/* Momentum Console */}
+        <motion.div
+          className="col-span-12 grid gap-3 lg:grid-cols-[1.2fr_0.8fr]"
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45, delay: 0.04 }}
+        >
+          <GlassPanel className="p-4 sm:p-5" intensity="strong">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div className="min-w-0">
+                <div className="mb-2 flex flex-wrap items-center gap-2">
+                  <Badge className={cn(
+                    'rounded-md border text-[10px] font-black uppercase tracking-wide',
+                    todayLogged
+                      ? 'border-emerald-300/25 bg-emerald-300/10 text-emerald-100'
+                      : 'border-cyan-300/25 bg-cyan-300/10 text-cyan-100'
+                  )}>
+                    {todayLogged ? 'Today logged' : 'Today open'}
+                  </Badge>
+                  {nextScheduledWorkout && (
+                    <span className="text-xs font-semibold text-white/52">
+                      Next plan: {nextScheduledWorkout.workout} / {nextScheduledWorkout.duration}m
+                    </span>
+                  )}
+                </div>
+                <h2 className="text-xl font-black tracking-tight text-white sm:text-2xl">
+                  {todayLogged ? 'Nice. Keep the signal clean.' : 'Make today count.'}
+                </h2>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-white/58">{nextForgeMove}</p>
+              </div>
+              <Button onClick={openWorkoutDialog} className="h-11 shrink-0 rounded-lg gap-2 shadow-lg shadow-cyan-400/20">
+                <Plus className="h-4 w-4" /> Log Session
+              </Button>
+            </div>
+
+            <div className="mt-5 grid gap-2 sm:grid-cols-3">
+              {trendTiles.map((tile) => (
+                <div key={tile.label} className="rounded-lg border border-white/[0.08] bg-black/20 p-3">
+                  <div className="flex items-center gap-2 text-cyan-100">
+                    {tile.icon}
+                    <p className="text-[10px] font-black uppercase tracking-wide text-white/42">{tile.label}</p>
+                  </div>
+                  <p className="mt-2 text-lg font-black text-white">{tile.value}</p>
+                  <p className="text-xs text-white/48">{tile.detail}</p>
+                </div>
+              ))}
+            </div>
+          </GlassPanel>
+
+          <GlassPanel className="p-4 sm:p-5">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-black uppercase tracking-wide text-white/42">7-day pulse</p>
+                <h3 className="mt-1 text-lg font-black text-white">Consistency map</h3>
+              </div>
+              <Badge variant="outline" className="rounded-md border-white/10 bg-white/[0.04] text-xs">
+                {currentStreak}d streak
+              </Badge>
+            </div>
+            <div className="grid grid-cols-7 gap-1.5">
+              {sevenDayPulse.map((day) => (
+                <div key={day.key} className="text-center">
+                  <div
+                    className={cn(
+                      'mx-auto grid h-9 w-full max-w-10 place-items-center rounded-lg border text-xs font-black transition-all',
+                      day.completed
+                        ? 'border-primary/35 bg-primary text-primary-foreground shadow-lg shadow-primary/20'
+                        : day.today
+                          ? 'border-cyan-300/35 bg-cyan-300/10 text-cyan-100'
+                          : 'border-white/[0.08] bg-white/[0.035] text-white/42'
+                    )}
+                    title={day.dateLabel}
+                  >
+                    {day.completed ? <Check className="h-3.5 w-3.5" /> : day.label}
+                  </div>
+                  <p className="mt-1 text-[10px] font-semibold text-white/36">{day.label}</p>
+                </div>
+              ))}
+            </div>
+            <p className="mt-4 text-xs leading-5 text-white/48">
+              Best rhythm comes from small finished sessions stacked across the week.
+            </p>
+          </GlassPanel>
+        </motion.div>
 
         {/* Stats Cards Row */}
         <div className="col-span-12 grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -1209,7 +1347,7 @@ export function DashboardPage() {
                             'h-7 w-7 rounded-lg flex items-center justify-center text-xs font-medium',
                             day.done ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
                           )}>
-                            {day.done ? '✓' : day.day}
+                            {day.done ? <Check className="h-3.5 w-3.5" /> : day.day}
                           </div>
                           <span className={cn(day.done && 'line-through text-muted-foreground')}>{day.workout}</span>
                         </div>
@@ -1311,7 +1449,7 @@ export function DashboardPage() {
                           <div key={i} className="flex items-center justify-between text-xs">
                             <span className="text-muted-foreground truncate mr-2">{ex.exerciseName}</span>
                             <span className="shrink-0 text-muted-foreground/80">
-                              {ex.sets.length} × {ex.sets[0]?.reps ?? 0} reps @ {ex.sets[0]?.weight ?? 0}kg
+                              {ex.sets.length} x {ex.sets[0]?.reps ?? 0} reps @ {ex.sets[0]?.weight ?? 0}kg
                             </span>
                           </div>
                         ))}
