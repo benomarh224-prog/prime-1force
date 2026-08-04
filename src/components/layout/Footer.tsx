@@ -17,7 +17,7 @@ export function Footer() {
               className="block"
               aria-label="Prime Forge home"
             >
-              <Image src="/logo-wordmark.png" alt="Prime Forge" width={208} height={32} className="h-7 w-auto" />
+              <Image src="/logo-wordmark.png" alt="Prime Forge" width={188} height={32} className="h-7 w-auto" />
             </button>
           </div>
 

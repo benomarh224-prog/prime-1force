@@ -94,7 +94,7 @@ export function Header() {
             aria-label="Prime Forge home"
           >
             <span className="block shrink-0 transition-transform group-hover:scale-[1.02]">
-              <Image src="/logo-wordmark.png" alt="Prime Forge" width={182} height={28} className="h-6 w-auto sm:h-8" priority />
+              <Image src="/logo-wordmark.png" alt="Prime Forge" width={188} height={32} className="h-6 w-auto sm:h-8" priority />
             </span>
           </button>
 
@@ -196,7 +196,7 @@ export function Header() {
                 <div className="flex min-h-full flex-col">
                   <div className="relative shrink-0 border-b border-white/10 px-4 py-4 pr-12">
                     <span className="block">
-                      <Image src="/logo-wordmark.png" alt="Prime Forge" width={182} height={28} className="h-6 w-auto" />
+                      <Image src="/logo-wordmark.png" alt="Prime Forge" width={165} height={28} className="h-6 w-auto" />
                     </span>
                     <p className="mt-2 text-[11px] font-black uppercase tracking-[0.18em] text-cyan-100/42">
                       Training cockpit
