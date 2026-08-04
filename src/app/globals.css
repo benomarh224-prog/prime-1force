@@ -423,3 +423,84 @@
   transform: translateY(0);
   transition: opacity 0.3s ease, transform 0.3s ease;
 }
+
+/* Prime Forge Growth OS design system */
+:root {
+  --background: #050816;
+  --foreground: #f8fafc;
+  --card: #090e20;
+  --card-foreground: #f8fafc;
+  --primary: #2563eb;
+  --primary-foreground: #ffffff;
+  --secondary: #10172c;
+  --secondary-foreground: #f8fafc;
+  --muted: #11182b;
+  --muted-foreground: #94a3b8;
+  --accent: #38bdf8;
+  --accent-foreground: #020617;
+  --border: rgba(148, 163, 184, 0.15);
+  --input: #0b1122;
+  --ring: #60a5fa;
+  --radius: 0.75rem;
+}
+
+body {
+  background:
+    radial-gradient(900px 520px at 15% -10%, rgba(37, 99, 235, 0.15), transparent 62%),
+    radial-gradient(780px 520px at 88% 4%, rgba(56, 189, 248, 0.09), transparent 60%),
+    #050816;
+}
+
+.pf-grid {
+  background-image:
+    linear-gradient(rgba(96, 165, 250, .065) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(96, 165, 250, .055) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: linear-gradient(to bottom, black, transparent 86%);
+}
+
+.pf-panel {
+  border: 1px solid rgba(148, 163, 184, .14);
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.065), rgba(255,255,255,.018)),
+    rgba(7, 11, 25, .88);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 24px 80px rgba(0,0,0,.32);
+  backdrop-filter: blur(24px);
+}
+
+.pf-card {
+  border: 1px solid rgba(148, 163, 184, .115);
+  border-radius: 1rem;
+  background: linear-gradient(145deg, rgba(255,255,255,.04), rgba(255,255,255,.018));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.045);
+  transition: border-color .25s ease, background-color .25s ease, transform .25s ease, box-shadow .25s ease;
+}
+
+.pf-card:hover {
+  border-color: rgba(96, 165, 250, .24);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.065), 0 18px 50px rgba(2, 6, 23, .28);
+}
+
+.pf-eyebrow {
+  font-size: .7rem;
+  font-weight: 700;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: #7dd3fc;
+}
+
+.pf-gradient-text {
+  background: linear-gradient(115deg, #f8fafc 10%, #93c5fd 46%, #38bdf8 90%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}

@@ -8,11 +8,11 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://primeforge.21-0-10
 
 export const metadata: Metadata = {
   title: {
-    default: "Prime Forge - Learn Strength, Train Smarter",
+    default: "Prime Forge - Forge Your Best Self",
     template: "%s | Prime Forge",
   },
-  description: "Learn how to train, eat, recover, and track progress with clear workouts, AI coaching, and strength-focused guidance.",
-  keywords: ["fitness", "workout", "AI coach", "gym", "nutrition", "training", "health", "exercise", "meal plans", "progress tracking", "prime forge"],
+  description: "Build discipline, master your habits, strengthen your mindset, improve your health, and achieve meaningful goals with your personal growth operating system.",
+  keywords: ["self improvement", "habit tracker", "goal setting", "focus timer", "AI coach", "productivity", "mindset", "journal", "learning", "fitness", "personal growth", "prime forge"],
   authors: [{ name: "Prime Forge Team", url: SITE_URL }],
   creator: "Prime Forge",
   publisher: "Prime Forge",
@@ -25,8 +25,8 @@ export const metadata: Metadata = {
     shortcut: "/logo.svg",
   },
   openGraph: {
-    title: "Prime Forge - Learn Strength, Train Smarter",
-    description: "Learn how to train, eat, recover, and track progress with clear workouts, AI coaching, and strength-focused guidance.",
+    title: "Prime Forge - Forge Your Best Self",
+    description: "Build discipline, master your habits, strengthen your mindset, improve your health, and achieve meaningful goals with your personal growth operating system.",
     type: "website",
     locale: "en_US",
     url: SITE_URL,
@@ -42,8 +42,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Prime Forge - Learn Strength, Train Smarter",
-    description: "Learn how to train, eat, recover, and track progress with clear workouts, AI coaching, and strength-focused guidance.",
+    title: "Prime Forge - Forge Your Best Self",
+    description: "Build discipline, master your habits, strengthen your mindset, improve your health, and achieve meaningful goals with your personal growth operating system.",
     images: ["/opengraph-image.jpg"],
   },
   robots: {

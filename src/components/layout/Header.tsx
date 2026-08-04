@@ -1,288 +1,75 @@
 'use client';
 
 import Image from 'next/image';
-import { useAppStore, type PageName } from '@/lib/store';
-import { AuthDialog } from '@/components/auth/AuthDialog';
-import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
-import { authDialogEventName, type AuthDialogMode } from '@/lib/auth-dialog';
-import { motion } from 'framer-motion';
-import {
-  Dumbbell,
-  Home,
-  Utensils,
-  Mail,
-  Menu,
-  Bot,
-  ArrowRight,
-  CalendarDays,
-  LogOut,
-  UserCircle,
-} from 'lucide-react';
-import { signOut, useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
+import { signOut, useSession } from 'next-auth/react';
+import { AnimatePresence, motion } from 'framer-motion';
+import {
+  BarChart3, Bell, BookOpen, Bot, Brain, ChevronDown, CircleUserRound, Focus,
+  Flame, LayoutDashboard, LogOut, Menu, Settings, Sparkles, Target, Trophy, Users
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { openAuthDialog } from '@/lib/auth-dialog';
+import { useAppStore, type PageName } from '@/lib/store';
 
-const navItems: { label: string; page: PageName; icon: React.ReactNode }[] = [
-  { label: 'Home', page: 'home', icon: <Home className="h-4 w-4" /> },
-  { label: 'Workouts', page: 'workouts', icon: <Dumbbell className="h-4 w-4" /> },
-  { label: 'Schedule', page: 'schedule', icon: <CalendarDays className="h-4 w-4" /> },
-  { label: 'AI Coach', page: 'ai-coach', icon: <Bot className="h-4 w-4" /> },
-  { label: 'Nutrition', page: 'nutrition', icon: <Utensils className="h-4 w-4" /> },
-  { label: 'Contact', page: 'contact', icon: <Mail className="h-4 w-4" /> },
+const mainNav: Array<{label:string;page:PageName}> = [
+  {label:'Home',page:'home'}, {label:'Dashboard',page:'dashboard'}, {label:'Growth',page:'growth'},
+  {label:'Habits',page:'habits'}, {label:'Learning',page:'learning'}, {label:'AI Coach',page:'ai-coach'},
+  {label:'Challenges',page:'challenges'}, {label:'Community',page:'community'}, {label:'Pricing',page:'pricing'},
+];
+
+const growthLinks: Array<{label:string;copy:string;page:PageName;icon:typeof Target}> = [
+  {label:'Goals',copy:'Turn direction into milestones',page:'goals',icon:Target},
+  {label:'Focus Center',copy:'Protect your best attention',page:'focus',icon:Focus},
+  {label:'Journal',copy:'Reflect and discover patterns',page:'journal',icon:Brain},
+  {label:'Analytics',copy:'Understand your momentum',page:'analytics',icon:BarChart3},
 ];
 
 export function Header() {
   const { currentPage, navigate } = useAppStore();
   const { data: session, status } = useSession();
-  const [scrolled, setScrolled] = useState(false);
-  const [authOpen, setAuthOpen] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
-  const heroTop = currentPage === 'home' && !scrolled;
+  const [scrolled,setScrolled] = useState(false);
+  const [growthOpen,setGrowthOpen] = useState(false);
+  const [mobileOpen,setMobileOpen] = useState(false);
+  useEffect(()=>{const onScroll=()=>setScrolled(window.scrollY>18);onScroll();window.addEventListener('scroll',onScroll);return()=>window.removeEventListener('scroll',onScroll)},[]);
+  const go=(page:PageName)=>{navigate(page);setGrowthOpen(false);setMobileOpen(false)};
+  const homeTop=currentPage==='home'&&!scrolled;
 
-  const openAuth = (mode: AuthDialogMode) => {
-    setAuthMode(mode);
-    setAuthOpen(true);
-  };
+  return <header className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${homeTop?'bg-transparent':'border-b border-white/[.07] bg-[#050816]/85 shadow-[0_12px_40px_rgba(0,0,0,.2)] backdrop-blur-2xl'}`}>
+    <div className="mx-auto flex h-16 max-w-[1500px] items-center gap-5 px-4 sm:px-7 lg:px-10">
+      <button onClick={()=>go('home')} aria-label="Prime Forge home" className="shrink-0">
+        <Image src="/logo-wordmark.png" alt="Prime Forge" width={141} height={24} className="h-6 w-auto" priority/>
+      </button>
 
-  const navigateFromMobile = (page: PageName) => {
-    navigate(page);
-    setMobileMenuOpen(false);
-  };
+      <nav className="hidden min-w-0 flex-1 items-center justify-center gap-0.5 xl:flex">
+        {mainNav.map(item=>item.page==='growth'?<div key={item.page} className="relative" onMouseEnter={()=>setGrowthOpen(true)} onMouseLeave={()=>setGrowthOpen(false)}>
+          <button onClick={()=>go(item.page)} className={`flex items-center gap-1 rounded-lg px-3 py-2 text-xs font-medium transition ${['growth','goals','focus','journal','analytics'].includes(currentPage)?'bg-white/[.06] text-white':'text-slate-400 hover:bg-white/[.04] hover:text-white'}`}>Growth<ChevronDown className="h-3 w-3"/></button>
+          <AnimatePresence>{growthOpen&&<motion.div initial={{opacity:0,y:8,scale:.98}} animate={{opacity:1,y:0,scale:1}} exit={{opacity:0,y:6,scale:.98}} transition={{duration:.16}} className="absolute left-1/2 top-full w-[430px] -translate-x-1/2 pt-3"><div className="grid grid-cols-2 gap-1 rounded-2xl border border-white/[.1] bg-[#080d1f]/95 p-2 shadow-2xl backdrop-blur-2xl">{growthLinks.map(link=>{const Icon=link.icon;return <button key={link.page} onClick={()=>go(link.page)} className="flex gap-3 rounded-xl p-3 text-left transition hover:bg-white/[.05]"><span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-blue-500/[.1] text-sky-300"><Icon className="h-4 w-4"/></span><span><span className="block text-xs font-semibold">{link.label}</span><span className="mt-1 block text-[10px] text-slate-500">{link.copy}</span></span></button>})}</div></motion.div>}</AnimatePresence>
+        </div>:<button key={item.page} onClick={()=>go(item.page)} className={`rounded-lg px-3 py-2 text-xs font-medium transition ${currentPage===item.page?'bg-white/[.06] text-white':'text-slate-400 hover:bg-white/[.04] hover:text-white'}`}>{item.label}</button>)}
+      </nav>
 
-  const openAuthFromMobile = (mode: AuthDialogMode) => {
-    setMobileMenuOpen(false);
-    openAuth(mode);
-  };
+      <div className="ml-auto flex items-center gap-2">
+        {status==='authenticated'?<>
+          <button onClick={()=>go('settings')} className="hidden h-9 w-9 place-items-center rounded-xl border border-white/[.08] bg-white/[.035] text-slate-400 hover:text-white sm:grid"><Bell className="h-4 w-4"/></button>
+          <button onClick={()=>go('settings')} className="hidden items-center gap-2 rounded-xl border border-white/[.08] bg-white/[.035] px-2 py-1.5 text-left sm:flex"><span className="grid h-7 w-7 place-items-center rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 text-[10px] font-semibold">{session?.user?.name?.slice(0,1)||'P'}</span><span className="hidden max-w-24 truncate text-xs font-medium lg:block">{session?.user?.name||'Member'}</span></button>
+        </>:<>
+          <Button variant="ghost" size="sm" onClick={()=>openAuthDialog('login')} className="hidden rounded-xl text-slate-300 hover:bg-white/[.05] hover:text-white sm:inline-flex">Log in</Button>
+          <Button size="sm" onClick={()=>openAuthDialog('signup')} className="hidden rounded-xl bg-blue-600 px-4 text-white shadow-[0_0_24px_rgba(37,99,235,.2)] hover:bg-blue-500 sm:inline-flex">Start free</Button>
+        </>}
 
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  useEffect(() => {
-    const handleAuthDialog = (event: Event) => {
-      const mode = (event as CustomEvent<{ mode?: AuthDialogMode }>).detail?.mode || 'login';
-      openAuth(mode);
-    };
-
-    window.addEventListener(authDialogEventName, handleAuthDialog);
-    return () => window.removeEventListener(authDialogEventName, handleAuthDialog);
-  }, []);
-
-  return (
-    <>
-      <motion.header
-        initial={false}
-        animate={{ y: 0 }}
-        transition={{ duration: 0.5, ease: 'easeOut' }}
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          heroTop
-            ? 'bg-transparent'
-            : scrolled
-            ? 'glass shadow-[0_16px_42px_oklch(0_0_0_/_0.24)]'
-            : 'glass'
-        }`}
-      >
-        <div className="mx-auto max-w-[1400px] px-3 sm:px-6 lg:px-10">
-          <div className="flex h-14 items-center justify-between sm:h-16">
-          {/* Logo */}
-          <button
-            onClick={() => navigate('home')}
-            className="group flex min-w-0 items-center"
-            aria-label="Prime Forge home"
-          >
-            <span className="block shrink-0 transition-transform group-hover:scale-[1.02]">
-              <Image src="/logo-wordmark.png" alt="Prime Forge" width={188} height={32} className="h-6 w-auto sm:h-8" priority />
-            </span>
-          </button>
-
-          {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center gap-1">
-            {navItems.map((item) => (
-              <Button
-                key={item.page}
-                variant={currentPage === item.page ? 'secondary' : 'ghost'}
-                size="sm"
-                onClick={() => navigate(item.page)}
-                className={`gap-2 rounded-lg transition-all ${
-                  heroTop
-                    ? 'bg-transparent text-white/90 hover:bg-white/10 hover:text-white uppercase font-bold'
-                    : currentPage === item.page
-                    ? 'bg-primary/10 text-primary font-medium shadow-sm'
-                    : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-                }`}
-              >
-                <span className={heroTop ? 'hidden' : ''}>{item.icon}</span>
-                {item.page === 'workouts' && heroTop ? 'Programs' : item.label}
-              </Button>
-            ))}
-          </nav>
-
-          {/* Right side */}
-          <div className="flex items-center gap-2">
-            {status === 'authenticated' ? (
-              <div className="hidden items-center gap-2 sm:flex">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => navigate('dashboard')}
-                  className={`max-w-44 gap-2 rounded-lg ${
-                    heroTop ? 'border-white/25 bg-black/20 text-white hover:bg-white/10 hover:text-white' : ''
-                  }`}
-                >
-                  <UserCircle className="h-4 w-4" />
-                  <span>Dashboard</span>
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => signOut({ redirect: false })}
-                  className={`rounded-lg ${heroTop ? 'text-white hover:bg-white/10 hover:text-white' : ''}`}
-                  title="Sign out"
-                >
-                  <LogOut className="h-4 w-4" />
-                </Button>
-              </div>
-            ) : (
-              <div className="hidden items-center gap-2 sm:flex">
-                <Button
-                  onClick={() => openAuth('login')}
-                  variant="ghost"
-                  className={`rounded-lg font-semibold ${
-                    heroTop ? 'text-white hover:bg-white/10 hover:text-white' : ''
-                  }`}
-                  size="sm"
-                >
-                  Login
-                </Button>
-                <Button
-                  onClick={() => openAuth('signup')}
-                  variant={heroTop ? 'outline' : 'default'}
-                  className={`gap-2 font-semibold ${
-                    heroTop
-                      ? 'h-11 rounded-lg border-primary/70 bg-black/20 px-6 uppercase text-white shadow-none hover:bg-primary hover:text-primary-foreground'
-                      : 'rounded-lg neon-glow'
-                  }`}
-                  size="sm"
-                >
-                  Sign Up
-                  <ArrowRight className={`h-4 w-4 ${heroTop ? 'hidden' : ''}`} />
-                </Button>
-              </div>
-            )}
-
-            {/* Mobile Menu */}
-            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-              <SheetTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className={`h-11 w-11 rounded-lg lg:hidden ${
-                    heroTop
-                      ? 'bg-black/20 text-white ring-1 ring-white/10 hover:bg-white/10 hover:text-white'
-                      : 'bg-card/55 ring-1 ring-primary/10'
-                  }`}
-                >
-                  <Menu className="h-5 w-5" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent
-                side="right"
-                className="right-2 top-2 bottom-2 h-auto w-[min(calc(100vw-1rem),22rem)] overflow-hidden rounded-2xl border border-cyan-200/15 bg-[#071019]/[0.98] p-0 shadow-[0_24px_80px_rgba(0,0,0,0.62),0_0_36px_rgba(0,194,255,0.10)] backdrop-blur-2xl sm:right-3 sm:top-3 sm:bottom-3"
-              >
-                <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
-                <div className="flex min-h-full flex-col">
-                  <div className="relative shrink-0 border-b border-white/10 px-4 py-4 pr-12">
-                    <span className="block">
-                      <Image src="/logo-wordmark.png" alt="Prime Forge" width={165} height={28} className="h-6 w-auto" />
-                    </span>
-                    <p className="mt-2 text-[11px] font-black uppercase tracking-[0.18em] text-cyan-100/42">
-                      Training cockpit
-                    </p>
-                  </div>
-                  <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-3 py-4">
-                    {navItems.map((item) => (
-                      <button
-                        type="button"
-                        key={item.page}
-                        className={`group flex h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-[0.94rem] font-bold transition-all ${
-                          currentPage === item.page
-                            ? 'border border-cyan-200/20 bg-cyan-200/12 text-cyan-100 shadow-[0_0_24px_rgba(0,194,255,0.08)]'
-                            : 'border border-transparent text-white/62 hover:border-white/10 hover:bg-white/[0.055] hover:text-white'
-                        }`}
-                        onClick={() => navigateFromMobile(item.page)}
-                      >
-                        <span
-                          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
-                            currentPage === item.page ? 'bg-cyan-200/10 text-cyan-100' : 'bg-white/[0.045] text-white/48 group-hover:text-white'
-                          }`}
-                        >
-                          {item.icon}
-                        </span>
-                        <span className="min-w-0 truncate">{item.label}</span>
-                      </button>
-                    ))}
-                  </nav>
-                  <div className="shrink-0 space-y-2 border-t border-white/10 bg-black/20 p-3 pb-[max(0.85rem,env(safe-area-inset-bottom))]">
-                    {status === 'authenticated' ? (
-                      <>
-                        <Button
-                          onClick={() => navigateFromMobile('dashboard')}
-                          className="h-11 w-full gap-2 rounded-xl bg-cyan-400 text-black font-black shadow-[0_0_28px_rgba(0,194,255,0.24)] hover:bg-cyan-300"
-                        >
-                          <UserCircle className="h-4 w-4" />
-                          Dashboard
-                        </Button>
-                        <Button
-                          variant="outline"
-                          onClick={() => {
-                            setMobileMenuOpen(false);
-                            signOut({ redirect: false });
-                          }}
-                          className="h-11 w-full gap-2 rounded-xl border-white/10 bg-white/[0.035] text-white hover:bg-white/[0.07] hover:text-white"
-                        >
-                          <LogOut className="h-4 w-4" />
-                          Sign out
-                        </Button>
-                      </>
-                    ) : (
-                      <>
-                        <Button
-                          onClick={() => openAuthFromMobile('signup')}
-                          className="h-11 w-full gap-2 rounded-xl bg-cyan-400 text-black font-black shadow-[0_0_28px_rgba(0,194,255,0.24)] hover:bg-cyan-300"
-                        >
-                          Sign Up
-                          <ArrowRight className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          onClick={() => openAuthFromMobile('login')}
-                          className="h-11 w-full gap-2 rounded-xl border-white/10 bg-white/[0.035] text-white hover:bg-white/[0.07] hover:text-white"
-                        >
-                          <UserCircle className="h-4 w-4" />
-                          Login
-                        </Button>
-                      </>
-                    )}
-                    <Button
-                      variant="outline"
-                      onClick={() => navigateFromMobile('ai-coach')}
-                      className="h-11 w-full gap-2 rounded-xl border-cyan-200/15 bg-transparent text-white hover:bg-cyan-200/10 hover:text-cyan-50"
-                    >
-                      <Bot className="h-4 w-4" />
-                      Talk to AI Coach
-                    </Button>
-                  </div>
-                </div>
-              </SheetContent>
-            </Sheet>
-          </div>
-        </div>
+        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+          <SheetTrigger asChild><Button variant="ghost" size="icon" className="rounded-xl border border-white/[.08] bg-white/[.035] text-white xl:hidden"><Menu className="h-5 w-5"/></Button></SheetTrigger>
+          <SheetContent side="right" className="w-[min(92vw,380px)] border-white/[.08] bg-[#070b19]/[.98] p-0 text-white backdrop-blur-2xl">
+            <SheetTitle className="sr-only">Prime Forge navigation</SheetTitle>
+            <div className="border-b border-white/[.07] p-5 pr-12"><Image src="/logo-wordmark.png" alt="Prime Forge" width={141} height={24} className="h-6 w-auto"/><p className="mt-3 text-[10px] uppercase tracking-[.18em] text-sky-300/60">Forge your best self</p></div>
+            <div className="grid grid-cols-2 gap-2 p-4">{[
+              ['Dashboard',LayoutDashboard,'dashboard'],['Habits',Flame,'habits'],['Goals',Target,'goals'],['Focus',Focus,'focus'],['Journal',Brain,'journal'],['Learning',BookOpen,'learning'],['AI Coach',Bot,'ai-coach'],['Challenges',Trophy,'challenges'],['Community',Users,'community'],['Analytics',BarChart3,'analytics'],['Fitness',Sparkles,'fitness'],['Settings',Settings,'settings']
+            ].map(([label,Icon,page])=>{const I=Icon as typeof Target;return <button key={label as string} onClick={()=>go(page as PageName)} className={`rounded-xl border p-3 text-left ${currentPage===page?'border-blue-400/25 bg-blue-500/[.1]':'border-white/[.07] bg-white/[.025]'}`}><I className="h-4 w-4 text-sky-300"/><span className="mt-3 block text-xs font-medium">{label as string}</span></button>})}</div>
+            <div className="border-t border-white/[.07] p-4">{status==='authenticated'?<Button onClick={()=>signOut({redirect:false})} variant="outline" className="w-full rounded-xl border-white/[.1] bg-white/[.03] text-white"><LogOut className="h-4 w-4"/>Sign out</Button>:<div className="grid grid-cols-2 gap-2"><Button onClick={()=>openAuthDialog('login')} variant="outline" className="rounded-xl border-white/[.1] bg-white/[.03] text-white">Log in</Button><Button onClick={()=>openAuthDialog('signup')} className="rounded-xl bg-blue-600">Start free</Button></div>}</div>
+          </SheetContent>
+        </Sheet>
       </div>
-      </motion.header>
-      <AuthDialog open={authOpen} defaultMode={authMode} onOpenChange={setAuthOpen} />
-    </>
-  );
+    </div>
+  </header>;
 }

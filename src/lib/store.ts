@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-export type PageName = 'home' | 'workouts' | 'exercise-detail' | 'schedule' | 'ai-coach' | 'dashboard' | 'nutrition' | 'contact';
+export type PageName = 'home' | 'dashboard' | 'growth' | 'habits' | 'goals' | 'focus' | 'journal' | 'learning' | 'ai-coach' | 'challenges' | 'community' | 'analytics' | 'fitness' | 'workouts' | 'exercise-detail' | 'schedule' | 'nutrition' | 'pricing' | 'about' | 'blog' | 'settings' | 'contact';
 
 // ─── Workout Log Types ──────────────────────────────────────────
 

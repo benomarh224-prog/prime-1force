@@ -14,6 +14,7 @@ import { AICoachPage } from '@/components/pages/AICoachPage';
 import { DashboardPage } from '@/components/pages/DashboardPage';
 import { NutritionPage } from '@/components/pages/NutritionPage';
 import { ContactPage } from '@/components/pages/ContactPage';
+import { GrowthPage } from '@/components/pages/GrowthPage';
 
 const pageVariants = {
   initial: { opacity: 0, y: 4 },
@@ -21,7 +22,7 @@ const pageVariants = {
   exit: { opacity: 0, y: -4 },
 };
 
-const hashPages: PageName[] = ['home', 'workouts', 'exercise-detail', 'schedule', 'ai-coach', 'dashboard', 'nutrition', 'contact'];
+const hashPages: PageName[] = ['home', 'dashboard', 'growth', 'habits', 'goals', 'focus', 'journal', 'learning', 'ai-coach', 'challenges', 'community', 'analytics', 'fitness', 'workouts', 'exercise-detail', 'schedule', 'nutrition', 'pricing', 'about', 'blog', 'settings', 'contact'];
 
 function getPageFromHash(): PageName | null {
   const hash = window.location.hash.replace('#', '') as PageName;
@@ -57,6 +58,21 @@ export default function MainApp() {
         return <AICoachPage />;
       case 'dashboard':
         return <DashboardPage />;
+      case 'growth':
+      case 'habits':
+      case 'goals':
+      case 'focus':
+      case 'journal':
+      case 'learning':
+      case 'challenges':
+      case 'community':
+      case 'analytics':
+      case 'fitness':
+      case 'pricing':
+      case 'about':
+      case 'blog':
+      case 'settings':
+        return <GrowthPage />;
       case 'nutrition':
         return <NutritionPage />;
       case 'contact':

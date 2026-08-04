@@ -59,19 +59,18 @@ type SpeechRecognitionLike = {
 };
 
 const quickPrompts = [
-  { icon: <Dumbbell className="h-4 w-4" />, text: 'Build my next 7-day training plan with sets, reps, and rest' },
-  { icon: <Apple className="h-4 w-4" />, text: 'Create a simple meal plan for my current goal' },
-  { icon: <Brain className="h-4 w-4" />, text: 'Review my progress and tell me what to improve this week' },
-  { icon: <Heart className="h-4 w-4" />, text: 'Help me train around lower back pain safely' },
+  { icon: <Target className="h-4 w-4" />, text: 'Help me turn my biggest goal into a practical 30-day plan' },
+  { icon: <Brain className="h-4 w-4" />, text: 'Analyze why I keep losing momentum and design a better system' },
+  { icon: <Zap className="h-4 w-4" />, text: 'Give me a direct confidence and discipline reset for this week' },
+  { icon: <Dumbbell className="h-4 w-4" />, text: 'Balance my work, learning, health, and recovery priorities' },
 ];
 
 const coachModes = [
-  { id: 'plan', label: 'Plan', icon: CalendarCheck, prompt: 'Act as a training planner. Give a structured weekly plan with progression.' },
-  { id: 'form', label: 'Form', icon: Target, prompt: 'Act as a form coach. Give cues, mistakes, regressions, and safety checks.' },
-  { id: 'food', label: 'Food', icon: Apple, prompt: 'Act as a nutrition coach. Give calories, macros, timing, and simple meals.' },
-  { id: 'boost', label: 'Boost', icon: Zap, prompt: 'Act as a motivation coach. Be direct, practical, and action-focused.' },
+  { id: 'plan', label: 'Strategy', icon: CalendarCheck, prompt: 'Turn the goal into clear milestones, weekly priorities, and next actions.' },
+  { id: 'form', label: 'Analyze', icon: Target, prompt: 'Analyze patterns, friction, tradeoffs, and the root cause before recommending changes.' },
+  { id: 'food', label: 'Wellbeing', icon: Apple, prompt: 'Connect energy, health, nutrition, sleep, and sustainable performance.' },
+  { id: 'boost', label: 'Mindset', icon: Zap, prompt: 'Coach discipline and confidence with direct, practical, action-focused guidance.' },
 ];
-
 const CHAT_STORAGE_KEY = 'prime-forge-coach-chat';
 const MAX_STORED_MESSAGES = 40;
 const MAX_MESSAGES_SENT_TO_API = 24;
@@ -80,11 +79,10 @@ function createWelcomeMessage(level: string, goal: string): Message {
   return {
     id: 'welcome',
     role: 'assistant',
-    content: `Hey, I'm your PrimeForge AI Coach. I can help with training plans, nutrition, recovery, exercise technique, and practical fitness decisions.\n\nProfile context: **${level}** level, goal: **${goal.replace('_', ' ')}**.\n\nAsk me what you want to improve and I will give you a specific plan instead of generic advice.`,
+    content: `Welcome to Prime Coach. I can help you build discipline, improve focus, strengthen your mindset, learn faster, make career decisions, and create a healthier life.\n\nI remember the context you choose to share, so we can build on earlier conversations instead of starting over.\n\nWhat part of your life would create the biggest positive ripple if we improved it now?`,
     timestamp: new Date(),
   };
 }
-
 export function AICoachPage() {
   const { userWeight, userHeight, userGoal, userLevel, weeklyGoal, workoutLogs } = useAppStore();
   const [messages, setMessages] = useState<Message[]>([createWelcomeMessage(userLevel, userGoal)]);
@@ -151,30 +149,25 @@ export function AICoachPage() {
       return `${log.date}: ${log.name}, ${log.duration}min, ${exercises || 'training'}, completed: ${Boolean(log.completed)}`;
     });
 
-    return `You are PrimeForge AI Coach, an expert personal trainer, nutrition coach, and fitness mentor.
-User Profile:
-- Weight: ${userWeight}kg, Height: ${userHeight}cm
-- Fitness Level: ${userLevel}
-- Goal: ${userGoal.replace('_', ' ')}
-- Weekly training goal: ${weeklyGoal} sessions
+    return `You are Prime Coach, a context-aware personal growth coach inside Prime Forge.
+Available Profile Context:
+- Health profile: ${userWeight}kg, ${userHeight}cm, fitness level ${userLevel}
+- Current saved goal: ${userGoal.replace('_', ' ')}
+- Weekly movement target: ${weeklyGoal} sessions
 - Logged workouts: ${workoutLogs.length} total, ${completedLogs.length} completed
-- Recent workout history: ${recentLogs.length ? recentLogs.join(' | ') : 'No workouts logged yet'}
+- Recent health activity: ${recentLogs.length ? recentLogs.join(' | ') : 'No activity logged yet'}
 - Active coaching mode: ${mode.label}. ${mode.prompt}
 - Saved coach memory: ${coachMemory || 'No extra notes saved yet'}
 
 Guidelines:
-- Provide personalized workout advice, nutrition guidance, recovery recommendations, and exercise technique corrections
-- Always ask for missing information when necessary
-- Give specific sets, reps, rest periods, progression advice, and safety recommendations
-- Avoid generic answers
-- Use markdown formatting for readability
-- Start with a clear recommendation, then give steps
-- Keep responses practical and skimmable
-- Use the previous chat history and keep context between questions
-- When giving nutrition advice, mention macros when relevant
-- If the user uploads image or video context, provide careful form feedback, likely issues, safety cues, and ask for missing visual details instead of pretending certainty
-- When pain, injury, illness, or medical symptoms are mentioned, recommend professional care and avoid diagnosis
-- End with one simple action for the next 24 hours`;
+- Coach the whole person across discipline, productivity, mindset, confidence, career, learning, habits, health, and relationships
+- Start with the clearest insight or recommendation, then give a practical plan
+- Ask for missing information when it materially changes the advice
+- Avoid generic motivation; make recommendations specific and measurable
+- Use previous chat history and saved memory to maintain context
+- Turn ideas into a next action, habit, focus block, experiment, or reflection prompt
+- Use markdown for readability and end with one useful action for the next 24 hours
+- Never diagnose medical or mental-health conditions; recommend qualified support when appropriate`;
   };
 
   const handleMediaChange = (event: React.ChangeEvent<HTMLInputElement>) => {

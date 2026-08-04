@@ -1,57 +1,24 @@
 'use client';
 
 import Image from 'next/image';
-import { useAppStore } from '@/lib/store';
-import { ArrowRight } from 'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
+import { useAppStore, type PageName } from '@/lib/store';
 
-export function Footer() {
-  const { navigate } = useAppStore();
+const columns: Array<{title:string;links:Array<[string,PageName]>}> = [
+  {title:'Product',links:[['Dashboard','dashboard'],['Habits','habits'],['Goals','goals'],['Focus','focus'],['AI Coach','ai-coach']]},
+  {title:'Explore',links:[['Learning','learning'],['Challenges','challenges'],['Community','community'],['Fitness','fitness'],['Analytics','analytics']]},
+  {title:'Company',links:[['About','about'],['Blog','blog'],['Pricing','pricing'],['Contact','contact']]},
+];
 
-  return (
-    <footer className="mt-auto border-t border-white/[0.06] bg-background/70 backdrop-blur-sm">
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-          <div>
-            <button
-              onClick={() => navigate('home')}
-              className="block"
-              aria-label="Prime Forge home"
-            >
-              <Image src="/logo-wordmark.png" alt="Prime Forge" width={188} height={32} className="h-7 w-auto" />
-            </button>
-          </div>
-
-          <nav className="flex flex-wrap items-center gap-x-4 gap-y-2">
-            {[
-              { label: 'Workouts', page: 'workouts' as const },
-              { label: 'Schedule', page: 'schedule' as const },
-              { label: 'AI Coach', page: 'ai-coach' as const },
-              { label: 'Nutrition', page: 'nutrition' as const },
-              { label: 'Contact', page: 'contact' as const },
-            ].map((item) => (
-              <button
-                key={item.page}
-                onClick={() => navigate(item.page)}
-                className="text-xs font-semibold text-muted-foreground transition-colors hover:text-primary"
-              >
-                {item.label}
-              </button>
-            ))}
-          </nav>
-
-          <button
-            onClick={() => navigate('contact')}
-            className="flex items-center gap-2 text-xs font-bold text-primary transition-colors hover:text-primary/80"
-          >
-            Get in touch
-            <ArrowRight className="h-3.5 w-3.5" />
-          </button>
-        </div>
-
-        <p className="mt-5 border-t border-white/[0.06] pt-4 text-xs text-muted-foreground">
-          &copy; {new Date().getFullYear()} Prime Forge. All rights reserved.
-        </p>
+export function Footer(){
+  const navigate=useAppStore(s=>s.navigate);
+  return <footer className="border-t border-white/[.07] bg-[#040611] text-white">
+    <div className="mx-auto max-w-7xl px-5 py-14 sm:px-8 sm:py-18">
+      <div className="grid gap-12 lg:grid-cols-[1.3fr_1fr]">
+        <div><button onClick={()=>navigate('home')}><Image src="/logo-wordmark.png" alt="Prime Forge" width={176} height={30} className="h-7 w-auto"/></button><p className="mt-5 max-w-sm text-sm leading-7 text-slate-500">Forge your best self with one intelligent system for discipline, focus, learning, mindset, health, and meaningful growth.</p><button onClick={()=>navigate('dashboard')} className="mt-6 flex items-center gap-2 text-sm font-medium text-sky-300">Start your journey <ArrowUpRight className="h-4 w-4"/></button></div>
+        <div className="grid grid-cols-3 gap-6">{columns.map(column=><div key={column.title}><p className="text-xs font-semibold text-slate-300">{column.title}</p><div className="mt-4 space-y-3">{column.links.map(([label,page])=><button key={page} onClick={()=>navigate(page)} className="block text-xs text-slate-500 transition hover:text-white">{label}</button>)}</div></div>)}</div>
       </div>
-    </footer>
-  );
+      <div className="mt-14 flex flex-col gap-3 border-t border-white/[.06] pt-6 text-xs text-slate-600 sm:flex-row sm:items-center sm:justify-between"><p>© {new Date().getFullYear()} Prime Forge. Forge Your Best Self.</p><p>Built for intentional humans.</p></div>
+    </div>
+  </footer>;
 }
