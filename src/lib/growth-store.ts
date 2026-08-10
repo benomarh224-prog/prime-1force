@@ -22,9 +22,17 @@ export type Goal = {
   deadline: string;
 };
 
+export type JournalEntry = {
+  id: string;
+  content: string;
+  mood: string;
+  createdAt: string;
+};
+
 type GrowthState = {
   habits: Habit[];
   goals: Goal[];
+  journal: JournalEntry[];
   xp: number;
   level: number;
   coins: number;
@@ -32,9 +40,10 @@ type GrowthState = {
   journalEntries: number;
   toggleHabit: (id: string) => void;
   addHabit: (title: string, category: HabitCategory) => void;
+  addGoal: (title: string, area: string, deadline: string) => void;
   updateGoal: (id: string, progress: number) => void;
   addFocusMinutes: (minutes: number) => void;
-  addJournalEntry: () => void;
+  addJournalEntry: (content: string, mood: string) => void;
 };
 
 const categoryColors: Record<HabitCategory, string> = {
@@ -58,6 +67,7 @@ export const useGrowthStore = create<GrowthState>()(
         { id: 'books', title: 'Read 24 books this year', area: 'Learning', progress: 54, deadline: 'Dec 31' },
         { id: 'health', title: 'Build an elite health routine', area: 'Health', progress: 76, deadline: 'Oct 15' },
       ],
+      journal: [],
       xp: 2840,
       level: 12,
       coins: 460,
@@ -87,6 +97,11 @@ export const useGrowthStore = create<GrowthState>()(
           color: categoryColors[category],
         }],
       })),
+      addGoal: (title, area, deadline) => set((state) => ({
+        goals: [...state.goals, {
+          id: `goal-${Date.now()}`, title, area, deadline: deadline || 'No deadline', progress: 0,
+        }],
+      })),
       updateGoal: (id, progress) => set((state) => ({
         goals: state.goals.map((goal) => goal.id === id ? { ...goal, progress: Math.max(0, Math.min(100, progress)) } : goal),
       })),
@@ -94,7 +109,8 @@ export const useGrowthStore = create<GrowthState>()(
         focusMinutes: state.focusMinutes + minutes,
         xp: state.xp + Math.round(minutes / 2),
       })),
-      addJournalEntry: () => set((state) => ({
+      addJournalEntry: (content, mood) => set((state) => ({
+        journal: [{ id: `journal-${Date.now()}`, content, mood, createdAt: new Date().toISOString() }, ...state.journal],
         journalEntries: state.journalEntries + 1,
         xp: state.xp + 15,
       })),
