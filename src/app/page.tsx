@@ -83,9 +83,9 @@ export default function MainApp() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen min-w-0 flex-col">
       <Header />
-      <main className={isChatPage ? 'flex min-h-0 flex-1 lg:block' : 'flex-1 pb-[calc(6.75rem+env(safe-area-inset-bottom))] lg:pb-0'}>
+      <main className={isChatPage ? 'flex min-h-0 min-w-0 flex-1 lg:block' : 'min-w-0 flex-1 pb-[calc(6.75rem+env(safe-area-inset-bottom))] lg:pb-0'}>
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={currentPage}

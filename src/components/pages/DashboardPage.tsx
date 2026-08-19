@@ -60,12 +60,12 @@ export function DashboardPage() {
             <h1 className="mt-3 text-3xl font-semibold tracking-[-.04em] sm:text-5xl">Good afternoon, {firstName}.</h1>
             <p className="mt-3 text-slate-400">You&apos;re building momentum. Keep the promises you made to yourself today.</p>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="rounded-xl border border-white/[.08] bg-white/[.035] px-4 py-2.5">
+          <div className="grid grid-cols-2 gap-2 sm:flex">
+            <div className="min-w-0 rounded-xl border border-white/[.08] bg-white/[.035] px-3 py-2.5 sm:px-4">
               <p className="text-[10px] uppercase tracking-[.15em] text-slate-500">Level {level}</p>
               <p className="text-sm font-semibold text-sky-300">{xp.toLocaleString()} XP</p>
             </div>
-            <div className="rounded-xl border border-white/[.08] bg-white/[.035] px-4 py-2.5">
+            <div className="min-w-0 rounded-xl border border-white/[.08] bg-white/[.035] px-3 py-2.5 sm:px-4">
               <p className="text-[10px] uppercase tracking-[.15em] text-slate-500">Balance</p>
               <p className="text-sm font-semibold text-amber-300">{coins} coins</p>
             </div>
@@ -97,7 +97,7 @@ export function DashboardPage() {
 
         <div className="mt-4 grid gap-4 xl:grid-cols-[1.25fr_.75fr]">
           <section className="pf-card overflow-hidden p-5 sm:p-6">
-            <div className="flex items-center justify-between">
+              <div className="flex min-w-0 items-center justify-between gap-3">
               <div><p className="text-sm font-semibold">Momentum</p><p className="mt-1 text-xs text-slate-500">Your overall growth score this week</p></div>
               <button onClick={() => navigate('analytics')} className="text-xs font-medium text-sky-300 hover:text-sky-200">Full analytics</button>
             </div>
@@ -120,7 +120,7 @@ export function DashboardPage() {
           </section>
 
           <section className="pf-card p-5 sm:p-6">
-            <div className="flex items-center justify-between">
+            <div className="flex min-w-0 items-center justify-between gap-3">
               <div><p className="text-sm font-semibold">Daily intention</p><p className="mt-1 text-xs text-slate-500">{done} of {habits.length} complete</p></div>
               <span className="text-sm font-semibold text-sky-300">{Math.round(done / habits.length * 100)}%</span>
             </div>
@@ -146,7 +146,7 @@ export function DashboardPage() {
 
         <div className="mt-4 grid gap-4 xl:grid-cols-[.8fr_1.2fr]">
           <section className="pf-card p-5 sm:p-6">
-            <div className="flex items-center justify-between">
+            <div className="flex min-w-0 items-center justify-between gap-3">
               <div><p className="text-sm font-semibold">Active goals</p><p className="mt-1 text-xs text-slate-500">Direction for this season</p></div>
               <Target className="h-4 w-4 text-sky-300" />
             </div>
@@ -197,7 +197,7 @@ export function DashboardPage() {
           })}
         </div>
 
-        <div className="mt-4 flex items-center gap-3 rounded-2xl border border-white/[.07] bg-white/[.025] px-5 py-4">
+        <div className="mt-4 flex items-start gap-3 rounded-2xl border border-white/[.07] bg-white/[.025] px-4 py-4 sm:items-center sm:px-5">
           <Circle className="h-3 w-3 fill-sky-400 text-sky-400" />
           <p className="flex-1 text-sm italic text-slate-400">&ldquo;Success is the product of daily habits—not once-in-a-lifetime transformations.&rdquo;</p>
           <span className="hidden text-xs text-slate-600 sm:block">James Clear</span>

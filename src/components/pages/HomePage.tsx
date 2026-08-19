@@ -73,24 +73,24 @@ export function HomePage() {
         <div className="pointer-events-none absolute left-[8%] top-32 h-72 w-72 rounded-full bg-blue-600/20 blur-[110px]" />
         <div className="pointer-events-none absolute right-[8%] top-16 h-80 w-80 rounded-full bg-sky-400/15 blur-[120px]" />
 
-        <div className="relative mx-auto grid min-h-[calc(92svh-7rem)] max-w-[1440px] items-center gap-14 px-5 pb-20 sm:px-8 lg:grid-cols-[1.05fr_.95fr] lg:px-12">
+        <div className="relative mx-auto grid min-h-[calc(92svh-7rem)] max-w-[1440px] items-center gap-10 px-4 pb-16 sm:gap-14 sm:px-8 sm:pb-20 lg:grid-cols-[1.05fr_.95fr] lg:px-12">
           <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
             <div className="inline-flex items-center gap-2 rounded-full border border-blue-300/20 bg-blue-400/[0.08] px-3 py-1.5 text-xs font-semibold text-blue-100 shadow-[inset_0_1px_rgba(255,255,255,.08)] backdrop-blur-xl">
               <Sparkles className="h-3.5 w-3.5 text-sky-300" />
               Your personal operating system for growth
             </div>
-            <h1 className="mt-7 max-w-4xl text-balance text-[clamp(3.25rem,7vw,7.25rem)] font-semibold leading-[0.94] tracking-[-0.065em]">
+            <h1 className="mt-6 max-w-4xl text-balance text-[clamp(2.7rem,12vw,7.25rem)] font-semibold leading-[0.94] tracking-[-0.065em] sm:mt-7">
               Forge the person you were <span className="pf-gradient-text">meant to become.</span>
             </h1>
-            <p className="mt-7 max-w-2xl text-balance text-lg leading-8 text-slate-300/75 sm:text-xl">
+            <p className="mt-6 max-w-2xl text-balance text-base leading-7 text-slate-300/75 sm:mt-7 sm:text-xl sm:leading-8">
               Build discipline. Master your habits. Strengthen your mindset. Improve your health. Achieve meaningful goals. Become unstoppable.
             </p>
-            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-              <Button onClick={start} size="lg" className="h-13 rounded-xl bg-blue-600 px-7 font-semibold text-white shadow-[0_0_40px_rgba(37,99,235,.32)] hover:bg-blue-500">
+            <div className="mt-8 flex flex-col gap-3 sm:mt-9 sm:flex-row">
+              <Button onClick={start} size="lg" className="h-13 w-full rounded-xl bg-blue-600 px-7 font-semibold text-white shadow-[0_0_40px_rgba(37,99,235,.32)] hover:bg-blue-500 sm:w-auto">
                 Start your journey
                 <ArrowRight className="h-4 w-4" />
               </Button>
-              <Button onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })} size="lg" variant="outline" className="h-13 rounded-xl border-white/12 bg-white/[0.045] px-7 text-white backdrop-blur-xl hover:bg-white/[0.08] hover:text-white">
+              <Button onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })} size="lg" variant="outline" className="h-13 w-full rounded-xl border-white/12 bg-white/[0.045] px-7 text-white backdrop-blur-xl hover:bg-white/[0.08] hover:text-white sm:w-auto">
                 Explore features
               </Button>
             </div>
@@ -104,7 +104,7 @@ export function HomePage() {
           <motion.div initial={{ opacity: 0, scale: .94, y: 18 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: .15, duration: .8 }} className="relative mx-auto w-full max-w-[620px]">
             <div className="pointer-events-none absolute -inset-8 rounded-[3rem] bg-blue-500/15 blur-3xl" />
             <div className="pf-panel relative rounded-[1.75rem] p-3 shadow-[0_40px_120px_rgba(0,0,0,.48)]">
-              <div className="rounded-[1.35rem] border border-white/[0.07] bg-[#070b1b]/95 p-4 sm:p-6">
+              <div className="rounded-[1.35rem] border border-white/[0.07] bg-[#070b1b]/95 p-3.5 sm:p-6">
                 <div className="flex items-center justify-between border-b border-white/[0.08] pb-5">
                   <div>
                     <p className="text-xs font-medium uppercase tracking-[.18em] text-sky-300/70">Tuesday, August 4</p>
@@ -116,17 +116,17 @@ export function HomePage() {
                   </div>
                 </div>
 
-                <div className="mt-5 grid grid-cols-3 gap-2">
+                <div className="mt-5 grid grid-cols-3 gap-1.5 sm:gap-2">
                   {[
                     [Flame, '16', 'day streak'],
                     [Clock3, '5.3h', 'focus'],
                     [Zap, '2,840', 'total XP'],
                   ].map(([Icon, value, label]) => {
                     const I = Icon as typeof Flame;
-                    return <div key={label as string} className="rounded-xl border border-white/[0.08] bg-white/[0.035] p-3">
+                    return <div key={label as string} className="min-w-0 rounded-xl border border-white/[0.08] bg-white/[0.035] p-2.5 sm:p-3">
                       <I className="h-4 w-4 text-sky-300" />
-                      <p className="mt-3 text-lg font-semibold">{value as string}</p>
-                      <p className="text-[10px] text-slate-500">{label as string}</p>
+                      <p className="mt-3 truncate text-base font-semibold sm:text-lg">{value as string}</p>
+                      <p className="truncate text-[10px] text-slate-500">{label as string}</p>
                     </div>;
                   })}
                 </div>
@@ -178,7 +178,7 @@ export function HomePage() {
         </div>
       </section>
 
-      <section id="features" className="relative py-24 sm:py-32">
+      <section id="features" className="relative py-18 sm:py-32">
         <div className="mx-auto max-w-7xl px-5 sm:px-8">
           <motion.div {...reveal} className="max-w-3xl">
             <p className="pf-eyebrow">One system. Every dimension.</p>
@@ -206,7 +206,7 @@ export function HomePage() {
         </div>
       </section>
 
-      <section className="border-y border-white/[0.07] bg-[#070b19] py-24 sm:py-32">
+      <section className="border-y border-white/[0.07] bg-[#070b19] py-18 sm:py-32">
         <div className="mx-auto max-w-7xl px-5 sm:px-8">
           <motion.div {...reveal} className="text-center">
             <p className="pf-eyebrow">The Prime Forge method</p>
@@ -225,7 +225,7 @@ export function HomePage() {
         </div>
       </section>
 
-      <section className="py-24 sm:py-32">
+      <section className="py-18 sm:py-32">
         <div className="mx-auto grid max-w-7xl gap-10 px-5 sm:px-8 lg:grid-cols-[.85fr_1.15fr] lg:items-center">
           <motion.div {...reveal}>
             <p className="pf-eyebrow">Intelligence with context</p>

@@ -469,11 +469,37 @@ body {
 }
 
 .pf-card {
+  min-width: 0;
   border: 1px solid rgba(148, 163, 184, .115);
   border-radius: 1rem;
   background: linear-gradient(145deg, rgba(255,255,255,.04), rgba(255,255,255,.018));
   box-shadow: inset 0 1px 0 rgba(255,255,255,.045);
   transition: border-color .25s ease, background-color .25s ease, transform .25s ease, box-shadow .25s ease;
+}
+
+.pf-panel {
+  min-width: 0;
+}
+
+@media (max-width: 374px) {
+  .pf-card {
+    border-radius: 0.875rem;
+  }
+
+  .pf-eyebrow {
+    font-size: 0.625rem;
+    letter-spacing: 0.14em;
+  }
+
+  .mobile-bottom-nav {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+
+  .mobile-bottom-nav-grid {
+    gap: 0.125rem;
+    padding: 0.25rem;
+  }
 }
 
 .pf-card:hover {
