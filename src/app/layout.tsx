@@ -1,18 +1,19 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./lab.css";
 import { Toaster } from "@/components/ui/toaster";
 import { AppProviders } from "@/components/providers/AppProviders";
 import { ScrollToTop } from "@/components/layout/ScrollToTop";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://primeforge.21-0-10-152.sslip.io";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://primeforge.fit";
 
 export const metadata: Metadata = {
   title: {
-    default: "Prime Forge - Forge Your Best Self",
+    default: "PrimeForge Lab — Training Made Simple",
     template: "%s | Prime Forge",
   },
-  description: "Build discipline, master your habits, strengthen your mindset, improve your health, and achieve meaningful goals with your personal growth operating system.",
-  keywords: ["self improvement", "habit tracker", "goal setting", "focus timer", "AI coach", "productivity", "mindset", "journal", "learning", "fitness", "personal growth", "prime forge"],
+  description: "Choose your goal, time, and equipment. Build a simple session, explore the muscles you train, and log your progress.",
+  keywords: ["strength training", "workout programs", "fitness", "workout tracker", "gym", "primeforge"],
   authors: [{ name: "Prime Forge Team", url: SITE_URL }],
   creator: "Prime Forge",
   publisher: "Prime Forge",
@@ -25,8 +26,8 @@ export const metadata: Metadata = {
     shortcut: "/logo.svg",
   },
   openGraph: {
-    title: "Prime Forge - Forge Your Best Self",
-    description: "Build discipline, master your habits, strengthen your mindset, improve your health, and achieve meaningful goals with your personal growth operating system.",
+    title: "PrimeForge Lab — Training Made Simple",
+    description: "A clear session built around your goal, time, and equipment.",
     type: "website",
     locale: "en_US",
     url: SITE_URL,
@@ -42,8 +43,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Prime Forge - Forge Your Best Self",
-    description: "Build discipline, master your habits, strengthen your mindset, improve your health, and achieve meaningful goals with your personal growth operating system.",
+    title: "PrimeForge Lab — Training Made Simple",
+    description: "A clear session built around your goal, time, and equipment.",
     images: ["/opengraph-image.jpg"],
   },
   robots: {

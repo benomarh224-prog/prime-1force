@@ -1,52 +1,118 @@
 'use client';
 
-import Image from 'next/image';
-import { ArrowRight, CalendarDays, Dumbbell, Salad } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { useSession } from 'next-auth/react';
-import { Button } from '@/components/ui/button';
-import { openAuthDialog } from '@/lib/auth-dialog';
-import { useAppStore, type PageName } from '@/lib/store';
+import { ArrowRight, Check, ChevronDown, Dumbbell, Timer } from 'lucide-react';
+import { buildLabPlan, equipmentNames, goalNames, localDateKey, type LabEquipment, type LabGoal, type LabMinutes } from '@/lib/lab';
+import { useLabStore } from '@/lib/lab-store';
+import { useAppStore, type WorkoutLog } from '@/lib/store';
 
-const links: Array<{ icon: typeof Dumbbell; title: string; page: PageName }> = [
-  { icon: Dumbbell, title: 'Workouts', page: 'workouts' },
-  { icon: CalendarDays, title: 'Schedule', page: 'schedule' },
-  { icon: Salad, title: 'Nutrition', page: 'nutrition' },
-];
+const LabBody = dynamic(() => import('@/components/forge/LabBody'), { ssr: false, loading: () => <div className="lab-body-card lab-body-loading">Loading muscle guide…</div> });
 
 export function HomePage() {
-  const { navigate } = useAppStore();
   const { status } = useSession();
-  const start = () => status === 'authenticated' ? navigate('dashboard') : openAuthDialog('signup');
+  const { config, draft, setConfig, start, updateSet, cancel, finish, replaceLog } = useLabStore();
+  const navigate = useAppStore(state => state.navigate);
+  const [selected, setSelected] = useState(0);
+  const [notice, setNotice] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [confirmEnd, setConfirmEnd] = useState(false);
+  const [restUntil, setRestUntil] = useState(0);
+  const [now, setNow] = useState(0);
+  const plan = draft?.plan ?? buildLabPlan(config);
+  const activeIndex = Math.min(selected, plan.movements.length - 1);
+  const movement = plan.movements[activeIndex];
+  const rest = Math.max(0, Math.ceil((restUntil - now) / 1000));
+  const completedSets = draft ? Object.values(draft.sets).flat().filter(set => set.done).length : 0;
 
-  return (
-    <div className="min-h-[calc(100vh-4rem)] bg-[#07090d] text-white">
-      <section className="mx-auto grid max-w-7xl gap-10 px-5 py-24 sm:px-8 sm:py-32 lg:min-h-[680px] lg:grid-cols-2 lg:items-center lg:py-16">
-        <div className="max-w-xl">
-          <p className="text-sm font-medium text-orange-400">PRIME FORGE</p>
-          <h1 className="mt-5 text-balance text-5xl font-semibold leading-[.98] tracking-[-.055em] sm:text-7xl">Train better.<br />Feel stronger.</h1>
-          <p className="mt-6 max-w-md text-lg leading-8 text-slate-400">Simple workouts and plans to help you stay consistent.</p>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Button onClick={start} size="lg" className="h-12 rounded-lg bg-orange-500 px-6 font-semibold hover:bg-orange-400">Start training <ArrowRight className="h-4 w-4" /></Button>
-            <Button onClick={() => navigate('workouts')} variant="ghost" size="lg" className="h-12 rounded-lg px-5 text-slate-300 hover:bg-white/[.06] hover:text-white">See workouts</Button>
-          </div>
-        </div>
+  useEffect(() => {
+    if (!restUntil) return;
+    const interval = window.setInterval(() => {
+      const time = Date.now();
+      setNow(time);
+      if (time >= restUntil) setRestUntil(0);
+    }, 500);
+    return () => window.clearInterval(interval);
+  }, [restUntil]);
 
-        <div className="relative mx-auto w-full max-w-[560px] overflow-hidden rounded-2xl border border-white/10 bg-[#101217] shadow-2xl">
-          <div className="relative aspect-[4/3]"><Image src="/images/hero-primeforge.webp" alt="Athlete training with a dumbbell" fill priority sizes="(max-width: 1024px) 100vw, 560px" className="object-cover object-[65%_center]" /><div className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-transparent" /></div>
-          <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6"><p className="text-xs font-medium uppercase tracking-[.14em] text-orange-300">Start today</p><p className="mt-1 text-xl font-semibold">One workout at a time.</p></div>
-        </div>
-      </section>
+  const save = async () => {
+    if (!draft || !completedSets || saving) return;
+    const log: WorkoutLog = {
+      id: draft.id, date: localDateKey(), name: goalNames[draft.plan.config.goal] + ' · ' + equipmentNames[draft.plan.config.equipment],
+      duration: Math.round((Date.now() - draft.startedAt) / 60000), notes: '', completed: true,
+      exercises: draft.plan.movements.map(item => ({
+        exerciseId: item.id, exerciseName: item.name,
+        sets: draft.sets[item.id].filter(set => set.done).map(({ reps, weight }) => ({ reps, weight })),
+      })).filter(item => item.sets.length),
+    };
+    setSaving(true);
+    finish(log);
+    setRestUntil(0);
+    setConfirmEnd(false);
+    setNotice('Session saved on this device.');
+    if (status === 'authenticated') {
+      try {
+        const response = await fetch('/api/workout-sessions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ workout: log }) });
+        const data = await response.json();
+        if (response.ok && data.success && data.workout && data.persistence !== 'disabled') {
+          replaceLog(log.id, data.workout);
+          useAppStore.getState().upsertWorkoutLog(data.workout);
+          setNotice('Session saved and synced to your account.');
+        } else setNotice('Session saved on this device. Account sync is unavailable.');
+      } catch { setNotice('Session saved on this device. Account sync is unavailable.'); }
+    }
+    setSaving(false);
+  };
 
-      <section className="border-t border-white/[.08]">
-        <div className="mx-auto max-w-7xl px-5 py-6 sm:px-8 sm:py-8">
-          <div className="grid divide-y divide-white/[.08] border-y border-white/[.08] sm:grid-cols-3 sm:divide-x sm:divide-y-0">
-            {links.map((link) => {
-              const Icon = link.icon;
-              return <button key={link.title} onClick={() => navigate(link.page)} className="flex items-center gap-3 px-1 py-5 text-left transition hover:text-orange-300 sm:px-6 sm:py-4"><Icon className="h-5 w-5 text-orange-400" /><span className="font-medium">{link.title}</span><ArrowRight className="ml-auto h-4 w-4 text-slate-500" /></button>;
-            })}
-          </div>
-        </div>
-      </section>
+  return <div className="lab-page">
+    <div className="lab-intro"><p className="lab-eyebrow">PRIMEFORGE / TRAINING LAB</p><h1>Your next session.<br /><span>Made simple.</span></h1><p>Choose your goal, time, and equipment. Get a clear place to start.</p></div>
+    {notice && <div className="lab-notice" role="status"><Check size={18} /><span>{notice}</span><button onClick={() => navigate('dashboard')}>View progress <ArrowRight size={15} /></button></div>}
+    <div className="lab-workspace">
+      <div className="lab-workout-column">
+        <section className="lab-config lab-card">
+          <div className="lab-card-heading"><h2>{draft ? 'Session in progress' : 'Build your session'}</h2><Dumbbell size={18} /></div>
+          {draft ? <p className="lab-active-config">{goalNames[plan.config.goal]} · {plan.config.minutes} min · {equipmentNames[plan.config.equipment]}</p> : <>
+          <fieldset disabled={saving}><legend>Your goal</legend><div className="lab-options">{(['strength', 'muscle', 'fitness'] as LabGoal[]).map(goal => <button key={goal} aria-pressed={config.goal === goal} onClick={() => setConfig({ goal })}>{goalNames[goal]}</button>)}</div></fieldset>
+          <fieldset disabled={Boolean(draft) || saving}><legend>Time available</legend><div className="lab-options">{([20, 35, 50] as LabMinutes[]).map(minutes => <button key={minutes} aria-pressed={config.minutes === minutes} onClick={() => setConfig({ minutes })}>{minutes} min</button>)}</div></fieldset>
+          <fieldset disabled={saving}><legend>Equipment</legend><div className="lab-options">{(['gym', 'dumbbells', 'bodyweight'] as LabEquipment[]).map(equipment => <button key={equipment} aria-pressed={config.equipment === equipment} onClick={() => setConfig({ equipment })}>{equipmentNames[equipment]}</button>)}</div></fieldset>
+          </>}
+          <div className="lab-plan-summary"><span>{plan.movements.length} exercises</span><span>{plan.sets} sets each</span><span>{plan.rest}s rest</span></div>
+          {!draft && <div className="lab-session-actions"><button className="lab-primary" disabled={saving} onClick={() => { start(); setNotice(''); setSelected(0); }}>Start this session <ArrowRight size={18} /></button><p className="lab-caption">No account needed. Your sessions stay on this device.</p></div>}
+        </section>
+        <section className="lab-card lab-exercises">
+          <div className="lab-card-heading"><h2>{draft ? 'Log your sets' : 'Your session'}</h2><span className="lab-muted">{draft ? completedSets + ' sets done' : plan.config.minutes + ' min target'}</span></div>
+          <div className="lab-exercise-list">{plan.movements.map((item, index) => {
+            const isSelected = index === activeIndex;
+            const done = draft?.sets[item.id].filter(set => set.done).length ?? 0;
+            return <div key={item.id} className={'lab-exercise ' + (isSelected ? 'is-selected' : '')}>
+              <button className="lab-exercise-trigger" aria-expanded={isSelected} aria-controls={'details-' + item.id} onClick={() => setSelected(index)}>
+                <span className="lab-exercise-number">{draft && done === plan.sets ? <Check size={15} /> : String(index + 1).padStart(2, '0')}</span>
+                <span><strong>{item.name}</strong><small>{draft ? done + '/' + plan.sets + ' sets done' : plan.sets + ' sets · ' + plan.reps + ' reps'}</small></span><ChevronDown size={17} />
+              </button>
+              {isSelected && <div id={'details-' + item.id} className="lab-exercise-details">
+                <ol>{item.steps.map(step => <li key={step}>{step}</li>)}</ol>
+                {draft && <div className="lab-sets"><div className={'lab-set-labels ' + (config.equipment === 'bodyweight' ? 'is-bodyweight' : '')}><span>Set</span><span>Reps</span>{config.equipment !== 'bodyweight' && <span>Kg</span>}<span>Done</span></div>{draft.sets[item.id].map((set, setIndex) => <div key={setIndex} className={'lab-set-row ' + (config.equipment === 'bodyweight' ? 'is-bodyweight' : '')}>
+                  <span>{setIndex + 1}</span>
+                  <input type="number" min="1" max="200" inputMode="numeric" aria-label={item.name + ' set ' + (setIndex + 1) + ' reps'} value={set.reps} onChange={event => updateSet(item.id, setIndex, { reps: Math.max(1, Math.min(200, Number(event.target.value) || 1)) })} />
+                  {config.equipment !== 'bodyweight' && <input type="number" min="0" max="1000" step=".5" inputMode="decimal" aria-label={item.name + ' set ' + (setIndex + 1) + ' weight in kg'} value={set.weight} onChange={event => updateSet(item.id, setIndex, { weight: Math.max(0, Math.min(1000, Number(event.target.value) || 0)) })} />}
+                  <button className="lab-done" aria-label={item.name + ' set ' + (setIndex + 1) + ' complete'} aria-pressed={set.done} onClick={() => {
+                    updateSet(item.id, setIndex, { done: !set.done });
+                    if (!set.done) { const time = Date.now(); setNow(time); setRestUntil(time + plan.rest * 1000); }
+                  }}>{set.done && <Check size={17} />}</button>
+                </div>)}</div>}
+              </div>}
+            </div>;
+          })}</div>
+          {draft ? <div className="lab-session-actions">
+            {rest > 0 && <div className="lab-rest" role="timer" aria-label="Rest time remaining"><Timer size={17} /><span>Rest · {rest}s</span><button onClick={() => setRestUntil(0)}>Skip</button></div>}
+            <button className="lab-primary" disabled={!completedSets || saving} onClick={save}>Finish & save {completedSets > 0 && <span>({completedSets} sets)</span>}<Check size={17} /></button>
+            {confirmEnd ? <div className="lab-discard"><p>Discard this unfinished session?</p><button onClick={() => { cancel(); setRestUntil(0); setConfirmEnd(false); }}>Discard</button><button onClick={() => setConfirmEnd(false)}>Keep training</button></div> : <button className="lab-text-button" onClick={() => setConfirmEnd(true)}>Discard session</button>}
+          </div> : null}
+        </section>
+        <p className="lab-safety">Start with a light warm-up. Choose a comfortable load and stop if you feel pain. Time estimates vary with your pace.</p>
+      </div>
+      <div className="lab-body-column"><LabBody muscles={movement.muscles} /><div className="lab-focus"><span className="lab-eyebrow">SELECTED EXERCISE</span><strong>{movement.name}</strong><p>{plan.sets} sets · {plan.reps} reps · {plan.rest}s rest</p></div></div>
     </div>
-  );
+  </div>;
 }

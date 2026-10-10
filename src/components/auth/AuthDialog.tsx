@@ -149,7 +149,7 @@ export function AuthDialog({ open, defaultMode = 'login', onOpenChange }: AuthDi
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="border-primary/15 bg-background/95 p-0 shadow-[0_24px_80px_oklch(0_0_0_/_0.45)] backdrop-blur-xl sm:max-w-md">
+      <DialogContent className="border-border bg-card p-0 shadow-xl sm:max-w-md">
         <div className="border-b border-primary/10 px-5 pb-4 pt-5">
           <DialogHeader>
             <div className="mb-2 flex h-11 w-11 items-center justify-center rounded-lg bg-primary/10 text-primary">
@@ -162,8 +162,8 @@ export function AuthDialog({ open, defaultMode = 'login', onOpenChange }: AuthDi
               {mode === 'forgot'
                 ? 'Enter your email and we will send reset instructions if the account exists.'
                 : mode === 'login'
-                  ? 'Sign in to keep your training plan and progress together.'
-                  : 'Start saving your workouts, schedule, and coaching history.'}
+                  ? 'Sign in to sync new sessions to your account.'
+                  : 'Keep your saved sessions together across devices.'}
             </DialogDescription>
           </DialogHeader>
         </div>
@@ -185,8 +185,8 @@ export function AuthDialog({ open, defaultMode = 'login', onOpenChange }: AuthDi
             ))}
           </div>
 
-          <div className="mb-4 grid grid-cols-2 gap-2">
-            <Button
+          <div className="mb-4 flex gap-2 empty:hidden">
+            {socialProviders.google && <Button
               type="button"
               variant="outline"
               onClick={() => handleSocialSignIn('google')}
@@ -194,8 +194,8 @@ export function AuthDialog({ open, defaultMode = 'login', onOpenChange }: AuthDi
             >
               <Chrome className="h-4 w-4" />
               Google
-            </Button>
-            <Button
+            </Button>}
+            {socialProviders.apple && <Button
               type="button"
               variant="outline"
               onClick={() => handleSocialSignIn('apple')}
@@ -203,7 +203,7 @@ export function AuthDialog({ open, defaultMode = 'login', onOpenChange }: AuthDi
             >
               <Apple className="h-4 w-4" />
               Apple
-            </Button>
+            </Button>}
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -279,7 +279,7 @@ export function AuthDialog({ open, defaultMode = 'login', onOpenChange }: AuthDi
               </p>
             )}
 
-            <Button type="submit" className="h-11 w-full rounded-lg font-bold neon-glow" disabled={isLoading}>
+            <Button type="submit" className="h-11 w-full rounded-lg font-semibold" disabled={isLoading}>
               {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
               {mode === 'forgot' ? (
                 <>
