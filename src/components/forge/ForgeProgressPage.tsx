@@ -12,7 +12,7 @@ export function ForgeProgressPage() {
   const minutes = logs.reduce((sum, log) => sum + log.duration, 0);
   const sets = logs.reduce((sum, log) => sum + log.exercises.reduce((total, exercise) => total + exercise.sets.length, 0), 0);
   return <div className="lab-page">
-    <div className="lab-progress-heading"><div><p className="lab-eyebrow">YOUR TRAINING HISTORY</p><h1>Your work, recorded.</h1><p>Just your real sessions. No scores, no noise.</p></div><button className="lab-primary" onClick={() => navigate('home')}>New session <ArrowRight size={17} /></button></div>
+    <div className="lab-progress-heading"><div><p className="lab-eyebrow">PRIMEFORGE / YOUR PROGRESS</p><h1>THE WORK<br /><span>ADDS UP.</span></h1><p>Your real sessions. Your own pace.</p></div><button className="lab-primary" onClick={() => navigate('home')}>New session <ArrowRight size={17} /></button></div>
     <div className="lab-metrics">{[[logs.length, 'Sessions'], [sets, 'Sets completed'], [minutes, 'Minutes trained']].map(([value, label]) => <div key={label}><strong>{value}</strong><span>{label}</span></div>)}</div>
     <section className="lab-card"><div className="lab-card-heading"><h2>Saved sessions</h2><span className="lab-muted">Latest first</span></div>
       {logs.length ? logs.map(log => <details key={log.id} className="lab-history-item">
