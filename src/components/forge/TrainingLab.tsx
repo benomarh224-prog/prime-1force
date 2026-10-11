@@ -1,14 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import dynamic from 'next/dynamic';
+import LabBody from '@/components/forge/LabBody';
 import { useSession } from 'next-auth/react';
 import { ArrowDown, ArrowRight, ArrowUpRight, Check, ChevronDown, Timer } from 'lucide-react';
 import { buildLabPlan, equipmentNames, goalNames, localDateKey, type LabEquipment, type LabGoal, type LabMinutes } from '@/lib/lab';
 import { useLabStore } from '@/lib/lab-store';
 import { useAppStore, type WorkoutLog } from '@/lib/store';
-
-const LabBody = dynamic(() => import('@/components/forge/LabBody'), { ssr: false, loading: () => <div className="lab-body-card lab-body-loading">Loading muscle guide…</div> });
 
 export function TrainingLab() {
   const { status } = useSession();

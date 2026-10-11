@@ -58,4 +58,14 @@ for (const split of trainingSplits) {
   console.log(split.label + ': plan, tracking, draft preservation and cancellation passed');
 }
 assert.equal(useLabStore.getState().history.length, 0);
+const { muscleMapPaths, preferredMuscleView } = load('src/lib/muscle-map.ts');
+assert.equal(preferredMuscleView(['legs', 'core']), 'front');
+assert.equal(preferredMuscleView(['chest', 'arms']), 'front');
+assert.equal(preferredMuscleView(['back', 'arms']), 'back');
+assert.equal(muscleMapPaths.front.back, undefined, 'Do not highlight a back muscle on a front illustration');
+assert.equal(muscleMapPaths.back.chest, undefined, 'Do not highlight chest on a rear illustration');
+for (const muscle of ['chest', 'back', 'shoulders', 'arms', 'core', 'legs']) {
+  assert.ok(muscleMapPaths.front[muscle] || muscleMapPaths.back[muscle], muscle + ' must have a visible focus region');
+}
+console.log('Muscle map: focus regions and front/rear selection passed');
 console.log('All training split checks passed. No user data was changed.');

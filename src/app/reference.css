@@ -115,6 +115,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, summary:focus-visibl
 .lab-body-column { background: #111416; }
 .lab-body-scene { background: radial-gradient(ellipse at 50% 45%, #4a2c1c 0%, #211911 35%, transparent 70%); }
 .lab-body-watermark { color: #ff6b190b; }
+.lab-body-scene.lab-anatomy-scene { --muscle-figure-height: 525px; height: var(--muscle-figure-height); margin-block: 12px 14px; display: grid; place-items: center; background: radial-gradient(ellipse at 50% 55%, #362216 0%, #171513 43%, transparent 74%); }
+.lab-anatomy-figure { display: block; min-height: 0; min-width: 0; width: 100%; height: var(--muscle-figure-height); max-width: 400px; overflow: hidden; }
 .lab-body-title, .lab-body-card > .lab-caption, .lab-focus .lab-eyebrow, .lab-focus p, .lab-view-toggle button, .lab-muscles span { color: #bdb7b2; }
 .lab-muscles i, .lab-muscles span i { background: #ff6b19; }
 .lab-focus::after { color: #ff6b19; }
@@ -189,6 +191,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, summary:focus-visibl
   .ref-programs { padding-top: 32px; }
   .lab-options button { background: #1c2022; }
   .lab-page { padding-inline: 20px; }
+  .lab-body-scene.lab-anatomy-scene { --muscle-figure-height: 430px; margin-block: 14px; }
   .lab-footer { width: calc(100% - 40px); margin-top: 16px; }
 }
 @media (prefers-reduced-motion: reduce) { .ref-button, .ref-split-card, .ref-split-card > img { transition: none; } }
