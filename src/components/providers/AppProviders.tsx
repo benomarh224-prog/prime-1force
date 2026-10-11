@@ -75,7 +75,7 @@ function AuthenticatedProfileSync() {
 export function AppProviders({ children }: { children: React.ReactNode }) {
   return (
     <SessionProvider>
-      <ThemeProvider attribute="class" defaultTheme="light" forcedTheme="light" disableTransitionOnChange>
+      <ThemeProvider attribute="class" defaultTheme="dark" forcedTheme="dark" disableTransitionOnChange>
         <AuthenticatedProfileSync />
         {children}
       </ThemeProvider>

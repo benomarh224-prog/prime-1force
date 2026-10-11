@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import "./lab.css";
+import "./reference.css";
 import { Toaster } from "@/components/ui/toaster";
 import { AppProviders } from "@/components/providers/AppProviders";
 import { ScrollToTop } from "@/components/layout/ScrollToTop";
@@ -9,10 +10,10 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://primeforge.fit";
 
 export const metadata: Metadata = {
   title: {
-    default: "PrimeForge Lab — Training Made Simple",
+    default: "Prime Forge — Build Your Body. Forge Your Mind.",
     template: "%s | Prime Forge",
   },
-  description: "Choose your goal, time, and equipment. Build a simple session, explore the muscles you train, and log your progress.",
+  description: "Train with purpose. Explore Push, Pull and Legs sessions, track every set, and build your own progress.",
   keywords: ["strength training", "workout programs", "fitness", "workout tracker", "gym", "primeforge"],
   authors: [{ name: "Prime Forge Team", url: SITE_URL }],
   creator: "Prime Forge",
@@ -26,8 +27,8 @@ export const metadata: Metadata = {
     shortcut: "/logo.svg",
   },
   openGraph: {
-    title: "PrimeForge Lab — Training Made Simple",
-    description: "A clear session built around your goal, time, and equipment.",
+    title: "Prime Forge — Build Your Body. Forge Your Mind.",
+    description: "Train with purpose. Track your progress. Become stronger every day.",
     type: "website",
     locale: "en_US",
     url: SITE_URL,
@@ -43,8 +44,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "PrimeForge Lab — Training Made Simple",
-    description: "A clear session built around your goal, time, and equipment.",
+    title: "Prime Forge — Build Your Body. Forge Your Mind.",
+    description: "Train with purpose. Track your progress. Become stronger every day.",
     images: ["/opengraph-image.jpg"],
   },
   robots: {

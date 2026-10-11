@@ -1,3 +1,3 @@
 export function ForgeBrand({ compact = false }: { compact?: boolean }) {
-  return <span className="forge-brand"><svg className="forge-brand-icon" viewBox="0 0 32 32" aria-hidden="true"><path d="M6 27 16 5h10l-4 8h-6l-6 14zM17 19h8l-4 8h-8z" fill="currentColor" /></svg>{!compact && <span>PRIMEFORGE<small>.FIT</small></span>}</span>;
+  return <span className="forge-brand"><svg className="forge-brand-icon" viewBox="0 0 36 40" aria-hidden="true"><path d="M3 2h30L18 13 3 2Zm0 5 12 9v7l-7-5v10l-5-4V7Zm30 0v17l-5 4V18l-7 5v-7L33 7ZM16 18h4v20l-4-3V18Z" fill="currentColor" /></svg>{!compact && <span>PRIME FORGE</span>}</span>;
 }

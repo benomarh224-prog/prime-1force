@@ -6,7 +6,7 @@ export type LabMinutes = 20 | 35 | 50;
 export type Muscle = 'chest' | 'back' | 'shoulders' | 'arms' | 'core' | 'legs';
 export type LabConfig = { goal: LabGoal; equipment: LabEquipment; minutes: LabMinutes };
 export type LabMovement = { id: string; name: string; muscles: Muscle[]; steps: string[] };
-export type LabPlan = { config: LabConfig; movements: LabMovement[]; sets: number; reps: string; rest: number };
+export type LabPlan = { name?: string; config: LabConfig; movements: LabMovement[]; sets: number; reps: string; rest: number };
 
 export const muscleNames: Record<Muscle, string> = { chest: 'Chest', back: 'Back', shoulders: 'Shoulders', arms: 'Arms', core: 'Core', legs: 'Legs' };
 export const goalNames: Record<LabGoal, string> = { strength: 'Strength', muscle: 'Muscle', fitness: 'Fitness' };
