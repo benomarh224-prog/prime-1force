@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import LabBody from '@/components/forge/LabBody';
+import { ExerciseDemo } from '@/components/forge/ExerciseDemo';
+import { ExerciseLibrary } from '@/components/forge/ExerciseLibrary';
+import { exercises } from '@/lib/data';
 import { useSession } from 'next-auth/react';
 import { ArrowDown, ArrowRight, ArrowUpRight, Check, ChevronDown, Timer } from 'lucide-react';
 import { buildLabPlan, equipmentNames, goalNames, localDateKey, type LabEquipment, type LabGoal, type LabMinutes } from '@/lib/lab';
@@ -71,6 +74,7 @@ export function TrainingLab() {
   };
 
   return <div className="lab-page lab-home">
+    <div className="lab-workout-toolbar"><span>YOUR TRAINING SPACE</span><button onClick={() => document.getElementById('exercise-library')?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' })}>Browse GIF exercises <ArrowDown size={16} /></button></div>
     {notice && <div className="lab-notice" role="status"><Check size={18} /><span>{notice}</span><button onClick={() => navigate('dashboard')}>View progress <ArrowRight size={15} /></button></div>}
     <section className="lab-hero" aria-label="Build your workout">
       <div className="lab-hero-copy">
@@ -96,12 +100,14 @@ export function TrainingLab() {
           <div className="lab-exercise-list">{plan.movements.map((item, index) => {
             const isSelected = index === activeIndex;
             const done = draft?.sets[item.id].filter(set => set.done).length ?? 0;
+            const demo = exercises.find(exercise => exercise.id === item.id);
             return <div key={item.id} className={'lab-exercise ' + (isSelected ? 'is-selected' : '')}>
               <button className="lab-exercise-trigger" aria-expanded={isSelected} aria-controls={'details-' + item.id} onClick={() => setSelected(index)}>
                 <span className="lab-exercise-number">{draft && done === plan.sets ? <Check size={15} /> : String(index + 1).padStart(2, '0')}</span>
                 <span><strong>{item.name}</strong><small>{draft ? done + '/' + plan.sets + ' sets done' : plan.sets + ' sets · ' + plan.reps + ' reps'}</small></span><ChevronDown size={17} />
               </button>
               {isSelected && <div id={'details-' + item.id} className="lab-exercise-details">
+                {demo && <ExerciseDemo key={demo.id} exercise={demo} />}
                 <ol>{item.steps.map(step => <li key={step}>{step}</li>)}</ol>
                 {draft && <div className="lab-sets"><div className={'lab-set-labels ' + (config.equipment === 'bodyweight' ? 'is-bodyweight' : '')}><span>Set</span><span>Reps</span>{config.equipment !== 'bodyweight' && <span>Kg</span>}<span>Done</span></div>{draft.sets[item.id].map((set, setIndex) => <div key={setIndex} className={'lab-set-row ' + (config.equipment === 'bodyweight' ? 'is-bodyweight' : '')}>
                   <span>{setIndex + 1}</span>
@@ -124,5 +130,6 @@ export function TrainingLab() {
         <p className="lab-safety">Start with a light warm-up. Choose a comfortable load and stop if you feel pain. Time estimates vary with your pace.</p>
       </div>
     </section>
+    <ExerciseLibrary />
   </div>;
 }

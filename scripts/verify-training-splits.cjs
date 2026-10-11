@@ -68,4 +68,25 @@ for (const muscle of ['chest', 'back', 'shoulders', 'arms', 'core', 'legs']) {
   assert.ok(muscleMapPaths.front[muscle] || muscleMapPaths.back[muscle], muscle + ' must have a visible focus region');
 }
 console.log('Muscle map: focus regions and front/rear selection passed');
+const { exercises } = load('src/lib/data.ts');
+assert.equal(exercises.length, 11, 'Restore the complete original exercise catalog');
+assert.equal(new Set(exercises.map(exercise => exercise.id)).size, 11);
+for (const exercise of exercises) {
+  assert.ok(exercise.gif.startsWith('https://static.exercisedb.dev/media/') && exercise.gif.endsWith('.gif'));
+  assert.ok(fs.existsSync(path.join(root, 'public', exercise.image)), exercise.name + ' has a local fallback poster');
+  assert.ok(exercise.steps.length > 0, exercise.name + ' has instructions');
+}
+// Contrast checks for the new reading surfaces and interactive orange buttons.
+function luminance(hex) {
+  const values = hex.match(/[a-f\d]{2}/gi).map(value => parseInt(value, 16) / 255)
+    .map(value => value <= .04045 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4);
+  return .2126 * values[0] + .7152 * values[1] + .0722 * values[2];
+}
+for (const [foreground, background] of [['182333', 'f4f6f8'], ['526172', 'ffffff'], ['ffffff', 'c54b0d'], ['a33b08', 'fff1e8']]) {
+  const levels = [luminance(foreground), luminance(background)].sort((a, b) => b - a);
+  const ratio = (levels[0] + .05) / (levels[1] + .05);
+  assert.ok(ratio >= 4.5, `${foreground} on ${background} must meet normal-text contrast`);
+  console.log(`Contrast ${foreground}/${background}: ${ratio.toFixed(2)}:1 passed`);
+}
+console.log('Exercise catalog: all 11 original GIF mappings, fallback posters and instructions passed');
 console.log('All training split checks passed. No user data was changed.');
