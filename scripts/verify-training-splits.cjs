@@ -18,10 +18,13 @@ function load(file) {
   const module = { exports: {} };
   cache.set(filename, module);
   const source = ts.transpileModule(fs.readFileSync(filename, 'utf8'), {
-    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 },
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020, jsx: ts.JsxEmit.ReactJSX },
   }).outputText;
   const scopedRequire = name => {
-    if (name.startsWith('@/')) return load('src/' + name.slice(2) + '.ts');
+    if (name.startsWith('@/')) {
+      const candidate = 'src/' + name.slice(2);
+      return load(candidate + (fs.existsSync(path.join(root, candidate + '.ts')) ? '.ts' : '.tsx'));
+    }
     if (name === 'zustand/middleware') {
       const { persist, createJSONStorage } = require(name);
       return { persist: (creator, options) => persist(creator, { ...options, storage: createJSONStorage(() => localStorage) }) };
@@ -89,4 +92,59 @@ for (const [foreground, background] of [['182333', 'f4f6f8'], ['526172', 'ffffff
   console.log(`Contrast ${foreground}/${background}: ${ratio.toFixed(2)}:1 passed`);
 }
 console.log('Exercise catalog: all 11 original GIF mappings, fallback posters and instructions passed');
+const { mergeCompletedLogs, getTrainingWeek, suggestTodayPlan } = load('src/lib/training-overview.ts');
+const sampleLog = (id, date, name = 'PUSH session', completed = true) => ({
+  id, date, name, completed, duration: 20, notes: '',
+  exercises: [{ exerciseId: 'bench-press', exerciseName: 'Barbell Bench Press', sets: [{ reps: 10, weight: 20 }] }],
+});
+const sampleLogs = [sampleLog('a', '2026-10-05'), sampleLog('b', '2026-10-05'), sampleLog('c', '2026-10-11'), sampleLog('old', '2026-10-04'), sampleLog('future', '2026-10-12')];
+const merged = mergeCompletedLogs(sampleLogs, [sampleLog('a', '2026-10-05'), sampleLog('incomplete', '2026-10-06', 'PULL session', false)]);
+assert.equal(merged.length, 5, 'Synced and device logs should not double count');
+assert.equal(mergeCompletedLogs([sampleLog('same', '2026-10-05')], [sampleLog('same', '2026-10-05', 'PUSH session', false)]).length, 0);
+const week = getTrainingWeek(merged, new Date(2026, 9, 11));
+assert.equal(week.days[0].key, '2026-10-05');
+assert.equal(week.days[6].key, '2026-10-11');
+assert.equal(week.sessions, 3);
+assert.equal(week.sets, 3);
+assert.equal(week.days[0].sessions, 2);
+assert.equal(week.days[6].isToday, true);
+assert.equal(getTrainingWeek([], new Date(2026, 9, 7)).sessions, 0);
+assert.equal(getTrainingWeek([sampleLog('future', '2026-10-09')], new Date(2026, 9, 7)).sessions, 0);
+assert.equal(new Set(getTrainingWeek([], new Date(2026, 10, 1)).days.map(day => day.key)).size, 7, 'Keep distinct local days around daylight-saving changes');
+const gymConfig = { goal: 'strength', equipment: 'gym', minutes: 35 };
+assert.equal(suggestTodayPlan(gymConfig, []).name, 'PUSH session');
+assert.equal(suggestTodayPlan(gymConfig, [sampleLog('x', '2026-10-10')]).name, 'PULL session');
+assert.equal(suggestTodayPlan(gymConfig, [sampleLog('x', '2026-10-10', 'PULL session')]).name, 'LEGS session');
+assert.equal(suggestTodayPlan(gymConfig, [sampleLog('x', '2026-10-10', 'LEGS session')]).name, 'PUSH session');
+assert.equal(suggestTodayPlan({ ...gymConfig, equipment: 'bodyweight', minutes: 20 }, []).movements.length, 3);
+const { exerciseMatchesMuscle, musclesForFilter } = load('src/lib/exercise-guide.ts');
+assert.equal(exercises.filter(exercise => exerciseMatchesMuscle(exercise, 'Arms')).length, 2);
+assert.equal(exercises.filter(exercise => exerciseMatchesMuscle(exercise, 'Back')).length, 3);
+assert.equal(exercises.filter(exercise => exerciseMatchesMuscle(exercise, 'Core')).length, 0, 'Do not invent GIFs for missing core movements');
+assert.equal(musclesForFilter('Biceps')[0], 'arms');
+assert.equal(musclesForFilter('all').length, 0);
+console.log('Today workout, weekly progress, duplicate protection and body-to-exercise filters passed');
+const React = require('react');
+const { renderToStaticMarkup } = require('react-dom/server');
+const LabBody = load('src/components/forge/LabBody.tsx').default;
+const frontMarkup = renderToStaticMarkup(React.createElement(LabBody, { muscles: ['chest'], onSelectMuscle: () => {} }));
+assert.ok(frontMarkup.includes('role="group"'), 'Interactive SVG must expose a group, not hide controls inside an image');
+assert.ok(frontMarkup.includes('aria-label="Browse Chest exercises"'));
+assert.ok(frontMarkup.includes('tabindex="0"'), 'Muscle regions must be keyboard accessible');
+assert.ok(!frontMarkup.includes('aria-label="Browse Back exercises"'), 'Back selection belongs on the rear illustration');
+const backMarkup = renderToStaticMarkup(React.createElement(LabBody, { muscles: ['back'], onSelectMuscle: () => {} }));
+assert.ok(backMarkup.includes('aria-label="Browse Back exercises"'));
+const { ExerciseLibrary } = load('src/components/forge/ExerciseLibrary.tsx');
+const armsMarkup = renderToStaticMarkup(React.createElement(ExerciseLibrary, { muscle: 'Arms', onMuscleChange: () => {}, query: '', onQueryChange: () => {} }));
+assert.equal((armsMarkup.match(/class="exercise-library-card"/g) || []).length, 2);
+assert.ok(armsMarkup.includes('Play demonstration: Machine Bicep Curl'));
+assert.ok(armsMarkup.includes('Play demonstration: Cable Triceps Pushdown'));
+assert.ok(armsMarkup.includes('Form tip:'));
+assert.ok(armsMarkup.includes('3 sets') && armsMarkup.includes('8–12 reps'));
+const coreMarkup = renderToStaticMarkup(React.createElement(ExerciseLibrary, { muscle: 'Core', onMuscleChange: () => {}, query: '', onQueryChange: () => {} }));
+assert.ok(coreMarkup.includes('No core GIF demos in your original library yet.'));
+const { WeeklyTraining } = load('src/components/forge/WeeklyTraining.tsx');
+const weeklyMarkup = renderToStaticMarkup(React.createElement(WeeklyTraining, { logs: [], goal: 5 }));
+assert.equal((weeklyMarkup.match(/no recorded sessions|upcoming/g) || []).length, 7);
+console.log('Rendered UI: front/rear accessible muscle controls, filtered GIF cards, form tips and seven-day summary passed');
 console.log('All training split checks passed. No user data was changed.');

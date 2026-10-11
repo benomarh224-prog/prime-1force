@@ -7,7 +7,7 @@ import { ExerciseLibrary } from '@/components/forge/ExerciseLibrary';
 import { exercises } from '@/lib/data';
 import { useSession } from 'next-auth/react';
 import { ArrowDown, ArrowRight, ArrowUpRight, Check, ChevronDown, Timer } from 'lucide-react';
-import { buildLabPlan, equipmentNames, goalNames, localDateKey, type LabEquipment, type LabGoal, type LabMinutes } from '@/lib/lab';
+import { buildLabPlan, equipmentNames, goalNames, localDateKey, muscleNames, type Muscle, type LabEquipment, type LabGoal, type LabMinutes } from '@/lib/lab';
 import { useLabStore } from '@/lib/lab-store';
 import { useAppStore, type WorkoutLog } from '@/lib/store';
 
@@ -16,6 +16,8 @@ export function TrainingLab() {
   const { config, draft, setConfig, start, updateSet, cancel, finish, replaceLog } = useLabStore();
   const navigate = useAppStore(state => state.navigate);
   const [selected, setSelected] = useState(0);
+  const [libraryMuscle, setLibraryMuscle] = useState('all');
+  const [libraryQuery, setLibraryQuery] = useState('');
   const [notice, setNotice] = useState('');
   const [saving, setSaving] = useState(false);
   const [confirmEnd, setConfirmEnd] = useState(false);
@@ -73,6 +75,12 @@ export function TrainingLab() {
     window.requestAnimationFrame(() => document.getElementById('session')?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'start' }));
   };
 
+  const browseMuscle = (muscle: Muscle) => {
+    setLibraryQuery('');
+    setLibraryMuscle(muscleNames[muscle]);
+    window.requestAnimationFrame(() => document.getElementById('exercise-library')?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'start' }));
+  };
+
   return <div className="lab-page lab-home">
     <div className="lab-workout-toolbar"><span>YOUR TRAINING SPACE</span><button onClick={() => document.getElementById('exercise-library')?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' })}>Browse GIF exercises <ArrowDown size={16} /></button></div>
     {notice && <div className="lab-notice" role="status"><Check size={18} /><span>{notice}</span><button onClick={() => navigate('dashboard')}>View progress <ArrowRight size={15} /></button></div>}
@@ -90,7 +98,7 @@ export function TrainingLab() {
           <div className="lab-session-actions">{draft ? <button className="lab-primary" onClick={() => document.getElementById('session')?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' })}>Continue session <ArrowDown size={19} /></button> : <button className="lab-primary" disabled={saving} onClick={startSession}>Let’s get to work <ArrowUpRight size={20} /></button>}<p className="lab-caption">No account. No friction. Just your next session.</p></div>
         </section>
       </div>
-      <div className="lab-body-column"><LabBody muscles={movement.muscles} /><div className="lab-focus"><span className="lab-eyebrow">IN FOCUS / {String(activeIndex + 1).padStart(2, '0')}</span><strong>{movement.name}</strong><p>{plan.sets} sets · {plan.reps} reps · {plan.rest}s rest</p></div></div>
+      <div className="lab-body-column"><LabBody muscles={movement.muscles} onSelectMuscle={browseMuscle} /><div className="lab-focus"><span className="lab-eyebrow">IN FOCUS / {String(activeIndex + 1).padStart(2, '0')}</span><strong>{movement.name}</strong><p>{plan.sets} sets · {plan.reps} reps · {plan.rest}s rest</p></div></div>
     </section>
     <section id="session" className="lab-session-section" aria-label="Your session exercises">
       <div className="lab-session-intro"><p className="lab-eyebrow">02 — THE WORK</p><h2>{draft ? <>ONE SET.<br />AT A TIME.</> : <>A PLAN.<br />NOT A GUESS.</>}</h2><p>{draft ? 'Log what you lift. Take your rest. Keep moving.' : 'Your exercises, in order. Select a movement to see the cues and muscles involved.'}</p><div className="lab-session-meta"><span>{goalNames[plan.config.goal]}</span><span>{equipmentNames[plan.config.equipment]}</span></div></div>
@@ -108,7 +116,8 @@ export function TrainingLab() {
               </button>
               {isSelected && <div id={'details-' + item.id} className="lab-exercise-details">
                 {demo && <ExerciseDemo key={demo.id} exercise={demo} />}
-                <ol>{item.steps.map(step => <li key={step}>{step}</li>)}</ol>
+                {demo?.tips[0] && <p className="session-form-tip"><strong>Form tip:</strong> {demo.tips[0]}</p>}
+                <ol>{(demo?.steps ?? item.steps).map(step => <li key={step}>{step}</li>)}</ol>
                 {draft && <div className="lab-sets"><div className={'lab-set-labels ' + (config.equipment === 'bodyweight' ? 'is-bodyweight' : '')}><span>Set</span><span>Reps</span>{config.equipment !== 'bodyweight' && <span>Kg</span>}<span>Done</span></div>{draft.sets[item.id].map((set, setIndex) => <div key={setIndex} className={'lab-set-row ' + (config.equipment === 'bodyweight' ? 'is-bodyweight' : '')}>
                   <span>{setIndex + 1}</span>
                   <input type="number" min="1" max="200" inputMode="numeric" aria-label={item.name + ' set ' + (setIndex + 1) + ' reps'} value={set.reps} onChange={event => updateSet(item.id, setIndex, { reps: Math.max(1, Math.min(200, Number(event.target.value) || 1)) })} />
@@ -130,6 +139,6 @@ export function TrainingLab() {
         <p className="lab-safety">Start with a light warm-up. Choose a comfortable load and stop if you feel pain. Time estimates vary with your pace.</p>
       </div>
     </section>
-    <ExerciseLibrary />
+    <ExerciseLibrary muscle={libraryMuscle} onMuscleChange={setLibraryMuscle} query={libraryQuery} onQueryChange={setLibraryQuery} />
   </div>;
 }

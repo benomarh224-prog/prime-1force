@@ -4,8 +4,10 @@ import Image from 'next/image';
 import { ArrowRight, BarChart3, Bot, Clock3, Dumbbell, Flame, MessageCircle, Target, TrendingUp } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
 import { useLabStore } from '@/lib/lab-store';
-import { localDateKey } from '@/lib/lab';
 import { trainingSplits, type SplitId } from '@/lib/splits';
+import { getTrainingWeek, mergeCompletedLogs } from '@/lib/training-overview';
+import { TodayWorkout } from '@/components/forge/TodayWorkout';
+import { WeeklyTraining } from '@/components/forge/WeeklyTraining';
 
 export function HomePage() {
   const navigate = useAppStore(state => state.navigate);
@@ -13,12 +15,8 @@ export function HomePage() {
   const workoutLogs = useAppStore(state => state.workoutLogs);
   const history = useLabStore(state => state.history);
   const selectSplit = useLabStore(state => state.selectSplit);
-  const logs = [...new Map([...workoutLogs, ...history].filter(log => log.completed !== false).map(log => [log.id, log])).values()];
-  const today = new Date();
-  const startOfWeek = new Date(today.getFullYear(), today.getMonth(), today.getDate() - (today.getDay() + 6) % 7);
-  const weekStart = localDateKey(startOfWeek);
-  const weekEnd = localDateKey(today);
-  const thisWeek = logs.filter(log => log.date.slice(0, 10) >= weekStart && log.date.slice(0, 10) <= weekEnd).length;
+  const logs = mergeCompletedLogs(workoutLogs, history);
+  const thisWeek = getTrainingWeek(logs).sessions;
   const totalSets = logs.reduce((sum, log) => sum + log.exercises.reduce((count, exercise) => count + exercise.sets.length, 0), 0);
   const minutes = logs.reduce((sum, log) => sum + log.duration, 0);
   const goal = Math.max(1, weeklyGoal);
@@ -39,6 +37,7 @@ export function HomePage() {
       </div>
     </section>
     <div className="ref-container ref-lower">
+      <div className="home-training-overview"><TodayWorkout logs={logs} /><WeeklyTraining logs={logs} goal={goal} /></div>
       <section className="ref-split-grid" aria-label="Explore training splits">{trainingSplits.map(split => <button key={split.id} className="ref-split-card" onClick={() => openSplit(split.id)}>
         <Image unoptimized loading="eager" src={split.image} alt="" fill sizes="(max-width: 700px) 100vw, 33vw" />
         <div className="ref-split-shade" /><div className="ref-split-copy"><h2>{split.label}</h2><p>{split.muscles}</p><div className="ref-split-meta"><span><BarChart3 size={15} />{split.movements.length} exercises</span><span><Clock3 size={15} />3 sets each</span></div></div><span className="ref-card-arrow"><ArrowRight size={18} /></span>
